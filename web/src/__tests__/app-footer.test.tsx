@@ -1,12 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/react';
 import { AppFooter } from '../components/AppFooter';
 
+afterEach(() => cleanup());
+
 describe('AppFooter', () => {
+  let writeTextMock: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
-    // Mock clipboard API — must be done before each test
-    Object.assign(navigator, {
-      clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    writeTextMock = vi.fn().mockResolvedValue(undefined);
+    // navigator.clipboard is a getter-only in happy-dom — use defineProperty
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      get: () => ({ writeText: writeTextMock }),
     });
   });
 
@@ -29,7 +35,7 @@ describe('AppFooter', () => {
     render(<AppFooter launchUrl="http://127.0.0.1:8080/" tokenLast4="ab12" sessionActive={true} />);
     const button = screen.getByRole('button');
     button.click();
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('http://127.0.0.1:8080/');
+    expect(writeTextMock).toHaveBeenCalledWith('http://127.0.0.1:8080/');
   });
 
   it('clicking the URL calls clipboard.writeText with the exact URL string', () => {
@@ -37,7 +43,7 @@ describe('AppFooter', () => {
     render(<AppFooter launchUrl={url} tokenLast4="zz99" sessionActive={false} />);
     const button = screen.getByRole('button');
     button.click();
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(url);
+    expect(writeTextMock).toHaveBeenCalledWith(url);
   });
 
   it('renders "—" when launchUrl is empty', () => {
