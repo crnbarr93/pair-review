@@ -117,43 +117,52 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLUG-01 | — | Pending |
-| PLUG-02 | — | Pending |
-| PLUG-03 | — | Pending |
-| PLUG-04 | — | Pending |
-| INGEST-01 | — | Pending |
-| INGEST-02 | — | Pending |
-| INGEST-03 | — | Pending |
-| INGEST-04 | — | Pending |
-| DIFF-01 | — | Pending |
-| DIFF-02 | — | Pending |
-| DIFF-03 | — | Pending |
-| DIFF-04 | — | Pending |
-| LLM-01 | — | Pending |
-| LLM-02 | — | Pending |
-| LLM-03 | — | Pending |
-| LLM-04 | — | Pending |
-| LLM-05 | — | Pending |
-| CHECK-01 | — | Pending |
-| CHECK-02 | — | Pending |
-| SESS-01 | — | Pending |
-| SESS-02 | — | Pending |
-| SESS-03 | — | Pending |
-| SESS-04 | — | Pending |
-| SEC-01 | — | Pending |
-| SEC-02 | — | Pending |
-| SEC-03 | — | Pending |
-| SEC-04 | — | Pending |
-| SUB-01 | — | Pending |
-| SUB-02 | — | Pending |
-| SUB-03 | — | Pending |
-| SUB-04 | — | Pending |
+| PLUG-01 | Phase 1 | Pending |
+| PLUG-02 | Phase 1 | Pending |
+| PLUG-03 | Phase 1 | Pending |
+| PLUG-04 | Phase 3 | Pending |
+| INGEST-01 | Phase 1 | Pending |
+| INGEST-02 | Phase 1 | Pending |
+| INGEST-03 | Phase 3 | Pending |
+| INGEST-04 | Phase 3 | Pending |
+| DIFF-01 | Phase 3 | Pending |
+| DIFF-02 | Phase 3 | Pending |
+| DIFF-03 | Phase 3 | Pending |
+| DIFF-04 | Phase 3 | Pending |
+| LLM-01 | Phase 4 | Pending |
+| LLM-02 | Phase 4 | Pending |
+| LLM-03 | Phase 5 | Pending |
+| LLM-04 | Phase 5 | Pending |
+| LLM-05 | Phase 5 | Pending |
+| CHECK-01 | Phase 4 | Pending |
+| CHECK-02 | Phase 4 | Pending |
+| SESS-01 | Phase 2 | Pending |
+| SESS-02 | Phase 2 | Pending |
+| SESS-03 | Phase 2 | Pending |
+| SESS-04 | Phase 7 | Pending |
+| SEC-01 | Phase 1 | Pending |
+| SEC-02 | Phase 1 | Pending |
+| SEC-03 | Phase 1 | Pending |
+| SEC-04 | Phase 1 | Pending |
+| SUB-01 | Phase 6 | Pending |
+| SUB-02 | Phase 6 | Pending |
+| SUB-03 | Phase 6 | Pending |
+| SUB-04 | Phase 6 | Pending |
 
 **Coverage:**
 - v1 requirements: 31 total
-- Mapped to phases: 0
-- Unmapped: 31 ⚠️ (to be mapped by roadmapper)
+- Mapped to phases: 31
+- Unmapped: 0 ✓
+
+**Phase distribution:**
+- Phase 1 (Plugin Skeleton + Secure Vertical Slice): 9 requirements (PLUG-01, PLUG-02, PLUG-03, INGEST-01, INGEST-02, SEC-01, SEC-02, SEC-03, SEC-04)
+- Phase 2 (Persistent Session Store + Resume): 3 requirements (SESS-01, SESS-02, SESS-03)
+- Phase 3 (Diff UI + File Tree + Navigation): 7 requirements (PLUG-04, INGEST-03, INGEST-04, DIFF-01, DIFF-02, DIFF-03, DIFF-04)
+- Phase 4 (LLM Summary + Checklist + Self-Review): 4 requirements (LLM-01, LLM-02, CHECK-01, CHECK-02)
+- Phase 5 (Walkthrough + Inline Threaded Comments): 3 requirements (LLM-03, LLM-04, LLM-05)
+- Phase 6 (Review Submission + Verdict UI): 4 requirements (SUB-01, SUB-02, SUB-03, SUB-04)
+- Phase 7 (Polish + Concurrency): 1 requirement (SESS-04)
 
 ---
 *Requirements defined: 2026-04-16*
-*Last updated: 2026-04-16 after initial definition*
+*Last updated: 2026-04-16 after roadmap creation — traceability filled in with phase mappings*
