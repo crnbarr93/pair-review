@@ -1,6 +1,20 @@
 // Source of truth for Phase 1 type surface. See 01-CONTEXT D-17 (opaque IDs) and 01-RESEARCH Pattern 6 (DiffModel shape).
 // Downstream plans import from this file — do not re-declare these types.
 
+// Shape of `gh pr view --json` output for D-15 fields
+export interface GitHubPrViewJson {
+  title: string;
+  body: string;
+  author: { login: string };
+  baseRefName: string;
+  headRefName: string;
+  baseRefOid: string;
+  headRefOid: string;
+  additions: number;
+  deletions: number;
+  changedFiles: number;
+}
+
 export type FileStatus = 'added' | 'modified' | 'deleted' | 'renamed';
 export type LineKind = 'add' | 'del' | 'context';
 export type LineSide = 'LEFT' | 'RIGHT' | 'BOTH';
