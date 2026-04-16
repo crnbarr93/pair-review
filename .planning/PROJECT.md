@@ -26,7 +26,6 @@ A Claude Code plugin that pairs the user with an LLM to review pull requests thr
 - [ ] LLM generates a PR summary (intent, key changes, risk areas) visible in the GUI
 - [ ] LLM self-review runs against a criticality-ranked checklist with code references linking back to diff locations
 - [ ] Built-in default checklist ships with the plugin (correctness, security, tests, performance, style)
-- [ ] Per-repo checklist override via a repo-committed file (e.g. `.review/checklist.md`) takes precedence over built-ins
 - [ ] Step-by-step walkthrough orders changes as an LLM-chosen narrative over curated "core changes"
 - [ ] "Show all" escape in the walkthrough expands beyond curated core to walk the remaining hunks
 - [ ] Inline conversational comments anchored to file+line, supporting a GitHub-style threaded dialogue between user and LLM during the walkthrough
@@ -45,7 +44,8 @@ A Claude Code plugin that pairs the user with an LLM to review pull requests thr
 - Comments-only review mode — the walkthrough always culminates in a full GitHub review submission with verdict; comment-only posting is a deliberate non-goal.
 - Hosted/shared backend — everything runs locally; no accounts, no server.
 - Polished open-source release (docs site, install wizard, config UX, versioned releases) — this is a personal tool first; release polish is deferred until the workflow proves itself in daily use.
-- LLM-inferred per-PR checklists — built-ins plus repo override cover the scope; dynamic inference adds variance without clear value for a personal tool.
+- LLM-inferred per-PR checklists — built-in checklist covers the scope reliably; dynamic inference adds variance without predictable value for a personal tool.
+- Per-repo checklist override file in v1 — deferred to v2 (see REQUIREMENTS.md `CHECK-V2-01`). Built-in checklist only in v1; if override value emerges in daily use, bring it forward.
 
 ## Context
 
@@ -72,7 +72,7 @@ A Claude Code plugin that pairs the user with an LLM to review pull requests thr
 |----------|-----------|---------|
 | Claude Code plugin + local web UI (not Zed extension, not standalone app) | Zed's WASM extension API cannot render the needed diff+comments UI; Claude Code gives MCP + slash commands + existing auth for free. Zed integration possible later via shared MCP server. | — Pending |
 | MCP tools as the LLM-to-UI control plane (not subagent+file-protocol) | MCP is the natural Claude Code pattern; gives responsive, typed tool calls that map cleanly to UI actions (show_hunk, post_comment, run_self_review, submit_review). Subagent+files would be clunkier. | — Pending |
-| Built-in default checklist + optional per-repo override file | Works out of the box for any PR; teams/repos can drop a file to tune without forcing config up front. Avoids forcing schema design in v1 while leaving the door open. | — Pending |
+| Built-in default checklist only in v1 (repo override deferred to v2) | Works out of the box; avoids forcing override-schema design in v1. Repo override (`.review/checklist.md`) tracked as `CHECK-V2-01` and will come forward if daily use surfaces a need. | — Pending |
 | LLM-curated walkthrough with "show all" escape | Reviewer-style guidance beats "walk every hunk" for long PRs; escape hatch prevents missing something. | — Pending |
 | Final action is a full GitHub review submission (verdict + body + inline comments) | Matches how real reviews ship; one API call keeps the GitHub UI clean; verdict discipline forces the user to actually decide. | — Pending |
 | Resumable per-PR state on disk | Real reviews happen in chunks across hours/days; session-only state would be a non-starter. | — Pending |
@@ -96,4 +96,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 after initialization*
+*Last updated: 2026-04-16 after requirements definition (checklist scope narrowed: repo override moved to v2)*
