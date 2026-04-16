@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+
+  /* Surfaces */
+  --color-surface: #0d1117;
+  --color-surface-raised: #161b22;
+
+  /* Borders */
+  --color-border: #30363d;
+
+  /* Accent */
+  --color-accent: #388bfd;
+  --color-accent-muted: #1f3451;
+
+  /* Destructive */
+  --color-destructive: #da3633;
+  --color-destructive-muted: #3b1219;
+
+  /* Diff semantics */
+  --color-diff-add: #0d4429;
+  --color-diff-add-text: #56d364;
+  --color-diff-del: #3b1219;
+  --color-diff-del-text: #f85149;
+  --color-diff-hunk: #1b2d4f;
+  --color-diff-hunk-text: #79c0ff;
+
+  /* Text */
+  --color-text: #e6edf3;
+  --color-text-secondary: #8b949e;
+  --color-text-disabled: #484f58;
+
+  /* Typography — font stacks only; weights are Tailwind utilities (font-normal, font-semibold) */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "SF Mono", "Menlo", "Consolas", "Courier New", monospace;
+}
+
+/* Global body background — belt-and-braces so Hono's bootstrap fallback also renders dark */
+html, body, #root { height: 100%; }
+body { margin: 0; font-family: var(--font-sans); background: var(--color-surface); color: var(--color-text); }
