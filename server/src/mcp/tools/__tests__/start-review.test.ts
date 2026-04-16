@@ -192,7 +192,7 @@ describe('plugin manifest structure', () => {
     expect(existsSync(nestedMcpPath)).toBe(false);
   });
 
-  it('commands/review.md exists at repo root, NOT inside .claude-plugin/commands/', async () => {
+  it('commands/pair-review.md exists at repo root, NOT inside .claude-plugin/commands/', async () => {
     const { existsSync } = await import('node:fs');
     const { resolve } = await import('node:path');
     const { fileURLToPath } = await import('node:url');
@@ -200,22 +200,26 @@ describe('plugin manifest structure', () => {
     const __dirname = fileURLToPath(new URL('.', import.meta.url));
     const repoRoot = resolve(__dirname, '../../../../../');
 
-    expect(existsSync(resolve(repoRoot, 'commands/review.md'))).toBe(true);
+    expect(existsSync(resolve(repoRoot, 'commands/pair-review.md'))).toBe(true);
     expect(existsSync(resolve(repoRoot, '.claude-plugin/commands'))).toBe(false);
+    // Defensive: a bare /review name collides with the user's other globally-installed
+    // review skills/commands. Asserting the rename keeps that hard-won fix from regressing.
+    expect(existsSync(resolve(repoRoot, 'commands/review.md'))).toBe(false);
   });
 
-  it('commands/review.md has YAML frontmatter with description and argument-hint', async () => {
+  it('commands/pair-review.md has YAML frontmatter and references the namespaced MCP tool', async () => {
     const { readFileSync } = await import('node:fs');
     const { resolve } = await import('node:path');
     const { fileURLToPath } = await import('node:url');
 
     const __dirname = fileURLToPath(new URL('.', import.meta.url));
     const repoRoot = resolve(__dirname, '../../../../../');
-    const content = readFileSync(resolve(repoRoot, 'commands/review.md'), 'utf-8');
+    const content = readFileSync(resolve(repoRoot, 'commands/pair-review.md'), 'utf-8');
 
     expect(content).toContain('description:');
     expect(content).toContain('argument-hint:');
-    expect(content).toContain('start_review');
+    expect(content).toContain('mcp__git-review-plugin__start_review');
+    expect(content).toContain('allowed-tools:');
     expect(content).toContain('$ARGUMENTS');
   });
 });
