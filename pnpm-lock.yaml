@@ -16,6 +16,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: 1.29.0
         version: 1.29.0(zod@4.3.6)
+      '@shared/types':
+        specifier: workspace:*
+        version: link:../shared
       execa:
         specifier: 9.6.1
         version: 9.6.1

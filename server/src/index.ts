@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { serve } from '@hono/node-server';
-import { Hono } from 'hono';
 import { SessionManager } from './session/manager.js';
+import { buildHttpApp } from './http/server.js';
 import { startMcp } from './mcp/server.js';
 import { logger } from './logger.js';
 
@@ -9,9 +9,8 @@ async function main() {
   const sessionToken = crypto.randomBytes(32).toString('base64url');
   const manager = new SessionManager({ sessionToken });
 
-  // PHASE-1 STUB HTTP APP — Plan 03 replaces with buildHttpApp(manager)
-  const app = new Hono();
-  app.get('/', (c) => c.text('Stub — Plan 03 mounts real routes', 200));
+  // Plan 03: real HTTP app with security middleware chain
+  const app = buildHttpApp(manager);
 
   const httpServer = serve(
     { fetch: app.fetch, port: 0, hostname: '127.0.0.1' }, // SEC-01: 127.0.0.1 ONLY

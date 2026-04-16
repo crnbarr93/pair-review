@@ -1,8 +1,15 @@
 {
-  "name": "shared",
+  "name": "@shared/types",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "./types.ts",
-  "types": "./types.ts"
+  "main": "./types.js",
+  "types": "./types.ts",
+  "exports": {
+    ".": {
+      "types": "./types.ts",
+      "import": "./types.js",
+      "default": "./types.js"
+    }
+  }
 }
