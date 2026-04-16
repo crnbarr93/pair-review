@@ -4,9 +4,13 @@ import type { SessionManager, SourceArg } from '../../session/manager.js';
 import { logger } from '../../logger.js';
 import type { ReviewSession } from '@shared/types';
 
-const Source = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('github'), url: z.string().url() }),
-  z.object({ kind: z.literal('github'), number: z.number().int().positive() }),
+// Zod v4 disallows duplicate discriminator values in discriminatedUnion.
+// Use z.union with an inner union for the two github variants.
+const Source = z.union([
+  z.union([
+    z.object({ kind: z.literal('github'), url: z.string().url() }),
+    z.object({ kind: z.literal('github'), number: z.number().int().positive() }),
+  ]),
   z.object({ kind: z.literal('local'), base: z.string().min(1), head: z.string().min(1) }),
 ]);
 const Input = z.object({ source: Source });

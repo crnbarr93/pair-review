@@ -1,16 +1,18 @@
 import { describe, it, expect, afterAll } from 'vitest';
 import { execa } from 'execa';
+import { spawn, type ChildProcess } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, '../../../../');
+// __dirname = .../git-review-plugin/server/src/__tests__/
+// ../../../ = .../git-review-plugin/ (repo root)
+const REPO_ROOT = path.resolve(__dirname, '../../../');
 
 describe('Phase 1 end-to-end', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let child: any = null;
+  let child: ChildProcess | null = null;
   let repoDir = '';
 
   async function makeRepo() {
@@ -41,18 +43,22 @@ describe('Phase 1 end-to-end', () => {
     repoDir = await makeRepo();
     const serverBin = path.join(REPO_ROOT, 'server/dist/index.js');
 
-    child = execa('node', [serverBin], {
+    // Use node:child_process.spawn directly — execa v9 subprocess streams don't emit
+    // `data` events reliably inside vitest worker threads (stream lifecycle difference).
+    child = spawn('node', [serverBin], {
       cwd: repoDir,
       env: { ...process.env, CLAUDE_PLUGIN_DATA: path.join(repoDir, '.plugin-data') },
-      reject: false,
-      buffer: false,
+      stdio: ['pipe', 'pipe', 'pipe'],
     });
 
     // Read stderr until we see the listen URL (or 5s timeout)
     let stderrBuf = '';
     const listenUrlPromise = new Promise<string>((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('timeout waiting for listen URL')), 5000);
-      child.stderr.on('data', (chunk: Buffer) => {
+      const timeout = setTimeout(
+        () => reject(new Error('timeout waiting for listen URL. stderr so far: ' + stderrBuf)),
+        5000
+      );
+      child!.stderr!.on('data', (chunk: Buffer) => {
         stderrBuf += chunk.toString();
         const m = stderrBuf.match(/http:\/\/127\.0\.0\.1:(\d+)/);
         if (m) {
@@ -89,7 +95,7 @@ describe('Phase 1 end-to-end', () => {
       },
     ];
     for (const r of requests) {
-      child.stdin.write(JSON.stringify(r) + '\n');
+      child!.stdin!.write(JSON.stringify(r) + '\n');
     }
 
     // Collect stdout responses until we see id=2
@@ -105,7 +111,7 @@ describe('Phase 1 end-to-end', () => {
             ),
           15000
         );
-        child.stdout.on('data', (chunk: Buffer) => {
+        child!.stdout!.on('data', (chunk: Buffer) => {
           stdoutBuf += chunk.toString();
           for (const line of stdoutBuf.split('\n')) {
             try {
@@ -128,7 +134,7 @@ describe('Phase 1 end-to-end', () => {
       /Review open at: http:\/\/127\.0\.0\.1:\d+\/\?token=/
     );
 
-    // Verify the server is reachable (GET / returns 200 with HTML content)
+    // Verify the server is reachable (GET / returns 200)
     const healthCheck = await execa(
       'curl',
       ['-s', '-o', '/dev/null', '-w', '%{http_code}', `http://127.0.0.1:${port}/`],
@@ -142,9 +148,9 @@ describe('Phase 1 end-to-end', () => {
     expect(probe.exitCode).toBe(0);
 
     // SIGTERM shuts down cleanly
-    child.kill('SIGTERM');
+    child!.kill('SIGTERM');
     const exitCode = await new Promise<number>((resolve) => {
-      child.on('exit', (c: number | null) => resolve(c ?? 1));
+      child!.on('exit', (c: number | null) => resolve(c ?? 1));
     });
     expect(exitCode).toBe(0);
     child = null;
