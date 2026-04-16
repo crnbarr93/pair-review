@@ -14,7 +14,7 @@ export function mountEvents(app: Hono, manager: SessionManager) {
       const payload: SnapshotMessage = {
         type: 'snapshot',
         session,
-        launchUrl: manager.getLaunchUrl(),
+        launchUrl: manager.sessionLaunchUrl(prKey),
         tokenLast4: manager.getTokenLast4(),
       };
       await stream.writeSSE({

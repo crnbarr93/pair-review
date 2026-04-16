@@ -153,10 +153,21 @@ export class SessionManager {
     // Launch browser only on first call for this prKey (D-21)
     if (!this.launched.has(prKey)) {
       this.launched.add(prKey);
-      await launchBrowser(this.launchUrl);
+      await launchBrowser(this.sessionLaunchUrl(prKey));
     }
 
     return session;
+  }
+
+  /**
+   * Per-session launch URL: base `?token=…` URL with `&session=<prKey>` appended.
+   * The web bootstrap reads `?session=` to subscribe to /api/events; the base URL
+   * built at server start does not yet know the session, so this is computed per
+   * startReview call and used for both the browser launch and the SSE snapshot's
+   * launchUrl field (so the footer shows the full copy-pasteable URL).
+   */
+  sessionLaunchUrl(prKey: string): string {
+    return `${this.launchUrl}&session=${encodeURIComponent(prKey)}`;
   }
 
   private async derivePrKey(source: SourceArg): Promise<string> {
