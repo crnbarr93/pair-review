@@ -41,7 +41,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Monorepo scaffold + test infrastructure + shared types + fixtures (Wave 0)
 - [x] 01-02-PLAN.md — Server core: logger, SessionManager, persistence, browser-launch, 127.0.0.1 boot (Wave 1)
-- [ ] 01-03-PLAN.md — HTTP security layer: host/token/CSP middleware + SSE/adopt routes + probes (Wave 2)
+- [x] 01-03-PLAN.md — HTTP security layer: host/token/CSP middleware + SSE/adopt routes + probes (Wave 2)
 - [ ] 01-04-PLAN.md — Ingestion (gh + git) + parse-diff + Shiki highlighting + real startReview (Wave 3)
 - [ ] 01-05-PLAN.md — Web SPA foundation: Vite/Tailwind, main.tsx bootstrap, chrome components (Wave 3)
 - [ ] 01-06-PLAN.md — Web diff canvas: 4 states + DiffView wrapper + App.tsx 4-phase router (Wave 4)
