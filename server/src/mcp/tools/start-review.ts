@@ -27,7 +27,10 @@ export function registerStartReview(mcp: McpServer, manager: SessionManager): vo
     async ({ source }) => {
       try {
         const session = await manager.startReview(source as SourceArg);
-        const text = renderSummary(session, manager.getLaunchUrl());
+        // Use the per-session URL (base + &session=<prKey>). manager.getLaunchUrl()
+        // is missing the session param the web bootstrap needs; clicking that bare
+        // URL from chat dropped users into a "Session expired" page with no diff.
+        const text = renderSummary(session, manager.sessionLaunchUrl(session.prKey));
         return { content: [{ type: 'text' as const, text }] };
       } catch (err) {
         logger.error('start_review failed', err);
