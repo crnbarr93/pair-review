@@ -1,0 +1,8 @@
+{
+  "name": "git-review-plugin",
+  "version": "0.1.0",
+  "description": "Pair-review workflow with LLM in a local browser GUI",
+  "author": { "name": "Connor Barr" },
+  "commands": "./commands/",
+  "mcpServers": "./.mcp.json"
+}

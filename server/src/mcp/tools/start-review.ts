@@ -33,13 +33,57 @@ export function registerStartReview(mcp: McpServer, manager: SessionManager): vo
   );
 }
 
+/**
+ * Deterministic paraphrase of a PR description (D-20 / Pitfall 11 mitigation).
+ *
+ * Takes the first non-empty paragraph, strips markdown noise (headers, bullets,
+ * HTML comments, code spans, links), collapses whitespace, and truncates to 280 chars.
+ * If the description is empty or whitespace-only, returns a placeholder.
+ *
+ * This is a TEXTUAL transform — not LLM-interpreted — so the content is safe to pass
+ * back into the LLM context as structured data rather than instructions.
+ */
+export function paraphrase(desc: string): string {
+  if (!desc || !desc.trim()) return '(no description provided — review the changes below)';
+
+  // Split into paragraphs FIRST (before whitespace collapse), then take the first one.
+  // Paragraphs are separated by one or more blank lines.
+  const paragraphs = desc.split(/\n\n+/);
+
+  // Strip markdown from each paragraph candidate and find the first non-empty one
+  for (const para of paragraphs) {
+    const stripped = para
+      .replace(/<!--[\s\S]*?-->/g, '')              // HTML comments
+      .replace(/^#+\s+/gm, '')                       // ATX headers (## Heading)
+      .replace(/^[-*+]\s+/gm, '')                    // Unordered list bullets
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')       // Markdown links → text
+      .replace(/`{1,3}([^`]*)`{1,3}/g, '$1')          // Inline code: strip backticks, keep content
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (stripped.length > 0) {
+      return stripped.length > 280 ? stripped.slice(0, 277) + '...' : stripped;
+    }
+  }
+
+  return '(no description provided — review the changes below)';
+}
+
+/**
+ * Render the start_review tool return summary.
+ * Exported as renderSummaryForTest for unit testing without mocking the full tool.
+ */
+export function renderSummaryForTest(s: ReviewSession, url: string): string {
+  return renderSummary(s, url);
+}
+
 function renderSummary(s: ReviewSession, url: string): string {
-  const { pr, diff } = s;
+  const { pr } = s;
   return [
     `**${pr.title}** by @${pr.author}`,
     `${pr.baseBranch} → ${pr.headBranch}  (+${pr.additions}/-${pr.deletions}, ${pr.filesChanged} files)`,
     '',
-    pr.description || '(no description)', // Plan 04 adds paraphrase per D-20
+    paraphrase(pr.description),
     '',
     `Review open at: ${url}`,
   ].join('\n');
