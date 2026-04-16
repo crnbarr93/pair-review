@@ -1,0 +1,12 @@
+{
+  "title": "Improve hello greeting and add bye",
+  "body": "Adds i18n TODO to hello; introduces a bye helper. Part of exploration.",
+  "author": { "login": "octocat" },
+  "baseRefName": "main",
+  "headRefName": "feat/greet",
+  "baseRefOid": "0000000000000000000000000000000000000000",
+  "headRefOid": "1111111111111111111111111111111111111111",
+  "additions": 3,
+  "deletions": 1,
+  "changedFiles": 2
+}
