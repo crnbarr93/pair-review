@@ -24,13 +24,11 @@ export function DiffView({
 function FileDiff({ file }: { file: DiffModel['files'][number] }) {
   // Build hunks array for the @git-diff-view/react API:
   // data.hunks is string[] where each string is the raw hunk content (header + lines).
+  // parse-diff stores `line.text` with the +/-/space prefix already attached, so
+  // we use it verbatim — adding another prefix produces invalid `++`/`--` lines
+  // that the library's parser silently rejects (empty <tbody>).
   const hunks = file.hunks.map((h) => {
-    const lines = h.lines
-      .map((l) => {
-        const prefix = l.kind === 'add' ? '+' : l.kind === 'del' ? '-' : ' ';
-        return `${prefix}${l.text}`;
-      })
-      .join('\n');
+    const lines = h.lines.map((l) => l.text).join('\n');
     return `${h.header}\n${lines}`;
   });
 

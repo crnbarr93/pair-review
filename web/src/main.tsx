@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import '@git-diff-view/react/styles/diff-view-pure.css';
 import { adoptSession, openEventStream } from './api';
 import { actions } from './store';
 import App from './App';
