@@ -37,7 +37,15 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. User can run `/review --local <base-ref> <head-ref>` and get a browser-rendered diff of those two refs with no network call to GitHub.
   3. `curl` probes confirm the local server binds to `127.0.0.1` only, rejects requests missing the per-session token with 403, rejects requests with any `Host` header other than `127.0.0.1:<port>` or `localhost:<port>`, and serves HTML with a strict CSP that forbids external scripts and inline scripts (except a nonce'd entry).
   4. Planning resolves Open Decision 2 (WebSocket vs SSE + HTTP POST) and Open Decision 3 (`better-sqlite3` vs atomic JSON) — both decisions documented in PROJECT.md's Key Decisions table before coding starts.
-**Plans**: TBD
+**Plans**: 7 plans in 5 waves
+Plans:
+- [ ] 01-01-PLAN.md — Monorepo scaffold + test infrastructure + shared types + fixtures (Wave 0)
+- [ ] 01-02-PLAN.md — Server core: logger, SessionManager, persistence, browser-launch, 127.0.0.1 boot (Wave 1)
+- [ ] 01-03-PLAN.md — HTTP security layer: host/token/CSP middleware + SSE/adopt routes + probes (Wave 2)
+- [ ] 01-04-PLAN.md — Ingestion (gh + git) + parse-diff + Shiki highlighting + real startReview (Wave 3)
+- [ ] 01-05-PLAN.md — Web SPA foundation: Vite/Tailwind, main.tsx bootstrap, chrome components (Wave 3)
+- [ ] 01-06-PLAN.md — Web diff canvas: 4 states + DiffView wrapper + App.tsx 4-phase router (Wave 4)
+- [ ] 01-07-PLAN.md — Plugin manifest + /review command + end-to-end test + human walkthrough (Wave 5)
 **UI hint**: yes
 
 **Placement rationale**: Research explicitly recommends a thin vertical slice first because it proves the control plane with zero product risk. Security must ship here (not in a later "hardening" phase) because the local server is exposed to every tab the user opens from day one — PITFALLS.md rates DNS-rebinding/CSRF as a BLOCKER that cannot be retrofitted. INGEST-01 and INGEST-02 are the two ingestion paths (GitHub and local) and both need to exist here because the local-diff path is the only way to validate the UI independent of GitHub-API flakiness.
@@ -148,7 +156,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Plugin Skeleton + Secure Vertical Slice | 0/TBD | Not started | - |
+| 1. Plugin Skeleton + Secure Vertical Slice | 0/7 | Not started | - |
 | 2. Persistent Session Store + Resume | 0/TBD | Not started | - |
 | 3. Diff UI + File Tree + Navigation | 0/TBD | Not started | - |
 | 4. LLM Summary + Checklist + Self-Review | 0/TBD | Not started | - |
