@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "description": "Pair-review workflow with LLM in a local browser GUI",
   "author": { "name": "Connor Barr" },
-  "commands": "./commands/",
-  "mcpServers": "./.mcp.json"
+  "mcpServers": {
+    "git-review-plugin": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/server/dist/index.js"],
+      "env": {}
+    }
+  }
 }

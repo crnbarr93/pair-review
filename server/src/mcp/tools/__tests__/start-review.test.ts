@@ -164,14 +164,19 @@ describe('plugin manifest structure', () => {
     expect(json).toHaveProperty('name');
     expect(json).toHaveProperty('version');
     expect(json).toHaveProperty('description');
-    expect(json).toHaveProperty('commands');
     expect(json).toHaveProperty('mcpServers');
-    expect(json.commands).toBe('./commands/');
-    expect(json.mcpServers).toBe('./.mcp.json');
+    // mcpServers is inlined as an object so Claude Code loads the bundled
+    // server unambiguously. The default `commands/` directory is auto-discovered
+    // and the field is omitted from the manifest.
+    const servers = json.mcpServers as Record<string, { command: string; args: string[] }>;
+    expect(servers).toHaveProperty('git-review-plugin');
+    expect(servers['git-review-plugin'].command).toBe('node');
+    expect(servers['git-review-plugin'].args[0]).toContain('${CLAUDE_PLUGIN_ROOT}');
+    expect(servers['git-review-plugin'].args[0]).toContain('server/dist/index.js');
   });
 
-  it('.mcp.json exists at repo root (NOT inside .claude-plugin/)', async () => {
-    const { readFileSync, existsSync } = await import('node:fs');
+  it('no separate .mcp.json at repo root (inlined in plugin.json)', async () => {
+    const { existsSync } = await import('node:fs');
     const { resolve } = await import('node:path');
     const { fileURLToPath } = await import('node:url');
 
@@ -180,14 +185,11 @@ describe('plugin manifest structure', () => {
     const mcpJsonPath = resolve(repoRoot, '.mcp.json');
     const nestedMcpPath = resolve(repoRoot, '.claude-plugin/.mcp.json');
 
-    expect(existsSync(mcpJsonPath)).toBe(true);
+    // Both must NOT exist — the canonical location is inlined into plugin.json.
+    // This avoids the merge-ambiguity case where Claude Code sees the same
+    // server name from two sources and silently drops one.
+    expect(existsSync(mcpJsonPath)).toBe(false);
     expect(existsSync(nestedMcpPath)).toBe(false);
-
-    const json = JSON.parse(readFileSync(mcpJsonPath, 'utf-8')) as Record<string, unknown>;
-    const servers = json['mcpServers'] as Record<string, { command: string; args: string[] }>;
-    const gitReview = servers['git-review-plugin'];
-    expect(gitReview.command).toBe('node');
-    expect(gitReview.args[0]).toContain('${CLAUDE_PLUGIN_ROOT}');
   });
 
   it('commands/review.md exists at repo root, NOT inside .claude-plugin/commands/', async () => {

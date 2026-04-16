@@ -1,14 +1,17 @@
 ---
 description: Open a PR review workspace in the browser
 argument-hint: <pr-url-or-number> | --local <base> <head>
+allowed-tools: mcp__git-review-plugin__start_review
 ---
 
-The user wants to review a pull request. Call the `start_review` MCP tool now with one of:
+You MUST call the `mcp__git-review-plugin__start_review` tool. Do not attempt to perform a code review yourself — this command's entire purpose is to launch the local browser-based review workspace via that MCP tool. The tool reads the diff, parses hunks, persists state, and opens the default browser to a local review URL.
 
-- `{ source: { kind: "github", url: "https://..." } }` if the user provided a full GitHub PR URL.
-- `{ source: { kind: "github", number: N } }` if the user provided only a number (the tool will infer owner/repo from the current working directory's git remote).
-- `{ source: { kind: "local", base: "<ref>", head: "<ref>" } }` if the user passed `--local <base> <head>`.
+Build the tool argument from the user input below using exactly one of these shapes:
 
-After the tool returns, share the review summary it produces with the user verbatim. The browser will have opened automatically; the tool's return includes a fallback URL in case auto-launch failed.
+- `{ "source": { "kind": "github", "url": "<full-PR-URL>" } }` — when the input is a full GitHub PR URL like `https://github.com/owner/repo/pull/123`.
+- `{ "source": { "kind": "github", "number": <integer> } }` — when the input is just a PR number (the tool will infer owner/repo from the current working directory's git remote).
+- `{ "source": { "kind": "local", "base": "<ref>", "head": "<ref>" } }` — when the input is `--local <base> <head>` (e.g. `--local HEAD~1 HEAD` or `--local main feature/x`).
 
-User argument: $ARGUMENTS
+After the tool returns, share its `summary` field with the user verbatim — it contains the PR title, source descriptor, paraphrased description, and the local review URL. Do NOT add your own analysis of the diff; the user reviews the code in the browser, not in chat.
+
+User input: $ARGUMENTS
