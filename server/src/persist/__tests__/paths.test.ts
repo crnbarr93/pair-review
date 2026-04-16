@@ -10,7 +10,7 @@ describe('stateFilePath', () => {
     // Reset module registry so warnedOnce resets between tests
     vi.resetModules();
     // Re-import modules fresh each test
-    loggerMod = await import('../../../logger.js');
+    loggerMod = await import('../../logger.js');
     const pathsMod = await import('../paths.js');
     stateFilePath = pathsMod.stateFilePath;
   });
