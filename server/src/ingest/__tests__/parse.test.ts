@@ -1,10 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import { toDiffModel } from '../parse.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// From server/src/ingest/__tests__/ → root is 4 levels up
+const FIXTURES_DIR = path.resolve(__dirname, '../../../../tests/fixtures');
 
 describe('toDiffModel', () => {
   const ghDiffText = readFileSync(
-    new URL('../../../../../tests/fixtures/github-pr.diff', import.meta.url),
+    path.join(FIXTURES_DIR, 'github-pr.diff'),
     'utf8'
   );
 
@@ -123,7 +129,7 @@ index abc1234..def5678 100644
 
   it('parses local.diff fixture as well', () => {
     const localDiffText = readFileSync(
-      new URL('../../../../../tests/fixtures/local.diff', import.meta.url),
+      path.join(FIXTURES_DIR, 'local.diff'),
       'utf8'
     );
     const model = toDiffModel(localDiffText);
