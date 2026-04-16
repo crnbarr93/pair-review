@@ -68,22 +68,22 @@ Exceptions:
 
 ## Typography
 
-Four sizes, two weights. All sizes in rem with px equivalent at 16px browser default.
+Four sizes, **two weights** (400 regular, 600 semibold). All sizes in rem with px equivalent at 16px browser default.
 
 | Role | Size | Weight | Line Height | Font Stack | Usage |
 |------|------|--------|-------------|------------|-------|
 | Body | 14px (0.875rem) | 400 (regular) | 1.5 | System sans-serif | Status text, metadata, descriptions, error messages |
-| Label | 12px (0.75rem) | 500 (medium) | 1.4 | System sans-serif | Badges, status pills, secondary metadata, footer text |
+| Label | 12px (0.75rem) | 600 (semibold) | 1.4 | System sans-serif | Badges, status pills, secondary metadata, footer text |
 | Heading | 16px (1rem) | 600 (semibold) | 1.25 | System sans-serif | PR title in header, panel section headings (Phase 3+) |
 | Code | 13px (0.8125rem) | 400 (regular) | 1.538 (= 20px) | System monospace | All diff line content, file path labels |
 
 **Notes:**
 - Body is 14px, not 16px — developer tools are information-dense; GitHub's own UI uses 14px for most body text.
 - Code is 13px — GitHub diff line text is 12px; 13px is one step more readable without sacrificing density.
-- Only two weights used: 400 and 600. 500 (medium) is an exception used only for label/badge text where semibold is too heavy. If system fonts don't support 500, fall back to 400.
+- **Exactly two weights used: 400 (regular) and 600 (semibold).** Label and Heading both use 600; Body and Code both use 400. Label is 12px inside a `rounded-full` pill with a tinted background — 600 weight at 12px reads distinct and bold against the pill tint without needing a third intermediate weight. No 500/medium weight is introduced anywhere in the system.
 - No display-size heading in Phase 1. The largest text in Phase 1 is 16px (PR title). Display sizes (20px+) are reserved for Phase 4+ (PR summary heading).
 
-**Source:** GitHub diff UI reference (14px body, 12-13px code). Developer-tool density convention.
+**Source:** GitHub diff UI reference (14px body, 12-13px code). Developer-tool density convention. Two-weight constraint enforced per UI-checker Dimension 4.
 
 ---
 
@@ -139,13 +139,15 @@ Phase 1 layout is a simple vertical stack. This is the scaffold all later phases
 └─────────────────────────────────────────────┘
 ```
 
+**Primary visual anchor:** The **diff canvas is the primary focal point of the Phase 1 surface** — the region the user's eye should land on first and linger in. Header and footer are chrome (secondary, muted `--color-surface-raised`) that frame the diff; every other visual decision (dominant-surface color, generous horizontal padding on wide viewports, no competing accents in chrome) defers to making the diff canvas the dominant read.
+
 **Extension points for later phases (do not implement in Phase 1, do reserve the regions):**
 - Phase 3: Left sidebar (240px fixed, collapsible) — file tree navigation. The diff canvas shrinks; it does not re-layout.
 - Phase 4: Right panel (320px fixed, collapsible) — summary + checklist. The diff canvas shrinks further.
 - Phase 5: Inline comment threads mount inside diff rows — no layout change to the shell.
 - Phase 6: Submission panel appears as a bottom drawer or modal — footer remains.
 
-The app header height of 48px and footer height of 28px are fixed for all phases.
+The app header height of 48px and footer height of 28px are fixed for all phases. As later phases add sidebar and right-panel regions, the diff canvas remains the primary visual anchor; chrome grows denser around it but never competes for the user's read.
 
 ---
 
@@ -161,13 +163,13 @@ Wraps the full viewport. Three-slot layout: header, main, footer. Main slot is `
 
 48px fixed top bar. Background `--color-surface-raised`. Bottom border `--color-border` 1px. Contains left slot (PR title + source badge) and right slot (session status pill). Padding: 0 `lg` (24px) horizontal.
 
-- **PR title**: 16px semibold, `--color-text`, max-width 60% of header, truncated with ellipsis.
-- **Source badge**: 12px medium, `--color-text-secondary`, prefixed with GitHub icon (Lucide `Github`) or local icon (Lucide `GitBranch`). Format: `#123` for GitHub PRs, `main..feat/x` for local diffs.
+- **PR title**: 16px semibold (600), `--color-text`, max-width 60% of header, truncated with ellipsis.
+- **Source badge**: 12px semibold (600), `--color-text-secondary`, prefixed with GitHub icon (Lucide `Github`) or local icon (Lucide `GitBranch`). Format: `#123` for GitHub PRs, `main..feat/x` for local diffs.
 - **Session status pill**: See `<SessionStatusPill>` below.
 
 ### `<SessionStatusPill>`
 
-12px label text. Rounded-full. Appears in header right slot. Two states:
+12px label text at 600 (semibold) weight. Rounded-full. Appears in header right slot. Two states:
 
 | State | Background | Text | Icon |
 |-------|------------|------|------|
@@ -180,7 +182,7 @@ Phase 7 extends this pill to show GitHub auth identity (`PLUG-V2-01`). The slot 
 
 ### `<DiffCanvas>`
 
-The main content region. `flex-1`, `overflow-y: auto`. Background `--color-surface`. Padding: `lg` (24px) top/bottom, `xl` (32px) left/right on viewport widths ≥ 1280px; `md` (16px) left/right below.
+The main content region and the **primary visual focal point of the app**. `flex-1`, `overflow-y: auto`. Background `--color-surface`. Padding: `lg` (24px) top/bottom, `xl` (32px) left/right on viewport widths ≥ 1280px; `md` (16px) left/right below.
 
 Hosts one of four states:
 1. Loading — renders `<LoadingState>`
@@ -216,7 +218,7 @@ Centered in `<DiffCanvas>`. Lucide `AlertCircle` icon (24px, `--color-destructiv
 
 28px fixed bottom bar. Background `--color-surface-raised`. Top border `--color-border` 1px. Left slot: session token status text. Right slot: local URL (monospace 12px, selectable, copy on click via Clipboard API).
 
-Session token status in footer is text-only (12px label, `--color-text-secondary`): "Token: ••••••••[last4]" — shows last 4 chars of session token to confirm the session matches what Claude Code printed to terminal.
+Session token status in footer is text-only (12px label at 600 weight, `--color-text-secondary`): "Token: ••••••••[last4]" — shows last 4 chars of session token to confirm the session matches what Claude Code printed to terminal.
 
 ---
 
@@ -313,7 +315,7 @@ No shadcn, no third-party component registries. All UI is hand-rolled over Tailw
 
 ## Tailwind 4 Token Declarations
 
-The following goes in `web/src/index.css` inside `@theme {}`. This is the authoritative token list for all seven phases.
+The following goes in `web/src/index.css` inside `@theme {}`. This is the authoritative token list for all seven phases. Note: only font *stacks* are tokenized — font weights are applied via Tailwind's built-in `font-normal` (400) and `font-semibold` (600) utilities, so no third-weight token can leak in accidentally.
 
 ```css
 @theme {
@@ -354,7 +356,7 @@ The following goes in `web/src/index.css` inside `@theme {}`. This is the author
   --color-text-secondary: #8b949e;
   --color-text-disabled: #484f58;
 
-  /* Typography */
+  /* Typography — font stacks only; weights are Tailwind utilities (font-normal, font-semibold) */
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "SF Mono", "Menlo", "Consolas", "Courier New", monospace;
 }
