@@ -18,7 +18,7 @@ Three Open Decisions from research must be resolved during planning (not treated
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Plugin Skeleton + Secure Vertical Slice** - Plugin boots, MCP + HTTP server run in one process, `/review` fetches a PR (or local branch diff), browser opens to a basic diff view. Security (127.0.0.1 + token + Host + CSP) ships from day one. Transport and persistence format decisions resolved in planning.
+- [x] **Phase 1: Plugin Skeleton + Secure Vertical Slice** - Plugin boots, MCP + HTTP server run in one process, `/review` fetches a PR (or local branch diff), browser opens to a basic diff view. Security (127.0.0.1 + token + Host + CSP) ships from day one. Transport and persistence format decisions resolved in planning. (completed 2026-04-16)
 - [ ] **Phase 2: Persistent Session Store + Resume** - Event-sourced reducer with atomic persistence, `/review` on the same PR resumes walkthrough cursor and drafted comments, head-SHA-gated stale-diff detection surfaces a choice when the PR has moved, state survives crashes without corruption.
 - [ ] **Phase 3: Diff UI + File Tree + Navigation** - Real diff renderer (with unified and split modes) with syntax highlighting, file-tree sidebar showing review status, generated/lockfile files auto-collapsed and excluded from LLM context, keyboard shortcuts, existing PR review comments shown read-only, CI check-run status on the PR header.
 - [ ] **Phase 4: LLM Summary + Checklist + Self-Review** - LLM-generated PR summary pane, built-in criticality-ranked checklist shipped with the plugin, self-review produces category-grouped severity-tagged findings with clickable `file:line` refs, per-category coverage visible in the UI.
@@ -45,7 +45,7 @@ Plans:
 - [x] 01-04-PLAN.md — Ingestion (gh + git) + parse-diff + Shiki highlighting + real startReview (Wave 3)
 - [x] 01-05-PLAN.md — Web SPA foundation: Vite/Tailwind, main.tsx bootstrap, chrome components (Wave 3)
 - [x] 01-06-PLAN.md — Web diff canvas: 4 states + DiffView wrapper + App.tsx 4-phase router (Wave 4)
-- [ ] 01-07-PLAN.md — Plugin manifest + /review command + end-to-end test + human walkthrough (Wave 5)
+- [x] 01-07-PLAN.md — Plugin manifest + /review command + end-to-end test + human walkthrough (Wave 5)
 **UI hint**: yes
 
 **Placement rationale**: Research explicitly recommends a thin vertical slice first because it proves the control plane with zero product risk. Security must ship here (not in a later "hardening" phase) because the local server is exposed to every tab the user opens from day one — PITFALLS.md rates DNS-rebinding/CSRF as a BLOCKER that cannot be retrofitted. INGEST-01 and INGEST-02 are the two ingestion paths (GitHub and local) and both need to exist here because the local-diff path is the only way to validate the UI independent of GitHub-API flakiness.
@@ -156,7 +156,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Plugin Skeleton + Secure Vertical Slice | 0/7 | Not started | - |
+| 1. Plugin Skeleton + Secure Vertical Slice | 7/7 | Complete   | 2026-04-16 |
 | 2. Persistent Session Store + Resume | 0/TBD | Not started | - |
 | 3. Diff UI + File Tree + Navigation | 0/TBD | Not started | - |
 | 4. LLM Summary + Checklist + Self-Review | 0/TBD | Not started | - |

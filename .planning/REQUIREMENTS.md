@@ -9,15 +9,15 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Plugin (PLUG)
 
-- [ ] **PLUG-01**: User can launch a review via a single `/review` slash command inside Claude Code — `/review <github-url>` or `/review <pr-number>` for GitHub, `/review --local <base-ref> <head-ref>` for local branches
-- [ ] **PLUG-02**: Plugin auto-launches the user's default browser to the local review URL on start
-- [ ] **PLUG-03**: Plugin binds an ephemeral port and echoes the exact URL to the terminal as a fallback when the browser auto-launch fails
+- [x] **PLUG-01**: User can launch a review via a single `/review` slash command inside Claude Code — `/review <github-url>` or `/review <pr-number>` for GitHub, `/review --local <base-ref> <head-ref>` for local branches
+- [x] **PLUG-02**: Plugin auto-launches the user's default browser to the local review URL on start
+- [x] **PLUG-03**: Plugin binds an ephemeral port and echoes the exact URL to the terminal as a fallback when the browser auto-launch fails
 - [ ] **PLUG-04**: User can drive the review UI via keyboard shortcuts (`n`/`p` next/prev hunk, `c` comment, `r` mark hunk reviewed, `v` set verdict, `s` submit)
 
 ### Ingestion (INGEST)
 
-- [ ] **INGEST-01**: User can load a GitHub PR by URL or PR number; plugin fetches metadata via `gh pr view --json` and the diff via `gh pr diff`, inheriting the user's existing `gh` authentication
-- [ ] **INGEST-02**: User can review a local branch diff by supplying two refs; plugin runs `git diff <base>..<head>` and parses the unified-diff output with no host integration
+- [x] **INGEST-01**: User can load a GitHub PR by URL or PR number; plugin fetches metadata via `gh pr view --json` and the diff via `gh pr diff`, inheriting the user's existing `gh` authentication
+- [x] **INGEST-02**: User can review a local branch diff by supplying two refs; plugin runs `git diff <base>..<head>` and parses the unified-diff output with no host integration
 - [ ] **INGEST-03**: User can see existing PR review comments (inline and top-level) alongside the diff as read-only context during the review
 - [ ] **INGEST-04**: User can see CI / check-run status (name + conclusion) on the PR header when reviewing a GitHub PR
 
@@ -50,10 +50,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Security (SEC)
 
-- [ ] **SEC-01**: Local review server binds to `127.0.0.1` only — never `0.0.0.0` or `::`
-- [ ] **SEC-02**: Every state-changing request requires a per-session random token in a custom header, verified server-side; missing/invalid token returns 403
-- [ ] **SEC-03**: Server rejects requests whose `Host` header is not exactly `127.0.0.1:<port>` or `localhost:<port>` (closes the DNS-rebinding attack vector)
-- [ ] **SEC-04**: All HTML responses carry a strict Content-Security-Policy that forbids external scripts, inline scripts (except a nonce'd entry), and external connections
+- [x] **SEC-01**: Local review server binds to `127.0.0.1` only — never `0.0.0.0` or `::`
+- [x] **SEC-02**: Every state-changing request requires a per-session random token in a custom header, verified server-side; missing/invalid token returns 403
+- [x] **SEC-03**: Server rejects requests whose `Host` header is not exactly `127.0.0.1:<port>` or `localhost:<port>` (closes the DNS-rebinding attack vector)
+- [x] **SEC-04**: All HTML responses carry a strict Content-Security-Policy that forbids external scripts, inline scripts (except a nonce'd entry), and external connections
 
 ### Review Submission (SUB)
 
@@ -117,12 +117,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLUG-01 | Phase 1 | Pending |
-| PLUG-02 | Phase 1 | Pending |
-| PLUG-03 | Phase 1 | Pending |
+| PLUG-01 | Phase 1 | Complete |
+| PLUG-02 | Phase 1 | Complete |
+| PLUG-03 | Phase 1 | Complete |
 | PLUG-04 | Phase 3 | Pending |
-| INGEST-01 | Phase 1 | Pending |
-| INGEST-02 | Phase 1 | Pending |
+| INGEST-01 | Phase 1 | Complete |
+| INGEST-02 | Phase 1 | Complete |
 | INGEST-03 | Phase 3 | Pending |
 | INGEST-04 | Phase 3 | Pending |
 | DIFF-01 | Phase 3 | Pending |
@@ -140,10 +140,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SESS-02 | Phase 2 | Pending |
 | SESS-03 | Phase 2 | Pending |
 | SESS-04 | Phase 7 | Pending |
-| SEC-01 | Phase 1 | Pending |
-| SEC-02 | Phase 1 | Pending |
-| SEC-03 | Phase 1 | Pending |
-| SEC-04 | Phase 1 | Pending |
+| SEC-01 | Phase 1 | Complete |
+| SEC-02 | Phase 1 | Complete |
+| SEC-03 | Phase 1 | Complete |
+| SEC-04 | Phase 1 | Complete |
 | SUB-01 | Phase 6 | Pending |
 | SUB-02 | Phase 6 | Pending |
 | SUB-03 | Phase 6 | Pending |
