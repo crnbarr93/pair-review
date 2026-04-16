@@ -3,10 +3,12 @@
 import { Hono } from 'hono';
 
 export function makeStubManager(opts: { token: string; port: number }) {
+  const baseUrl = `http://127.0.0.1:${opts.port}/?token=${opts.token}`;
   return {
     getSessionToken: () => opts.token,
     getHttpPort: () => opts.port,
-    getLaunchUrl: () => `http://127.0.0.1:${opts.port}/?token=${opts.token}`,
+    getLaunchUrl: () => baseUrl,
+    sessionLaunchUrl: (prKey: string) => `${baseUrl}&session=${encodeURIComponent(prKey)}`,
   } as const;
 }
 

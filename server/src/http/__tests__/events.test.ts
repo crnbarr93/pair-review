@@ -28,10 +28,12 @@ const stubSession: ReviewSession = {
 };
 
 function buildManager(opts: { token: string; port: number; session?: ReviewSession }) {
+  const baseUrl = `http://127.0.0.1:${opts.port}/?token=${opts.token}`;
   return {
     getSessionToken: () => opts.token,
     getHttpPort: () => opts.port,
-    getLaunchUrl: () => `http://127.0.0.1:${opts.port}/?token=${opts.token}`,
+    getLaunchUrl: () => baseUrl,
+    sessionLaunchUrl: (prKey: string) => `${baseUrl}&session=${encodeURIComponent(prKey)}`,
     getTokenLast4: () => opts.token.slice(-4),
     get: (prKey: string) => (opts.session && prKey === opts.session.prKey ? opts.session : undefined),
   };
