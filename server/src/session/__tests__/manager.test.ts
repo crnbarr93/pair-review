@@ -11,6 +11,44 @@ vi.mock('../../persist/store.js', () => ({
   readState: vi.fn(async () => null),
 }));
 
+// Mock ingest adapters so unit tests don't run git/gh CLIs
+vi.mock('../../ingest/github.js', () => ({
+  ingestGithub: vi.fn(async () => ({
+    meta: {
+      title: 'Test PR',
+      body: 'desc',
+      author: { login: 'testuser' },
+      baseRefName: 'main',
+      headRefName: 'feat/x',
+      baseRefOid: 'abc000',
+      headRefOid: 'def111',
+      additions: 10,
+      deletions: 2,
+      changedFiles: 1,
+    },
+    diffText:
+      'diff --git a/foo.ts b/foo.ts\n--- a/foo.ts\n+++ b/foo.ts\n@@ -1 +1 @@\n-const x = 1;\n+const x = 2;\n',
+  })),
+}));
+
+vi.mock('../../ingest/local.js', () => ({
+  ingestLocal: vi.fn(async () => ({
+    diffText:
+      'diff --git a/foo.ts b/foo.ts\n--- a/foo.ts\n+++ b/foo.ts\n@@ -1 +1 @@\n-const x = 1;\n+const x = 2;\n',
+    baseSha: 'baseshahex',
+    headSha: 'headshahex',
+  })),
+}));
+
+vi.mock('../../ingest/repo-infer.js', () => ({
+  inferRepoFromCwd: vi.fn(async () => ({ owner: 'test-owner', name: 'test-repo' })),
+}));
+
+// Mock Shiki — fast, no real highlighting in unit tests
+vi.mock('../../highlight/shiki.js', () => ({
+  highlightHunks: vi.fn(async () => []),
+}));
+
 describe('SessionManager', () => {
   let SessionManager: typeof import('../manager.js').SessionManager;
   let launchBrowserMock: ReturnType<typeof vi.fn>;
@@ -45,7 +83,9 @@ describe('SessionManager', () => {
 
     expect(session.prKey).toMatch(/^local:[0-9a-f]{64}$/);
     expect(session.pr.source).toBe('local');
-    expect(session.diff).toEqual({ files: [], totalHunks: 0 });
+    // Real diff is produced from the mocked diffText
+    expect(session.diff).toBeDefined();
+    expect(session.diff.files).toBeInstanceOf(Array);
   });
 
   it('startReview is idempotent — returns same session instance on second call', async () => {
@@ -106,5 +146,15 @@ describe('SessionManager', () => {
     });
 
     expect(session.prKey).toBe('gh:octocat/hello#42');
+  });
+
+  it('startReview wires toDiffModel — diff.files comes from parsed diffText', async () => {
+    const manager = new SessionManager({ sessionToken: 'testtoken1234' });
+    manager.setLaunchUrl('http://127.0.0.1:8080/?token=testtoken1234');
+
+    const session = await manager.startReview({ kind: 'local', base: 'main', head: 'HEAD' });
+
+    // The mock ingestLocal returns a diff with one file; toDiffModel should parse it
+    expect(session.diff.files.length).toBeGreaterThanOrEqual(1);
   });
 });
