@@ -22,15 +22,24 @@ export function DiffView({
 }
 
 function FileDiff({ file }: { file: DiffModel['files'][number] }) {
-  // Build hunks array for the @git-diff-view/react API:
-  // data.hunks is string[] where each string is the raw hunk content (header + lines).
-  // parse-diff stores `line.text` with the +/-/space prefix already attached, so
-  // we use it verbatim — adding another prefix produces invalid `++`/`--` lines
-  // that the library's parser silently rejects (empty <tbody>).
-  const hunks = file.hunks.map((h) => {
-    const lines = h.lines.map((l) => l.text).join('\n');
-    return `${h.header}\n${lines}`;
-  });
+  // Build hunks array for @git-diff-view/react. The library's parser
+  // (parseInstance.parse) requires a full unified-diff envelope per string —
+  // `--- a/<path>` and `+++ b/<path>` headers above the `@@` hunks. Without
+  // them, parsing silently produces zero diff lines and the table body stays
+  // empty. The 0.1.3 spike test only verified the API exported the right names;
+  // it never confirmed actual rendering, which masked the requirement.
+  //
+  // We pack ALL hunks for one file into a single envelope and pass it as a
+  // one-element array. parse-diff stores l.text with the +/-/space prefix
+  // already attached, so we use it verbatim (re-prefixing would yield invalid
+  // ++/-- lines that the parser also rejects).
+  const oldPath = file.oldPath ?? file.path;
+  const newPath = file.path;
+  const hunkBlocks = file.hunks
+    .map((h) => `${h.header}\n${h.lines.map((l) => l.text).join('\n')}`)
+    .join('\n');
+  const fullDiff = `--- a/${oldPath}\n+++ b/${newPath}\n${hunkBlocks}`;
+  const hunks = [fullDiff];
 
   return (
     <div>
