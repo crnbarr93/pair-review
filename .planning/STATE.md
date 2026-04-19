@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-04-19T13:32:23.248Z"
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-04-19T13:50:58.369Z"
 last_activity: 2026-04-19
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 11
-  completed_plans: 9
-  percent: 82
+  completed_plans: 10
+  percent: 91
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 ## Current Position
 
 Phase: 02 (persistent-session-store-resume) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-04-19
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P07 | 12 minutes | 1 tasks | 5 files |
 | Phase 02 P01 | 4 minutes | 3 tasks | 5 files |
 | Phase 02 P02 | 19 min | 4 tasks | 6 files |
+| Phase 02 P03 | 8 min | 4 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,11 @@ Recent decisions affecting current work:
 - [Phase 02]: writeState signature widened with optional lockOptions?: WriteStateLockOptions — production defaults identical to Phase 1, tests pass widened retry budget only where stale-detection requires it
 - [Phase 02]: Crash-safety proven via spawn('node', ['--import', 'tsx/esm', crash-fixture.ts]) + SIGKILL — reuses Phase-1 spawn-not-execa-in-vitest pattern
 - [Phase 02]: WIDE_LOCK (retries: 20, minTimeout: 100) is a test-only override — do NOT pass from SessionManager.applyEvent; production fail-fast 150ms budget is a feature
+- [Phase 02]: Plan 03: applyEvent owns lastEventId increment; reducer never touches it (grep-enforced)
+- [Phase 02]: Plan 03: per-prKey Promise-chain queue serializes applyEvent calls (closes Pitfall D)
+- [Phase 02]: Plan 03: SSE subscribe-before-snapshot + buffer-and-flush closes Pitfall E; Phase 2 always re-sends full snapshot on reconnect (Last-Event-ID read but ignored)
+- [Phase 02]: Plan 03: fetchCurrentHeadSha fails closed — errors surface as session.error (variant: 'fetch-failed', message prefix 'head-sha-check-failed'), NOT a false-positive staleDiff
+- [Phase 02]: Plan 03: choose-resume handler coerces client-supplied source to SourceArg rather than reconstructing from session.pr — server validates shape via zod .strict() + discriminatedUnion
 
 ### Pending Todos
 
@@ -103,6 +109,6 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-04-19T13:32:14.484Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-04-19T13:50:46.113Z
+Stopped at: Completed 02-03-PLAN.md
 Resume file: None

@@ -65,7 +65,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md — Shared types + pure reducer + typed SessionBus (Wave 1)
 - [x] 02-02-PLAN.md — SESS-03 persistence proofs: crash-interrupt + concurrency + stale-lock tests (Wave 1)
-- [ ] 02-03-PLAN.md — SessionManager applyEvent + disk-load resume + stale-SHA + POST /choose-resume + SSE update fan-out (Wave 2)
+- [x] 02-03-PLAN.md — SessionManager applyEvent + disk-load resume + stale-SHA + POST /choose-resume + SSE update fan-out (Wave 2)
 - [ ] 02-04-PLAN.md — Web StaleDiffModal + chooseResume API + store onUpdate + main.tsx wiring + human-verify checkpoint (Wave 3)
 
 **Placement rationale**: PROJECT.md names resumable state as a hard v1 requirement. PITFALLS flags browser-refresh data loss (Pitfall 8), stale-diff-on-resume (Pitfall 9), and crash corruption (implicit in SESS-03) as blockers that cannot be retrofitted without rewriting state handling throughout downstream phases. Ships before the LLM product surfaces (Phases 4+) precisely so every feature that follows persists naturally rather than being retrofitted. SESS-04 (multi-session switcher) is deliberately deferred to Phase 7 because concurrent reviews are a polish concern, not a blocker.
