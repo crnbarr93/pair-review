@@ -1,0 +1,1002 @@
+{
+  "216381173f18": [
+    [
+      [
+        {
+          "content": "  // fn0 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 0;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 0",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn1 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 1",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn2 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 2",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn3 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 3;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 3",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn4 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 4;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 4",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn5 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 5;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 5",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn6 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 6;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 6",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn7 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 7;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 7",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ]
+  ],
+  "d49e08f18c89": [
+    [
+      [
+        {
+          "content": "  // fn0 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 0;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 0",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn1 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 1",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn2 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 2",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn3 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 3;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 3",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ]
+  ],
+  "fa288d1472d2": [
+    [
+      [
+        {
+          "content": "  \"version\": \"1.0.0\",",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"old\": 0,",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"new\": 0,",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  \"version\": \"1.0.1\",",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"old\": 1,",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"new\": 1,",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  \"version\": \"1.0.2\",",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"old\": 2,",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"new\": 2,",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  \"version\": \"1.0.3\",",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"old\": 3,",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"new\": 3,",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  \"version\": \"1.0.4\",",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"old\": 4,",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"new\": 4,",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  \"version\": \"1.0.5\",",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"old\": 5,",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"new\": 5,",
+          "color": "#24292f"
+        }
+      ]
+    ]
+  ],
+  "8ec9a00bfd09": [
+    [
+      [
+        {
+          "content": "# Title",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "New section added.",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "End.",
+          "color": "#24292f"
+        }
+      ]
+    ]
+  ],
+  "62c9fedb1aea": [
+    [
+      [
+        {
+          "content": "  // fn0 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 0;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 0",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn1 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 1",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn2 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 2",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn3 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 3;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 3",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn4 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 4;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 4",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn5 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 5;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 5",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  // fn6 context a",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  const x = 6;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 1;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  return x + 2;",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  // added line 6",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "}",
+          "color": "#24292f"
+        }
+      ]
+    ]
+  ],
+  "e3357f6213a8": [
+    [
+      [
+        {
+          "content": "  \"version\": \"1.0.0\",",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"old\": 0,",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"new\": 0,",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  \"version\": \"1.0.1\",",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"old\": 1,",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"new\": 1,",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  \"version\": \"1.0.2\",",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"old\": 2,",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"new\": 2,",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  \"version\": \"1.0.3\",",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"old\": 3,",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"new\": 3,",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  \"version\": \"1.0.4\",",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"old\": 4,",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"new\": 4,",
+          "color": "#24292f"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "content": "  \"version\": \"1.0.5\",",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"old\": 5,",
+          "color": "#24292f"
+        }
+      ],
+      [
+        {
+          "content": "  \"new\": 5,",
+          "color": "#24292f"
+        }
+      ]
+    ]
+  ]
+}
