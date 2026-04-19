@@ -9,6 +9,7 @@ import type {
   LineKind,
   LineSide,
 } from '@shared/types';
+import { isGeneratedFile } from './generated-file-detection.js';
 
 // parse-diff Change type shapes
 interface AddChange {
@@ -99,6 +100,7 @@ export function toDiffModel(diffText: string): DiffModel {
       status,
       binary,
       hunks,
+      generated: isGeneratedFile(path), // Phase 3 D-14
     };
   });
 
