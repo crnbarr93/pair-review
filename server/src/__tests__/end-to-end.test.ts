@@ -47,7 +47,11 @@ describe('Phase 1 end-to-end', () => {
     // `data` events reliably inside vitest worker threads (stream lifecycle difference).
     child = spawn('node', [serverBin], {
       cwd: repoDir,
-      env: { ...process.env, CLAUDE_PLUGIN_DATA: path.join(repoDir, '.plugin-data') },
+      env: {
+        ...process.env,
+        CLAUDE_PLUGIN_DATA: path.join(repoDir, '.plugin-data'),
+        GIT_REVIEW_NO_BROWSER: '1',
+      },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
 

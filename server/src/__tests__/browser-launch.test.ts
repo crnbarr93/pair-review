@@ -91,4 +91,28 @@ describe('launchBrowser', () => {
     // URL was printed to stderr before the failure
     expect(stderrMessages.some((m) => m.includes('http://127.0.0.1:9999'))).toBe(true);
   });
+
+  it('skips open() when GIT_REVIEW_NO_BROWSER=1 but still prints the URL to stderr', async () => {
+    const prev = process.env.GIT_REVIEW_NO_BROWSER;
+    process.env.GIT_REVIEW_NO_BROWSER = '1';
+    try {
+      const { launchBrowser } = await import('../browser-launch.js');
+      const stderrMessages: string[] = [];
+      vi.spyOn(process.stderr, 'write').mockImplementation((...args) => {
+        stderrMessages.push(String(args[0]));
+        return true;
+      });
+      const openMod2 = await import('open');
+      const openSpy = vi.mocked(openMod2.default);
+      openSpy.mockClear();
+
+      await expect(launchBrowser('http://127.0.0.1:7777/?token=skip')).resolves.toBeUndefined();
+
+      expect(openSpy).not.toHaveBeenCalled();
+      expect(stderrMessages.some((m) => m.includes('http://127.0.0.1:7777'))).toBe(true);
+    } finally {
+      if (prev === undefined) delete process.env.GIT_REVIEW_NO_BROWSER;
+      else process.env.GIT_REVIEW_NO_BROWSER = prev;
+    }
+  });
 });
