@@ -86,7 +86,9 @@ button {
 .app {
   height: 100vh;
   display: grid;
-  grid-template-rows: 44px 52px 1fr;
+  /* Phase 3 D-02: 2-row layout — TopBar (44px) then main 1fr.
+     StageStepper row (previously 52px) is deferred to Phase 4. */
+  grid-template-rows: 44px 1fr;
   background: var(--paper);
 }
 
@@ -219,11 +221,13 @@ button {
 }
 
 /* ============================================
-   Main 3-col layout
+   Main 2-col layout (Phase 3 D-02)
+   FileExplorer (280px) · DiffViewer (1fr).
+   ChatPanel (380px) deferred to Phase 5.
    ============================================ */
 .main {
   display: grid;
-  grid-template-columns: 280px 1fr 380px;
+  grid-template-columns: 280px 1fr;
   overflow: hidden;
   min-height: 0;
 }
@@ -1092,3 +1096,51 @@ button {
   border-radius: 6px;
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--ink-4); }
+
+/* ============================================
+   Phase 3 additions — toast, footer hint, focused hunk
+   ============================================ */
+
+/* Bottom-center pill toast. role="status" aria-live="polite" (set in JSX).
+   Auto-dismisses at 2.5s via setTimeout in App.tsx. */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 8px 16px;
+  border-radius: 999px;
+  z-index: 20;
+  font-size: 12px;
+  max-width: 80vw;
+}
+
+/* Keyboard-shortcut hint at bottom-right. Live keys in ink-3, stubs in ink-4. */
+.footer-hint {
+  position: fixed;
+  bottom: 8px;
+  right: 16px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  z-index: 10;
+  pointer-events: none;
+}
+@media (max-width: 768px) {
+  .footer-hint { display: none; }
+}
+
+/* Focused-hunk highlight (n/p navigation). Teal left border + brief flash
+   on focus change; respects prefers-reduced-motion per D-17. */
+.hunk.focused {
+  border-left: 2px solid var(--claude);
+  animation: hunkFocus 400ms ease-out;
+}
+@keyframes hunkFocus {
+  from { background: var(--claude-2); }
+  to   { background: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hunk.focused { animation: none; }
+}

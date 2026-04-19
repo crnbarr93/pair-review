@@ -222,11 +222,9 @@ describe('App integration — final wiring', () => {
     // Need to set source so StaleDiffModal renders the full dialog (not fail-safe)
     actions.setSource({
       kind: 'github',
-      owner: 'o',
-      repo: 'r',
       number: 1,
       url: 'https://github.com/o/r/pull/1',
-    } as never);
+    });
     const { container } = render(<App />);
     expect(container.textContent).toMatch(/PR updated|Refresh|Discard|View both/i);
   });
