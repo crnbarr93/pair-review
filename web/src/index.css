@@ -1,3 +1,7 @@
+/* Tailwind v4 — utility classes used by StaleDiffModal and any future overlays.
+   The mockup design system below is hand-rolled CSS with its own tokens; the two coexist. */
+@import "tailwindcss";
+
 /* ============================================
    Claude Pair Review — Design System
    Ported from design handoff bundle (2026-04-19).
