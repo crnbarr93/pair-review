@@ -87,11 +87,11 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 03-01-PLAN.md — Foundation: shared types, Shiki theme fix, reducer extension, test mocks, deletions, PROJECT.md decisions (Wave 0)
+- [x] 03-01-PLAN.md — Foundation: shared types, Shiki theme fix, reducer extension, test mocks, deletions, PROJECT.md decisions (Wave 0)
 - [ ] 03-02-PLAN.md — Server ingest: generated-file detection, existing-comments + CI-checks fetch, POST /api/session/events route, fixture capture (Wave 1)
-- [ ] 03-03-PLAN.md — DiffViewer live-wire: multi-file + Shiki tokens + read-only markers + generated-file stub (Wave 1)
-- [ ] 03-04-PLAN.md — FileExplorer + TopBar + store + api postSessionEvent (Wave 1)
-- [ ] 03-05-PLAN.md — App.tsx AppShell: 2-column layout + keydown + IntersectionObserver + toast + footer hint + delete data.ts (Wave 2)
+- [x] 03-03-PLAN.md — DiffViewer live-wire: multi-file + Shiki tokens + read-only markers + generated-file stub (Wave 1)
+- [x] 03-04-PLAN.md — FileExplorer + TopBar + store + api postSessionEvent (Wave 1)
+- [x] 03-05-PLAN.md — App.tsx AppShell: 2-column layout + keydown + IntersectionObserver + toast + footer hint + delete data.ts (Wave 2)
 
 **Placement rationale**: Readable diff is a prerequisite for every LLM-driven feature that follows — the LLM and user must share a reference for "what hunk are we on?" and the user cannot read along without syntax highlighting and file-tree navigation. Per PITFALLS.md Pitfall 23, UI bikeshedding is a pattern risk; leaning on `@git-diff-view/react` (or a validated fallback) keeps this phase scoped. INGEST-03 and INGEST-04 live here rather than Phase 1 because their user-facing criterion is about what the reviewer *sees* alongside the diff — which needs the diff UI to exist. Ingest plumbing can be extended from Phase 1's `gh` adapter; the win is showing richer data against the real diff renderer.
 
