@@ -142,3 +142,48 @@ describe('ingestLocal', () => {
     );
   });
 });
+
+describe('fetchCurrentHeadSha', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls git rev-parse --verify <headRef> with cwd and returns trimmed stdout', async () => {
+    const { execa } = await import('execa');
+    (execa as ReturnType<typeof vi.fn>).mockImplementation(
+      (_bin: string, args: string[], opts?: { cwd?: string }) => {
+        if (args[0] === 'rev-parse' && args[1] === '--verify' && args[2] === 'feat/x') {
+          expect(opts?.cwd).toBe('/repo');
+          return Promise.resolve({ stdout: 'abc123def456\n' });
+        }
+        return Promise.reject(new Error('unexpected call'));
+      }
+    );
+
+    const { fetchCurrentHeadSha } = await import('../local.js');
+    const sha = await fetchCurrentHeadSha('feat/x', '/repo');
+
+    const calls = (execa as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls[0][0]).toBe('git');
+    expect(calls[0][1]).toEqual(['rev-parse', '--verify', 'feat/x']);
+    expect(calls[0][2]).toEqual({ cwd: '/repo' });
+    expect(sha).toBe('abc123def456');
+  });
+
+  it('throws on unknown ref with a friendly message (fail closed)', async () => {
+    const { execa } = await import('execa');
+    const gitErr = Object.assign(new Error('unknown revision'), {
+      stderr: 'fatal: unknown revision or path not in the working tree',
+    });
+    (execa as ReturnType<typeof vi.fn>).mockRejectedValue(gitErr);
+
+    const { fetchCurrentHeadSha } = await import('../local.js');
+    await expect(fetchCurrentHeadSha('nonexistent', '/repo')).rejects.toThrow(
+      /Unknown git ref|fetchCurrentHeadSha/i
+    );
+  });
+});

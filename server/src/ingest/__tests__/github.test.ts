@@ -123,3 +123,58 @@ describe('ingestGithub', () => {
     await expect(ingestGithub('42')).rejects.toThrow(/gh CLI failed|something went wrong/i);
   });
 });
+
+describe('fetchCurrentHeadSha', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls gh pr view <id> --json headRefOid and returns the sha', async () => {
+    const { execa } = await import('execa');
+    (execa as ReturnType<typeof vi.fn>).mockImplementation(
+      (_bin: string, args: string[]) => {
+        if (args[0] === 'pr' && args[1] === 'view' && args[3] === '--json' && args[4] === 'headRefOid') {
+          return Promise.resolve({ stdout: JSON.stringify({ headRefOid: 'abc123def' }) });
+        }
+        return Promise.reject(new Error('unexpected call'));
+      }
+    );
+
+    const { fetchCurrentHeadSha } = await import('../github.js');
+    const sha = await fetchCurrentHeadSha('123');
+
+    const calls = (execa as ReturnType<typeof vi.fn>).mock.calls;
+    const viewCall = calls.find(
+      ([_b, args]: [string, string[]]) => args[0] === 'pr' && args[1] === 'view'
+    );
+    expect(viewCall).toBeDefined();
+    expect(viewCall[0]).toBe('gh');
+    expect(viewCall[1]).toEqual(['pr', 'view', '123', '--json', 'headRefOid']);
+    expect(sha).toBe('abc123def');
+  });
+
+  it('throws on transient gh failure (does NOT swallow)', async () => {
+    const { execa } = await import('execa');
+    const failErr = Object.assign(new Error('gh crashed'), {
+      stderr: 'connection reset',
+    });
+    (execa as ReturnType<typeof vi.fn>).mockRejectedValue(failErr);
+
+    const { fetchCurrentHeadSha } = await import('../github.js');
+    await expect(fetchCurrentHeadSha('123')).rejects.toThrow(/gh CLI failed|gh crashed/i);
+  });
+
+  it('throws when gh returns empty headRefOid (fail closed)', async () => {
+    const { execa } = await import('execa');
+    (execa as ReturnType<typeof vi.fn>).mockResolvedValue({
+      stdout: JSON.stringify({ headRefOid: '' }),
+    });
+
+    const { fetchCurrentHeadSha } = await import('../github.js');
+    await expect(fetchCurrentHeadSha('123')).rejects.toThrow(/headRefOid/i);
+  });
+});

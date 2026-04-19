@@ -20,6 +20,25 @@ export async function ingestGithub(
   }
 }
 
+/**
+ * Cheap head-SHA lookup for Phase 2 stale-diff detection. Uses the same `gh pr view` path
+ * as `ingestGithub` but requests only the `headRefOid` field — no diff fetched.
+ * Throws on any gh CLI error (FAIL CLOSED per Pitfall F).
+ */
+export async function fetchCurrentHeadSha(numberOrUrl: string): Promise<string> {
+  const id = String(numberOrUrl);
+  try {
+    const { stdout } = await execa('gh', ['pr', 'view', id, '--json', 'headRefOid']);
+    const parsed = JSON.parse(stdout) as { headRefOid: string };
+    if (typeof parsed.headRefOid !== 'string' || parsed.headRefOid.length === 0) {
+      throw new Error('gh returned no headRefOid');
+    }
+    return parsed.headRefOid;
+  } catch (err) {
+    throw mapGhError(err);
+  }
+}
+
 function mapGhError(err: unknown): Error {
   if (err instanceof Error) {
     const raw = err as Error & { stderr?: unknown };

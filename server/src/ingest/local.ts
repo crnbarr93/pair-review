@@ -29,6 +29,20 @@ export async function ingestLocal(
   }
 }
 
+/**
+ * Cheap head-SHA lookup for Phase 2 stale-diff detection in local-branch mode.
+ * Runs `git rev-parse --verify <headRef>` only; does NOT fetch diff.
+ * Throws on any git error (FAIL CLOSED per Pitfall F).
+ */
+export async function fetchCurrentHeadSha(headRef: string, cwd: string): Promise<string> {
+  try {
+    const { stdout } = await execa('git', ['rev-parse', '--verify', headRef], { cwd });
+    return stdout.trim();
+  } catch (err) {
+    throw mapGitError(err, `fetchCurrentHeadSha: ${headRef}`);
+  }
+}
+
 function mapGitError(err: unknown, fallback: string): Error {
   if (err instanceof Error) {
     const raw = err as Error & { stderr?: unknown };
