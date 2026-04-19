@@ -9,7 +9,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Plugin (PLUG)
 
-- [x] **PLUG-01**: User can launch a review via a single `/review` slash command inside Claude Code — `/review <github-url>` or `/review <pr-number>` for GitHub, `/review --local <base-ref> <head-ref>` for local branches
+- [x] **PLUG-01**: User can launch a review via a single `/pair-review` slash command inside Claude Code — `/pair-review <github-url>` or `/pair-review <pr-number>` for GitHub, `/pair-review --local <base-ref> <head-ref>` for local branches
 - [x] **PLUG-02**: Plugin auto-launches the user's default browser to the local review URL on start
 - [x] **PLUG-03**: Plugin binds an ephemeral port and echoes the exact URL to the terminal as a fallback when the browser auto-launch fails
 - [ ] **PLUG-04**: User can drive the review UI via keyboard shortcuts (`n`/`p` next/prev hunk, `c` comment, `r` mark hunk reviewed, `v` set verdict, `s` submit)
@@ -43,7 +43,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Session (SESS)
 
-- [x] **SESS-01**: User can close the browser or quit Claude Code mid-review and, on next `/review` invocation for the same PR, resume with walkthrough cursor, drafted comments, summary, self-review findings, and checklist state intact
+- [x] **SESS-01**: User can close the browser or quit Claude Code mid-review and, on next `/pair-review` invocation for the same PR, resume with walkthrough cursor, drafted comments, summary, self-review findings, and checklist state intact
 - [x] **SESS-02**: User is alerted and given a resolution choice (rebase drafts / discard / view-both) when resuming a PR whose head SHA has changed since last session
 - [x] **SESS-03**: Plugin survives crashes, kills, and power loss without corrupting review state, using atomic write-and-rename and cross-process file locking
 - [ ] **SESS-04**: User can run multiple concurrent review sessions in separate browser tabs and switch between them via a session-switcher UI

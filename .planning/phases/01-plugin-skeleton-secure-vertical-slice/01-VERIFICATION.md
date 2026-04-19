@@ -12,7 +12,7 @@ gaps:
 
 # Phase 1: Plugin Skeleton + Secure Vertical Slice — Verification Report
 
-**Phase Goal:** Plugin boots, MCP + HTTP server run in one process, /review fetches a PR (or local branch diff), browser opens to a basic diff view. Security (127.0.0.1 + token + Host + CSP) ships from day one. Transport and persistence format decisions resolved in planning.
+**Phase Goal:** Plugin boots, MCP + HTTP server run in one process, /pair-review fetches a PR (or local branch diff), browser opens to a basic diff view. Security (127.0.0.1 + token + Host + CSP) ships from day one. Transport and persistence format decisions resolved in planning.
 **Verified:** 2026-04-19T21:30:00Z
 **Status:** passed (all 9/9 must-haves verified; final gap closed in commit f0f454a)
 **Re-verification:** No — single-pass verification with inline gap-closure
@@ -31,7 +31,7 @@ The human-verify checkpoint in Plan 01-07 Task 2 was APPROVED on 2026-04-19 per 
 | 2 | User can run `/pair-review <github-pr>` and browser opens showing diff | VERIFIED | ingestGithub in server/src/ingest/github.ts wired from SessionManager; human checkpoint APPROVED 2026-04-19 |
 | 3 | Server binds 127.0.0.1 only, rejects missing token with 403, rejects forged Host with 400, serves CSP | VERIFIED | index.ts: hostname: '127.0.0.1'; host-validate.ts allowlist; token-validate.ts 403 path; secure-headers.ts CSP; scripts/security-probes.sh exits 0 per e2e test |
 | 4 | D-01 and D-04 documented in PROJECT.md §Key Decisions | FAILED | .planning/PROJECT.md §Key Decisions table has 7 original rows only — no D-01 (SSE+POST) row, no D-04 (atomic JSON) row |
-| 5 | PLUG-01: /review slash command dispatches source arg to start_review | VERIFIED | commands/pair-review.md at repo root, frontmatter has description/argument-hint, body instructs LLM to call start_review, references $ARGUMENTS |
+| 5 | PLUG-01: /pair-review slash command dispatches source arg to start_review | VERIFIED | commands/pair-review.md at repo root, frontmatter has description/argument-hint, body instructs LLM to call start_review, references $ARGUMENTS |
 | 6 | PLUG-02: browser auto-launches on startReview | VERIFIED | browser-launch.ts + manager.ts launchBrowser called; sessionLaunchUrl includes ?token=&session= |
 | 7 | PLUG-03: URL echoed to stderr before browser launch | VERIFIED | browser-launch.ts: logger.info(url) runs BEFORE open(url); lifecycle tests assert empty stdout |
 | 8 | INGEST-01/02: gh + git ingestion with execa argv arrays, no command injection | VERIFIED | ingest/github.ts + local.ts use execa(bin, [array]) form exclusively; grep for template-string argv returns zero matches; ingestLocal runs rev-parse verify for both refs before git diff (three-dot) |
@@ -99,7 +99,7 @@ Step 7b SKIPPED for this verification — the e2e test (Plan 07 end-to-end) alre
 
 | Requirement | Source Plan | Description | Status | Evidence |
 |-------------|------------|-------------|--------|----------|
-| PLUG-01 | 01-07 | /review slash command dispatches to start_review | SATISFIED | commands/pair-review.md at repo root with correct frontmatter; allowed-tools locks to start_review |
+| PLUG-01 | 01-07 | /pair-review slash command dispatches to start_review | SATISFIED | commands/pair-review.md at repo root with correct frontmatter; allowed-tools locks to start_review |
 | PLUG-02 | 01-02, 01-04 | Browser auto-launches on start | SATISFIED | browser-launch.ts + sessionLaunchUrl(prKey) includes session param; human checkpoint confirmed |
 | PLUG-03 | 01-02 | URL echoed to stderr as fallback | SATISFIED | logger.info(url) before open(url) in browser-launch.ts |
 | INGEST-01 | 01-04 | gh pr view + gh pr diff ingestion | SATISFIED | ingest/github.ts with parallel execa calls; friendly auth error mapping |

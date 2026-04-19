@@ -18,8 +18,8 @@ Three Open Decisions from research must be resolved during planning (not treated
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [x] **Phase 1: Plugin Skeleton + Secure Vertical Slice** - Plugin boots, MCP + HTTP server run in one process, `/review` fetches a PR (or local branch diff), browser opens to a basic diff view. Security (127.0.0.1 + token + Host + CSP) ships from day one. Transport and persistence format decisions resolved in planning. (completed 2026-04-16)
-- [ ] **Phase 2: Persistent Session Store + Resume** - Event-sourced reducer with atomic persistence, `/review` on the same PR resumes walkthrough cursor and drafted comments, head-SHA-gated stale-diff detection surfaces a choice when the PR has moved, state survives crashes without corruption.
+- [x] **Phase 1: Plugin Skeleton + Secure Vertical Slice** - Plugin boots, MCP + HTTP server run in one process, `/pair-review` fetches a PR (or local branch diff), browser opens to a basic diff view. Security (127.0.0.1 + token + Host + CSP) ships from day one. Transport and persistence format decisions resolved in planning. (completed 2026-04-16)
+- [ ] **Phase 2: Persistent Session Store + Resume** - Event-sourced reducer with atomic persistence, `/pair-review` on the same PR resumes walkthrough cursor and drafted comments, head-SHA-gated stale-diff detection surfaces a choice when the PR has moved, state survives crashes without corruption.
 - [ ] **Phase 3: Diff UI + File Tree + Navigation** - Real diff renderer (with unified and split modes) with syntax highlighting, file-tree sidebar showing review status, generated/lockfile files auto-collapsed and excluded from LLM context, keyboard shortcuts, existing PR review comments shown read-only, CI check-run status on the PR header.
 - [ ] **Phase 4: LLM Summary + Checklist + Self-Review** - LLM-generated PR summary pane, built-in criticality-ranked checklist shipped with the plugin, self-review produces category-grouped severity-tagged findings with clickable `file:line` refs, per-category coverage visible in the UI.
 - [ ] **Phase 5: Walkthrough + Inline Threaded Comments** - LLM-curated walkthrough narrative ordering core changes with per-step commentary, "show all" escape to walk the remaining hunks without losing state, threaded conversational comments anchored to `{path, line, side}` via opaque server-resolved IDs (never freeform strings from the LLM).
@@ -29,12 +29,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 ## Phase Details
 
 ### Phase 1: Plugin Skeleton + Secure Vertical Slice
-**Goal**: The control plane works end-to-end. A user can type `/review <pr>` or `/review --local <base> <head>` inside Claude Code, the plugin process boots (MCP stdio + HTTP/push server in one Node process), the PR is fetched via `gh`, the default browser opens to a minimal diff view, and every request the browser makes is authenticated against a per-session token with strict Host validation and CSP. No comments, no checklist, no submission — but every architectural assumption and every BLOCKER-severity security pitfall is closed.
+**Goal**: The control plane works end-to-end. A user can type `/pair-review <pr>` or `/pair-review --local <base> <head>` inside Claude Code, the plugin process boots (MCP stdio + HTTP/push server in one Node process), the PR is fetched via `gh`, the default browser opens to a minimal diff view, and every request the browser makes is authenticated against a per-session token with strict Host validation and CSP. No comments, no checklist, no submission — but every architectural assumption and every BLOCKER-severity security pitfall is closed.
 **Depends on**: Nothing (first phase)
 **Requirements**: PLUG-01, PLUG-02, PLUG-03, INGEST-01, INGEST-02, SEC-01, SEC-02, SEC-03, SEC-04
 **Success Criteria** (what must be TRUE):
-  1. User can run `/review <github-url>` or `/review <pr-number>` inside Claude Code and the default browser auto-launches to the local review URL showing the PR's diff; if the browser launch fails, the terminal prints the exact URL as a fallback.
-  2. User can run `/review --local <base-ref> <head-ref>` and get a browser-rendered diff of those two refs with no network call to GitHub.
+  1. User can run `/pair-review <github-url>` or `/pair-review <pr-number>` inside Claude Code and the default browser auto-launches to the local review URL showing the PR's diff; if the browser launch fails, the terminal prints the exact URL as a fallback.
+  2. User can run `/pair-review --local <base-ref> <head-ref>` and get a browser-rendered diff of those two refs with no network call to GitHub.
   3. `curl` probes confirm the local server binds to `127.0.0.1` only, rejects requests missing the per-session token with 403, rejects requests with any `Host` header other than `127.0.0.1:<port>` or `localhost:<port>`, and serves HTML with a strict CSP that forbids external scripts and inline scripts (except a nonce'd entry).
   4. Planning resolves Open Decision 2 (WebSocket vs SSE + HTTP POST) and Open Decision 3 (`better-sqlite3` vs atomic JSON) — both decisions documented in PROJECT.md's Key Decisions table before coding starts.
 **Plans**: 7 plans in 5 waves
@@ -45,7 +45,7 @@ Plans:
 - [x] 01-04-PLAN.md — Ingestion (gh + git) + parse-diff + Shiki highlighting + real startReview (Wave 3)
 - [x] 01-05-PLAN.md — Web SPA foundation: Vite/Tailwind, main.tsx bootstrap, chrome components (Wave 3)
 - [x] 01-06-PLAN.md — Web diff canvas: 4 states + DiffView wrapper + App.tsx 4-phase router (Wave 4)
-- [x] 01-07-PLAN.md — Plugin manifest + /review command + end-to-end test + human walkthrough (Wave 5)
+- [x] 01-07-PLAN.md — Plugin manifest + /pair-review command + end-to-end test + human walkthrough (Wave 5)
 **UI hint**: yes
 
 **Placement rationale**: Research explicitly recommends a thin vertical slice first because it proves the control plane with zero product risk. Security must ship here (not in a later "hardening" phase) because the local server is exposed to every tab the user opens from day one — PITFALLS.md rates DNS-rebinding/CSRF as a BLOCKER that cannot be retrofitted. INGEST-01 and INGEST-02 are the two ingestion paths (GitHub and local) and both need to exist here because the local-diff path is the only way to validate the UI independent of GitHub-API flakiness.
@@ -53,11 +53,11 @@ Plans:
 ---
 
 ### Phase 2: Persistent Session Store + Resume
-**Goal**: The plugin remembers. Every state mutation — whether from an MCP tool or a browser POST — funnels through one event-sourced reducer and is persisted to disk atomically. Closing the browser, quitting Claude Code, crashing, or power-failing in mid-review is a no-op: the next `/review` on the same PR resumes at the exact cursor, with drafted comments and any partial checklist progress intact. When the PR's head SHA has moved since last session, the UI surfaces the change with an explicit resolution choice.
+**Goal**: The plugin remembers. Every state mutation — whether from an MCP tool or a browser POST — funnels through one event-sourced reducer and is persisted to disk atomically. Closing the browser, quitting Claude Code, crashing, or power-failing in mid-review is a no-op: the next `/pair-review` on the same PR resumes at the exact cursor, with drafted comments and any partial checklist progress intact. When the PR's head SHA has moved since last session, the UI surfaces the change with an explicit resolution choice.
 **Depends on**: Phase 1
 **Requirements**: SESS-01, SESS-02, SESS-03
 **Success Criteria** (what must be TRUE):
-  1. User can start a review, draft a partial state (walkthrough cursor + any in-flight UI state from Phase 1 + the persistence scaffolding for future Phase-5 drafts), close the browser, quit Claude Code, and on next `/review` for the same PR the browser reopens at the same cursor with all prior state restored.
+  1. User can start a review, draft a partial state (walkthrough cursor + any in-flight UI state from Phase 1 + the persistence scaffolding for future Phase-5 drafts), close the browser, quit Claude Code, and on next `/pair-review` for the same PR the browser reopens at the same cursor with all prior state restored.
   2. User is shown a "PR updated" alert with three explicit choices (rebase drafts where possible / discard session / view-both) when resuming a PR whose head SHA differs from the stored SHA.
   3. Kill -9 on the plugin process mid-mutation, followed by restart, does not leave a corrupted state file — persistence uses atomic write-and-rename plus cross-process file locking, verified by a test that interrupts a write.
   4. All mutations (from any entry point) go through `sessionManager.applyEvent(id, event)` — unit tests cover the reducer exhaustively for every event type in use so far.
