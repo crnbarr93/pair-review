@@ -7,7 +7,7 @@ const cache = new Map<string, ShikiFileTokens>();
 async function getHighlighter(): Promise<Highlighter> {
   if (!hl) {
     hl = await createHighlighter({
-      themes: ['github-dark'],
+      themes: ['github-light'],
       langs: [
         'typescript',
         'javascript',
@@ -70,7 +70,7 @@ export async function highlightHunks(
         // Our text is one line, so we take the first row
         const rows = h.codeToTokensBase(line.text, {
           lang: lang as Parameters<typeof h.codeToTokensBase>[1]['lang'],
-          theme: 'github-dark',
+          theme: 'github-light',
         });
         const row = (rows?.[0] ?? []) as Array<{
           content: string;
