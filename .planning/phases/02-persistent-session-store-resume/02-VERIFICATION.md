@@ -1,8 +1,9 @@
 ---
 phase: 02-persistent-session-store-resume
 verified: 2026-04-19T15:10:00Z
-status: human_needed
-score: 4/4 must-haves verified
+updated: 2026-04-19T15:35:00Z
+status: passed
+score: 4/4 must-haves verified; 6/6 human-UAT items passed (see 02-HUMAN-UAT.md)
 overrides_applied: 0
 human_verification:
   - test: "Live end-to-end resume-from-cold-start: /pair-review <pr> → close browser → quit Claude Code → re-run /pair-review <same pr> → browser reopens with restored state"
