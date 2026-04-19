@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-04-19T13:24:08.911Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-04-19T13:32:23.248Z"
 last_activity: 2026-04-19
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 11
-  completed_plans: 8
-  percent: 73
+  completed_plans: 9
+  percent: 82
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 ## Current Position
 
 Phase: 02 (persistent-session-store-resume) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-04-19
 
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 | Phase 01 P07 | 12 minutes | 1 tasks | 5 files |
 | Phase 02 P01 | 4 minutes | 3 tasks | 5 files |
+| Phase 02 P02 | 19 min | 4 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,9 @@ Recent decisions affecting current work:
 - [Phase 02]: SessionEvent co-located in shared/types.ts (not server/src/session/events.ts) — event type is part of the server↔web SSE contract via UpdateMessage
 - [Phase 02]: Reducer must NOT touch lastEventId — that invariant belongs to SessionManager.applyEvent (Plan 02-03); grep-enforced to 0 occurrences in reducer.ts
 - [Phase 02]: SessionBus uses WeakMap to preserve off() semantics while wrapping listeners with safeWrap for error isolation
+- [Phase 02]: writeState signature widened with optional lockOptions?: WriteStateLockOptions — production defaults identical to Phase 1, tests pass widened retry budget only where stale-detection requires it
+- [Phase 02]: Crash-safety proven via spawn('node', ['--import', 'tsx/esm', crash-fixture.ts]) + SIGKILL — reuses Phase-1 spawn-not-execa-in-vitest pattern
+- [Phase 02]: WIDE_LOCK (retries: 20, minTimeout: 100) is a test-only override — do NOT pass from SessionManager.applyEvent; production fail-fast 150ms budget is a feature
 
 ### Pending Todos
 
@@ -99,6 +103,6 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-04-19T13:24:08.909Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-04-19T13:32:14.484Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None
