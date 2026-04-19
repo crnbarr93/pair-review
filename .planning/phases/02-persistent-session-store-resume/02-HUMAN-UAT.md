@@ -13,11 +13,11 @@ updated: 2026-04-19T15:10:00Z
 ## Tests
 
 ### 1. Live end-to-end resume-from-cold-start
-expected: `/review <pr>` → close browser → quit Claude Code → re-run `/review <same pr>` → browser reopens with restored state. Diff renders immediately (no full re-fetch spinner); stderr shows disk-load path taken; state.json at `${CLAUDE_PLUGIN_DATA}/reviews/<prKey>/state.json` survived the restart.
+expected: `/pair-review <pr>` → close browser → quit Claude Code → re-run `/pair-review <same pr>` → browser reopens with restored state. Diff renders immediately (no full re-fetch spinner); stderr shows disk-load path taken; state.json at `${CLAUDE_PLUGIN_DATA}/pair-reviews/<prKey>/state.json` survived the restart.
 result: [pending]
 
 ### 2. Stale-SHA modal visual correctness
-expected: Edit state.json headSha to `'0000…'` → quit plugin → re-run `/review` → modal appears. Title "PR updated" shows; "Stored: 00000000 → Current: <real 8 chars>" visible; three buttons "Refresh to current PR" (blue), "Discard session" (red), "View both" (gray); Escape and backdrop click do NOT dismiss.
+expected: Edit state.json headSha to `'0000…'` → quit plugin → re-run `/pair-review` → modal appears. Title "PR updated" shows; "Stored: 00000000 → Current: <real 8 chars>" visible; three buttons "Refresh to current PR" (blue), "Discard session" (red), "View both" (gray); Escape and backdrop click do NOT dismiss.
 result: [pending]
 
 ### 3. Three-button dispatch (adopt / reset / viewBoth)
