@@ -158,6 +158,84 @@ describe('main.tsx bootstrap', () => {
     expect(esConstructed).toBe(false);
   });
 
+  it('calls setReviewToken + setSource BEFORE history.replaceState (token capture ordering)', async () => {
+    Object.defineProperty(window, 'location', {
+      writable: true,
+      value: { ...window.location, search: '?token=abc&session=gh:o/r%231' },
+    });
+
+    const callOrder: string[] = [];
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(async () => {
+        callOrder.push('fetch');
+        return { ok: true };
+      })
+    );
+    vi.spyOn(history, 'replaceState').mockImplementation(() => {
+      callOrder.push('replaceState');
+    });
+
+    const MockES = class {
+      url: string;
+      onerror: ((ev: Event) => void) | null = null;
+      constructor(url: string) {
+        this.url = url;
+      }
+      addEventListener() {}
+      close() {}
+    };
+    vi.stubGlobal('EventSource', MockES);
+
+    // Mock the api module so we can verify setReviewToken + setSource are
+    // called in the right order. Also keep adoptSession resolving truthy.
+    vi.doMock('../api', () => ({
+      adoptSession: vi.fn().mockImplementation(async () => {
+        callOrder.push('adoptSession');
+        return true;
+      }),
+      openEventStream: vi.fn(),
+      setReviewToken: vi.fn().mockImplementation((tok: string) => {
+        callOrder.push(`setReviewToken:${tok}`);
+      }),
+    }));
+    vi.doMock('../store', () => ({
+      actions: {
+        onAdoptFailed: vi.fn(),
+        onSnapshot: vi.fn(),
+        onUpdate: vi.fn(),
+        onSessionExpired: vi.fn(),
+        setSource: vi.fn().mockImplementation((src: unknown) => {
+          callOrder.push(`setSource:${JSON.stringify(src)}`);
+        }),
+      },
+    }));
+
+    const { bootstrap } = await import('../main');
+    await bootstrap();
+
+    const setTokenIdx = callOrder.findIndex((c) => c.startsWith('setReviewToken:'));
+    const setSourceIdx = callOrder.findIndex((c) => c.startsWith('setSource:'));
+    const replaceIdx = callOrder.indexOf('replaceState');
+
+    expect(setTokenIdx).toBeGreaterThanOrEqual(0);
+    expect(setSourceIdx).toBeGreaterThanOrEqual(0);
+    expect(replaceIdx).toBeGreaterThanOrEqual(0);
+
+    // Critical: capture BEFORE wipe.
+    expect(setTokenIdx).toBeLessThan(replaceIdx);
+    expect(setSourceIdx).toBeLessThan(replaceIdx);
+
+    // setReviewToken called with the token from the URL.
+    expect(callOrder[setTokenIdx]).toBe('setReviewToken:abc');
+    // setSource called with the github-shaped source derived from the prKey.
+    expect(callOrder[setSourceIdx]).toBe('setSource:{"kind":"github","number":1}');
+
+    vi.doUnmock('../api');
+    vi.doUnmock('../store');
+  });
+
   it('renders a fatal message in #root when fetch returns non-OK', async () => {
     let root = document.getElementById('root');
     if (!root) {
