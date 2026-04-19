@@ -1,8 +1,11 @@
 import { useSyncExternalStore } from 'react';
 import type {
   AppStatePhase,
+  CIStatus,
   DiffModel,
+  FileReviewStatus,
   PullRequestMeta,
+  ReadOnlyComment,
   ShikiFileTokens,
   SnapshotMessage,
   UpdateMessage,
@@ -29,6 +32,15 @@ export interface AppState {
   sessionKey: string;
   source?: ChooseResumeSource;
   headShaError?: { variant: 'head-sha-check-failed'; message: string };
+  // Phase 3 additions (mirror ReviewSession Phase 3 fields)
+  fileReviewStatus: Record<string, FileReviewStatus>;
+  expandedGeneratedFiles: Record<string, boolean>;
+  existingComments: ReadOnlyComment[];
+  ciStatus: CIStatus | undefined;
+  // Phase 3 addition — first-class prKey for Plan 03-05 postSessionEvent call sites.
+  // Empty string sentinel when no snapshot has arrived yet; consumers use a falsy
+  // check to short-circuit (T-3-13 mitigation).
+  prKey: string;
 }
 
 const INITIAL: AppState = {
@@ -37,6 +49,11 @@ const INITIAL: AppState = {
   launchUrl: '',
   tokenLast4: '',
   sessionKey: '',
+  fileReviewStatus: {},
+  expandedGeneratedFiles: {},
+  existingComments: [],
+  ciStatus: undefined,
+  prKey: '',
 };
 
 let state: AppState = { ...INITIAL };
@@ -87,6 +104,11 @@ export const actions = {
       tokenLast4: msg.tokenLast4,
       staleDiff: s.staleDiff,
       sessionKey: s.prKey,
+      prKey: s.prKey,
+      fileReviewStatus: s.fileReviewStatus ?? {},
+      expandedGeneratedFiles: s.expandedGeneratedFiles ?? {},
+      existingComments: s.existingComments ?? [],
+      ciStatus: s.ciStatus,
       headShaError:
         isHeadShaError && s.error
           ? { variant: 'head-sha-check-failed', message: s.error.message }
@@ -105,6 +127,11 @@ export const actions = {
       diff: s.diff,
       shikiTokens: s.shikiTokens,
       staleDiff: s.staleDiff,
+      prKey: s.prKey,
+      fileReviewStatus: s.fileReviewStatus ?? {},
+      expandedGeneratedFiles: s.expandedGeneratedFiles ?? {},
+      existingComments: s.existingComments ?? [],
+      ciStatus: s.ciStatus,
       headShaError: undefined, // an update arrived → previous head-sha-check-failed is cleared
     };
     emit();

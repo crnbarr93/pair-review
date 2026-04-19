@@ -150,3 +150,88 @@ describe('store reducer actions', () => {
     });
   });
 });
+
+describe('store — Phase 3 field mirroring', () => {
+  beforeEach(async () => {
+    const { __resetForTesting } = await import('../store');
+    __resetForTesting();
+  });
+
+  it('INITIAL includes Phase 3 fields with empty defaults AND prKey empty string', async () => {
+    const { __getStateForTesting } = await import('../store');
+    const state = __getStateForTesting();
+    expect(state.fileReviewStatus).toEqual({});
+    expect(state.expandedGeneratedFiles).toEqual({});
+    expect(state.existingComments).toEqual([]);
+    expect(state.ciStatus).toBeUndefined();
+    expect(state.prKey).toBe('');
+  });
+
+  it('onSnapshot populates prKey + the four Phase-3 fields from ReviewSession', async () => {
+    const { actions, __getStateForTesting } = await import('../store');
+    actions.onSnapshot(
+      snapshot(
+        baseSession({
+          prKey: 'github:owner/repo#1',
+          fileReviewStatus: { fA: 'reviewed' },
+          expandedGeneratedFiles: { lock: true },
+          existingComments: [
+            {
+              id: 1,
+              lineId: null,
+              path: '',
+              line: null,
+              side: 'BOTH',
+              author: 'a',
+              createdAt: '',
+              body: 'x',
+              htmlUrl: '',
+            },
+          ],
+          ciStatus: { aggregate: 'pass', checks: [] },
+        })
+      )
+    );
+    const state = __getStateForTesting();
+    expect(state.prKey).toBe('github:owner/repo#1');
+    // Existing Plan 02-04 assertion — dual mirror preserved
+    expect(state.sessionKey).toBe('github:owner/repo#1');
+    expect(state.fileReviewStatus).toEqual({ fA: 'reviewed' });
+    expect(state.expandedGeneratedFiles).toEqual({ lock: true });
+    expect(state.existingComments).toHaveLength(1);
+    expect(state.ciStatus).toEqual({ aggregate: 'pass', checks: [] });
+  });
+
+  it('onSnapshot defaults to empty when session omits Phase 3 fields (backward compat)', async () => {
+    const { actions, __getStateForTesting } = await import('../store');
+    actions.onSnapshot(snapshot(baseSession({ prKey: 'gh:o/r#1' })));
+    const state = __getStateForTesting();
+    expect(state.prKey).toBe('gh:o/r#1');
+    expect(state.fileReviewStatus).toEqual({});
+    expect(state.expandedGeneratedFiles).toEqual({});
+    expect(state.existingComments).toEqual([]);
+    expect(state.ciStatus).toBeUndefined();
+  });
+
+  it('onUpdate mirrors prKey + Phase 3 fields from UpdateMessage.state', async () => {
+    const { actions, __getStateForTesting } = await import('../store');
+    const update: UpdateMessage = {
+      type: 'update',
+      event: { type: 'file.reviewStatusSet', fileId: 'fB', status: 'reviewed' },
+      state: baseSession({
+        prKey: 'gh:o/r#1',
+        fileReviewStatus: { fB: 'reviewed' },
+        expandedGeneratedFiles: { gen1: true },
+        existingComments: [],
+        ciStatus: { aggregate: 'fail', checks: [] },
+        lastEventId: 1,
+      }),
+    };
+    actions.onUpdate(update);
+    const state = __getStateForTesting();
+    expect(state.prKey).toBe('gh:o/r#1');
+    expect(state.fileReviewStatus).toEqual({ fB: 'reviewed' });
+    expect(state.expandedGeneratedFiles).toEqual({ gen1: true });
+    expect(state.ciStatus).toEqual({ aggregate: 'fail', checks: [] });
+  });
+});
