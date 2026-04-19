@@ -30,6 +30,12 @@ function makeState(overrides: Partial<AppState> = {}): AppState {
     tokenLast4: '',
     sessionKey: 'gh:o/r#1',
     source: { kind: 'github', number: 1 } as ChooseResumeSource,
+    // Phase 3 AppState fields (Plan 03-04) — required on AppState, supplied with empty defaults.
+    fileReviewStatus: {},
+    expandedGeneratedFiles: {},
+    existingComments: [],
+    ciStatus: undefined,
+    prKey: 'gh:o/r#1',
     ...overrides,
   };
 }
