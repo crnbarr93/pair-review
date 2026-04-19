@@ -4,7 +4,20 @@ import writeFileAtomic from 'write-file-atomic';
 import lockfile from 'proper-lockfile';
 import { stateFilePath } from './paths.js';
 
-export async function writeState(prKey: string, data: object): Promise<void> {
+// Shape of the options bag accepted by `proper-lockfile.lock` — re-exported so
+// tests (and any future caller) can spell it without re-importing the library.
+export type WriteStateLockOptions = Parameters<typeof lockfile.lock>[1];
+
+// Production-tight default. IDENTICAL to Phase 1 so no existing caller behavior
+// drifts. When a caller passes `lockOptions`, this constant is bypassed and the
+// supplied options are forwarded verbatim.
+const DEFAULT_LOCK_OPTIONS = { retries: { retries: 3, minTimeout: 50 }, realpath: false } as const;
+
+export async function writeState(
+  prKey: string,
+  data: object,
+  lockOptions?: WriteStateLockOptions,
+): Promise<void> {
   const file = stateFilePath(prKey);
   await fs.mkdir(path.dirname(file), { recursive: true });
   // Ensure the target file exists before proper-lockfile tries to lock it
@@ -13,7 +26,7 @@ export async function writeState(prKey: string, data: object): Promise<void> {
   } catch {
     await fs.writeFile(file, '{}');
   }
-  const release = await lockfile.lock(file, { retries: { retries: 3, minTimeout: 50 }, realpath: false });
+  const release = await lockfile.lock(file, lockOptions ?? DEFAULT_LOCK_OPTIONS);
   try {
     await writeFileAtomic(file, JSON.stringify(data, null, 2));
   } finally {
