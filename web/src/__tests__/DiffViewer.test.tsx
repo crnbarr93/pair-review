@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
-import { performance } from 'node:perf_hooks';
 import { DiffViewer } from '../components/DiffViewer';
 import diffModelFixture from './fixtures/diff-model.fixture.json';
 import shikiTokensFixture from './fixtures/shiki-tokens.fixture.json';
@@ -52,8 +51,8 @@ describe('DiffViewer (Phase 3 — Open Decision 1 validation)', () => {
     for (const file of props.diff.files) {
       if (file.generated) continue;
       for (const hunk of file.hunks) {
-        const escapedId = hunk.id.replace(/:/g, '\\:');
-        const el = container.querySelector(`#${escapedId}`);
+        // Use attribute selector — hunk.id contains ':' which CSS id selectors treat as pseudo-class
+        const el = container.querySelector(`[id="${hunk.id}"]`);
         expect(el, `missing hunk anchor for ${hunk.id}`).toBeTruthy();
       }
     }
