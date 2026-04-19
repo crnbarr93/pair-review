@@ -1,12 +1,45 @@
 import { useSyncExternalStore } from 'react';
-import type { AppState, SnapshotMessage } from '@shared/types';
+import type {
+  AppStatePhase,
+  DiffModel,
+  PullRequestMeta,
+  ShikiFileTokens,
+  SnapshotMessage,
+  UpdateMessage,
+} from '@shared/types';
+import type { ChooseResumeSource } from './api';
 
-let state: AppState = {
+/**
+ * Phase-2-extended app state. Supersedes the AppState export in shared/types
+ * for all web consumers; the shared definition is kept for inheritance/import
+ * compatibility but the authoritative shape lives here because Phase 2 adds
+ * web-only fields (source, sessionKey, headShaError, staleDiff).
+ */
+export interface AppState {
+  phase: AppStatePhase;
+  session: { active: boolean };
+  pr?: PullRequestMeta;
+  diff?: DiffModel;
+  shikiTokens?: Record<string, ShikiFileTokens>;
+  errorVariant?: 'unreachable' | 'fetch-failed';
+  launchUrl: string;
+  tokenLast4: string;
+  // Phase 2 additions
+  staleDiff?: { storedSha: string; currentSha: string };
+  sessionKey: string;
+  source?: ChooseResumeSource;
+  headShaError?: { variant: 'head-sha-check-failed'; message: string };
+}
+
+const INITIAL: AppState = {
   phase: 'loading',
   session: { active: false },
   launchUrl: '',
   tokenLast4: '',
+  sessionKey: '',
 };
+
+let state: AppState = { ...INITIAL };
 
 const listeners = new Set<() => void>();
 
@@ -27,22 +60,58 @@ export function useAppStore(): AppState {
 
 export const actions = {
   onAdoptFailed(_variant: 'unreachable') {
-    state = { ...state, phase: 'error', errorVariant: 'unreachable', session: { active: false } };
+    state = {
+      ...state,
+      phase: 'error',
+      errorVariant: 'unreachable',
+      session: { active: false },
+    };
     emit();
   },
 
   onSnapshot(msg: SnapshotMessage) {
-    const hasFiles = msg.session.diff.files.length > 0;
+    const s = msg.session;
+    const hasFiles = s.diff.files.length > 0;
+    const isHeadShaError = !!(
+      s.error && s.error.message.startsWith('head-sha-check-failed:')
+    );
     state = {
-      phase: msg.session.error ? 'error' : hasFiles ? 'diff' : 'empty',
+      ...state,
+      phase: s.error ? 'error' : hasFiles ? 'diff' : 'empty',
       session: { active: true },
-      pr: msg.session.pr,
-      diff: msg.session.diff,
-      shikiTokens: msg.session.shikiTokens,
-      errorVariant: msg.session.error ? 'fetch-failed' : undefined,
+      pr: s.pr,
+      diff: s.diff,
+      shikiTokens: s.shikiTokens,
+      errorVariant: s.error ? 'fetch-failed' : undefined,
       launchUrl: msg.launchUrl,
       tokenLast4: msg.tokenLast4,
+      staleDiff: s.staleDiff,
+      sessionKey: s.prKey,
+      headShaError:
+        isHeadShaError && s.error
+          ? { variant: 'head-sha-check-failed', message: s.error.message }
+          : undefined,
     };
+    emit();
+  },
+
+  onUpdate(msg: UpdateMessage) {
+    const s = msg.state;
+    const hasFiles = s.diff.files.length > 0;
+    state = {
+      ...state,
+      phase: s.error ? 'error' : hasFiles ? 'diff' : 'empty',
+      pr: s.pr,
+      diff: s.diff,
+      shikiTokens: s.shikiTokens,
+      staleDiff: s.staleDiff,
+      headShaError: undefined, // an update arrived → previous head-sha-check-failed is cleared
+    };
+    emit();
+  },
+
+  setSource(source: ChooseResumeSource) {
+    state = { ...state, source };
     emit();
   },
 
@@ -51,3 +120,13 @@ export const actions = {
     emit();
   },
 };
+
+// Test-only exports (guarded by underscore prefix — see plan rule on stubs).
+// Not load-bearing for production; kept tiny so bundlers can tree-shake them.
+export function __resetForTesting(): void {
+  state = { ...INITIAL };
+}
+
+export function __getStateForTesting(): AppState {
+  return state;
+}
