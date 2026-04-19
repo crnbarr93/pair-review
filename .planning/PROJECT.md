@@ -77,6 +77,8 @@ A Claude Code plugin that pairs the user with an LLM to review pull requests thr
 | Final action is a full GitHub review submission (verdict + body + inline comments) | Matches how real reviews ship; one API call keeps the GitHub UI clean; verdict discipline forces the user to actually decide. | — Pending |
 | Resumable per-PR state on disk | Real reviews happen in chunks across hours/days; session-only state would be a non-starter. | — Pending |
 | GitHub + local branches only in v1 (no GitLab/Bitbucket) | Personal tool; author works on GitHub. API surface for other hosts isn't free. | — Pending |
+| **D-01 (Phase 1)** Real-time transport: SSE + HTTP POST (chosen over WebSocket) | Asymmetric broadcast shape (server pushes snapshots; client posts adopt/comment). EventSource is curl-debuggable and needs no extra dep; the LLM control channel is MCP-stdio so a bidirectional WS layer would have been redundant. | Resolved (Phase 1) |
+| **D-04 (Phase 1)** Persistence format: atomic JSON via `write-file-atomic` + `proper-lockfile` (chosen over `better-sqlite3`) | Reducer-on-single-event-loop already serializes mutations; native addons add install friction in a plugin-distributed binary; grep-able JSON state is easier to debug for a single-user local tool. | Resolved (Phase 1) |
 
 ## Evolution
 
