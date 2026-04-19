@@ -1,6 +1,5 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import '@git-diff-view/react/styles/diff-view-pure.css';
 import { adoptSession, openEventStream, setReviewToken } from './api';
 import type { ChooseResumeSource } from './api';
 import { actions } from './store';
