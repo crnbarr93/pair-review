@@ -5,6 +5,7 @@ import { tokenValidate } from './middleware/token-validate.js';
 import { secureHeadersMw } from './middleware/secure-headers.js';
 import { mountSessionAdopt } from './routes/session-adopt.js';
 import { mountSessionResume } from './routes/session-resume.js';
+import { mountSessionEvents } from './routes/session-events.js';
 import { mountEvents } from './routes/events.js';
 import { mountStatic } from './routes/static.js';
 
@@ -19,6 +20,7 @@ export function buildHttpApp(manager: SessionManager): Hono {
   // 4. Routes
   mountSessionAdopt(app, manager);
   mountSessionResume(app, manager);
+  mountSessionEvents(app, manager);
   mountEvents(app, manager);
   mountStatic(app, manager);
   return app;
