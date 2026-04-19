@@ -4,6 +4,8 @@ import type {
   ReadOnlyComment,
   DiffModel,
   LineSide,
+  CIStatus,
+  CheckRun,
 } from '@shared/types';
 import { logger } from '../logger.js';
 
@@ -237,4 +239,61 @@ export async function fetchExistingComments(
   } catch (err) {
     throw mapGhError(err);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3 — fetchCIChecks
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch CI check runs for a PR and normalize to `CIStatus`.
+ *
+ * Source: CONTEXT D-24 + RESEARCH Q6 (field-name correction: gh CLI exposes
+ * `bucket`/`link`, NOT REST's `conclusion`/`detailsUrl`). PROJECT.md D-24
+ * correction row documents this at planning time.
+ *
+ * CRITICAL: `gh pr checks` exits 8 when checks are pending — that is NOT an
+ * error (Pitfall B). We catch exit 8 and parse `stdout` anyway. Any other
+ * non-zero exit throws via `mapGhError`.
+ */
+export async function fetchCIChecks(prNumber: number): Promise<CIStatus> {
+  let stdout: string;
+  try {
+    const result = await execa('gh', [
+      'pr',
+      'checks',
+      String(prNumber),
+      '--json',
+      'name,state,bucket,link', // bucket NOT conclusion; link NOT detailsUrl
+    ]);
+    stdout = result.stdout;
+  } catch (err) {
+    const execaErr = err as { stdout?: string; exitCode?: number };
+    if (execaErr.exitCode === 8 && typeof execaErr.stdout === 'string') {
+      stdout = execaErr.stdout; // 8 = checks pending — parse stdout anyway
+    } else {
+      throw mapGhError(err);
+    }
+  }
+  interface GhCheckRun {
+    name: string;
+    bucket: string;
+    link: string;
+  }
+  const checks = JSON.parse(stdout) as GhCheckRun[];
+  if (checks.length === 0) return { aggregate: 'none', checks: [] };
+  const buckets = new Set(checks.map((c) => c.bucket));
+  const aggregate: CIStatus['aggregate'] = buckets.has('fail')
+    ? 'fail'
+    : buckets.has('pending')
+      ? 'pending'
+      : 'pass';
+  return {
+    aggregate,
+    checks: checks.map((c) => ({
+      name: c.name,
+      bucket: c.bucket as CheckRun['bucket'],
+      link: c.link,
+    })),
+  };
 }
