@@ -10,7 +10,12 @@ import { githubKey, localKey } from './key.js';
 import { writeState, readState } from '../persist/store.js';
 import { launchBrowser } from '../browser-launch.js';
 import { logger } from '../logger.js';
-import { ingestGithub, fetchCurrentHeadSha as fetchGithubHeadSha } from '../ingest/github.js';
+import {
+  ingestGithub,
+  fetchCurrentHeadSha as fetchGithubHeadSha,
+  fetchExistingComments,
+  fetchCIChecks,
+} from '../ingest/github.js';
 import { ingestLocal, fetchCurrentHeadSha as fetchLocalHeadSha } from '../ingest/local.js';
 import { inferRepoFromCwd } from '../ingest/repo-infer.js';
 import { toDiffModel } from '../ingest/parse.js';
@@ -196,6 +201,25 @@ export class SessionManager {
       await writeState(prKey, session);
     } catch (err) {
       logger.warn('persist write failed', err);
+    }
+
+    // Phase 3 GitHub-only: fetch existing PR comments and CI checks (D-20, D-24).
+    // Both run post-snapshot so the web client sees: snapshot → update(existingComments) → update(ciChecks).
+    // Failures are logged to stderr only; UI renders the "absent" variants (no markers, CI pill = none).
+    // Local-source sessions skip both fetches entirely (D-23, D-26).
+    if (source.kind === 'github' && pr.owner && pr.repo && typeof pr.number === 'number') {
+      try {
+        const comments = await fetchExistingComments(pr.owner, pr.repo, pr.number, diff);
+        await this.applyEvent(prKey, { type: 'existingComments.loaded', comments });
+      } catch (err) {
+        logger.warn('Failed to load existing comments:', err);
+      }
+      try {
+        const ciStatus = await fetchCIChecks(pr.number);
+        await this.applyEvent(prKey, { type: 'ciChecks.loaded', ciStatus });
+      } catch (err) {
+        logger.warn('Failed to load CI checks:', err);
+      }
     }
 
     // Launch browser only on first call for this prKey (D-21)
