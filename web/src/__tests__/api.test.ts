@@ -182,3 +182,72 @@ describe('chooseResume', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
+
+describe('postSessionEvent', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('throws when no review token is set', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { postSessionEvent } = await import('../api');
+
+    await expect(
+      postSessionEvent('gh:o/r#1', {
+        type: 'file.reviewStatusSet',
+        fileId: 'f1',
+        status: 'reviewed',
+      })
+    ).rejects.toThrowError(/review token not set/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('POSTs /api/session/events with X-Review-Token header and the JSON body', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { setReviewToken, postSessionEvent } = await import('../api');
+    setReviewToken('TOK');
+
+    const event = {
+      type: 'file.reviewStatusSet' as const,
+      fileId: 'f1',
+      status: 'reviewed' as const,
+    };
+    const res = await postSessionEvent('gh:o/r#1', event);
+
+    expect(res).toEqual({ ok: true });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('/api/session/events');
+    expect(init.method).toBe('POST');
+    expect(init.headers).toMatchObject({
+      'Content-Type': 'application/json',
+      'X-Review-Token': 'TOK',
+    });
+    expect(init.credentials).toBe('same-origin');
+    expect(JSON.parse(init.body as string)).toEqual({ prKey: 'gh:o/r#1', event });
+  });
+
+  it('throws on non-ok HTTP response', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 403 });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { setReviewToken, postSessionEvent } = await import('../api');
+    setReviewToken('TOK');
+
+    await expect(
+      postSessionEvent('gh:o/r#1', {
+        type: 'file.reviewStatusSet',
+        fileId: 'f1',
+        status: 'reviewed',
+      })
+    ).rejects.toThrowError(/403/);
+  });
+});

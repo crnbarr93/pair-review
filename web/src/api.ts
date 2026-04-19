@@ -1,4 +1,4 @@
-import type { SnapshotMessage, UpdateMessage } from '@shared/types';
+import type { SessionEvent, SnapshotMessage, UpdateMessage } from '@shared/types';
 
 /**
  * Choice triad for the Phase 2 stale-diff modal. Mirrors the server's zod
@@ -113,6 +113,41 @@ export async function chooseResume(params: {
   });
   if (!res.ok) {
     throw new Error(`chooseResume failed: HTTP ${res.status}`);
+  }
+  return { ok: true };
+}
+
+/**
+ * POST a user-triggered SessionEvent to the server. The server's tokenValidate
+ * middleware requires the X-Review-Token header to match the `review_session`
+ * cookie (double-submit pattern from Phase 1, same as chooseResume).
+ *
+ * Used by Plan 03-05 for the three user-driven event paths:
+ *  - `r`-key toggle → `file.reviewStatusSet`
+ *  - IntersectionObserver auto-transition → `file.reviewStatusSet`
+ *  - Expand-generated-file click → `file.generatedExpandToggled`
+ *
+ * Resolves { ok: true } on 200; throws on missing token, network error, or
+ * any non-OK HTTP status. Fails fast on missing token per T-3-05.
+ */
+export async function postSessionEvent(
+  prKey: string,
+  event: SessionEvent
+): Promise<{ ok: true }> {
+  if (!reviewToken) {
+    throw new Error('postSessionEvent: review token not set — call setReviewToken first');
+  }
+  const res = await fetch('/api/session/events', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Review-Token': reviewToken,
+    },
+    body: JSON.stringify({ prKey, event }),
+    credentials: 'same-origin',
+  });
+  if (!res.ok) {
+    throw new Error(`postSessionEvent failed: HTTP ${res.status}`);
   }
   return { ok: true };
 }
