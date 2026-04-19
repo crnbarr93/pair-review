@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-04-19T13:50:58.369Z"
+status: verifying
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-04-19T14:03:01.334Z"
 last_activity: 2026-04-19
 progress:
   total_phases: 7
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 11
-  completed_plans: 10
-  percent: 91
+  completed_plans: 11
+  percent: 100
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 
 Phase: 02 (persistent-session-store-resume) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-19
 
 Progress: [░░░░░░░░░░] 0%
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02 P01 | 4 minutes | 3 tasks | 5 files |
 | Phase 02 P02 | 19 min | 4 tasks | 6 files |
 | Phase 02 P03 | 8 min | 4 tasks | 11 files |
+| Phase 02 P04 | 7 min | 4 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,10 @@ Recent decisions affecting current work:
 - [Phase 02]: Plan 03: SSE subscribe-before-snapshot + buffer-and-flush closes Pitfall E; Phase 2 always re-sends full snapshot on reconnect (Last-Event-ID read but ignored)
 - [Phase 02]: Plan 03: fetchCurrentHeadSha fails closed — errors surface as session.error (variant: 'fetch-failed', message prefix 'head-sha-check-failed'), NOT a false-positive staleDiff
 - [Phase 02]: Plan 03: choose-resume handler coerces client-supplied source to SourceArg rather than reconstructing from session.pr — server validates shape via zod .strict() + discriminatedUnion
+- [Phase 02]: Plan 04: Kept 'Refresh to current PR' label for Phase 2 per Assumption A7; relabel to 'Rebase drafts where possible' deferred to Phase 5
+- [Phase 02]: Plan 04: AppState redefined locally in web/src/store.ts as the authoritative web shape; shared/types AppState preserved for backward compat
+- [Phase 02]: Plan 04: Modal auto-unmount via SSE round-trip — click button → chooseResume POST → server applyEvent → SSE snapshot/update → store clears staleDiff → modal's early-return fires
+- [Phase 02]: Plan 04: Token-capture ordering gate in main.tsx — setReviewToken + actions.setSource happen BEFORE history.replaceState (T-2-04-03 mitigation), enforced by a main-bootstrap call-order test
 
 ### Pending Todos
 
@@ -109,6 +114,6 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-04-19T13:50:46.113Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-04-19T14:02:48.913Z
+Stopped at: Completed 02-04-PLAN.md
 Resume file: None
