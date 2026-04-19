@@ -81,7 +81,24 @@ export interface ReviewSession {
   createdAt: string;          // ISO
   headSha: string;            // Duplicated from pr.headSha for Phase 2 stale-diff detection
   error: null | { variant: 'fetch-failed'; message: string };
+  // Phase 2 additions
+  staleDiff?: { storedSha: string; currentSha: string };
+  viewBothMode?: boolean;
+  pendingReset?: boolean;
+  lastEventId: number;   // monotonic per-session counter; starts at 0 on first persist
 }
+
+// Phase 2 event union — Phase 4/5/6 variants will extend this.
+// Every SessionEvent MUST be a plain JSON-serializable object (no Date, no functions).
+export type SessionEvent =
+  | {
+      type: 'session.adoptNewDiff';
+      newDiff: DiffModel;
+      newHeadSha: string;
+      newShikiTokens: Record<string, ShikiFileTokens>;
+    }
+  | { type: 'session.reset' }
+  | { type: 'session.viewBoth' };
 
 // SSE message envelope (server → browser)
 export interface SnapshotMessage {
@@ -89,6 +106,13 @@ export interface SnapshotMessage {
   session: ReviewSession;
   launchUrl: string;          // Shown in footer per UI-SPEC
   tokenLast4: string;         // For footer "Token: ••••[last4]" display — NEVER the full token
+}
+
+// SSE update envelope (server → browser) — pushed on every applyEvent per D-02
+export interface UpdateMessage {
+  type: 'update';
+  event: SessionEvent;
+  state: ReviewSession;
 }
 
 // Client app state machine (UI-SPEC §<DiffCanvas> four states)
