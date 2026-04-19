@@ -61,7 +61,12 @@ Plans:
   2. User is shown a "PR updated" alert with three explicit choices (rebase drafts where possible / discard session / view-both) when resuming a PR whose head SHA differs from the stored SHA.
   3. Kill -9 on the plugin process mid-mutation, followed by restart, does not leave a corrupted state file — persistence uses atomic write-and-rename plus cross-process file locking, verified by a test that interrupts a write.
   4. All mutations (from any entry point) go through `sessionManager.applyEvent(id, event)` — unit tests cover the reducer exhaustively for every event type in use so far.
-**Plans**: TBD
+**Plans**: 4 plans in 3 waves
+Plans:
+- [ ] 02-01-PLAN.md — Shared types + pure reducer + typed SessionBus (Wave 1)
+- [ ] 02-02-PLAN.md — SESS-03 persistence proofs: crash-interrupt + concurrency + stale-lock tests (Wave 1)
+- [ ] 02-03-PLAN.md — SessionManager applyEvent + disk-load resume + stale-SHA + POST /choose-resume + SSE update fan-out (Wave 2)
+- [ ] 02-04-PLAN.md — Web StaleDiffModal + chooseResume API + store onUpdate + main.tsx wiring + human-verify checkpoint (Wave 3)
 
 **Placement rationale**: PROJECT.md names resumable state as a hard v1 requirement. PITFALLS flags browser-refresh data loss (Pitfall 8), stale-diff-on-resume (Pitfall 9), and crash corruption (implicit in SESS-03) as blockers that cannot be retrofitted without rewriting state handling throughout downstream phases. Ships before the LLM product surfaces (Phases 4+) precisely so every feature that follows persists naturally rather than being retrofitted. SESS-04 (multi-session switcher) is deliberately deferred to Phase 7 because concurrent reviews are a polish concern, not a blocker.
 
@@ -157,7 +162,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Plugin Skeleton + Secure Vertical Slice | 7/7 | Complete   | 2026-04-16 |
-| 2. Persistent Session Store + Resume | 0/TBD | Not started | - |
+| 2. Persistent Session Store + Resume | 0/4 | Not started | - |
 | 3. Diff UI + File Tree + Navigation | 0/TBD | Not started | - |
 | 4. LLM Summary + Checklist + Self-Review | 0/TBD | Not started | - |
 | 5. Walkthrough + Inline Threaded Comments | 0/TBD | Not started | - |
