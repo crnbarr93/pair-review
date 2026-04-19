@@ -753,22 +753,25 @@ describe('applyEvent', () => {
 | A6 | The `ReviewSession` field additions (`staleDiff?`, `viewBothMode?`, `pendingReset?`, `lastEventId: number`) don't break Phase 1 behavior or tests | Runtime State Inventory | If Phase 1 tests assert full-shape equality on `ReviewSession`, those assertions need updating to allow the new optional fields. Low-risk; reading Phase 1's manager.test.ts shows equality is spot-check, not full-shape. |
 | A7 | The "rebase drafts where possible" button in Phase 2 can ship as a no-op (currently equivalent to "discard session" since no drafts exist) without misleading the user | Pattern 4 | The button's UI label promises rebase; in Phase 2 the actual behavior is refresh-to-new-diff which is close enough. Mitigation: consider showing the button as "Refresh to current PR" in Phase 2 and renaming to "Rebase drafts" when Phase 5 wires up the rebase logic. DISCUSS-PHASE decision. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should `session.reset` delete the state.json file on disk or just reset its contents to a fresh-ingest shape?**
    - What we know: the user chose "discard" for a reason — they want this session gone. Deleting the file is cleaner; rewriting it to an empty-ingest shape is faster (no re-fetch loss window).
    - What's unclear: whether "discard + re-ingest" should happen as one atomic server action (feels cleanest) or two steps (delete, then let startReview handle re-ingest idempotently).
    - Recommendation: one atomic server action — the POST handler for `{ choice: 'reset' }` calls `manager.resetSession(prKey)` which deletes the file + clears the in-memory map + re-runs the full ingest. Returns the new snapshot. Front end's SSE subscription picks up the new snapshot and re-paints.
+   - **RESOLVED:** Plan 03 Task 2 implements `SessionManager.resetSession(prKey, source)` as one atomic server action — `fs.unlink(stateFilePath(prKey))` + `this.sessions.delete(prKey)` + `this.launched.delete(prKey)` + fall-through `this.startReview(source)` to re-run the full ingest pipeline. Plan 03 Task 4 wires the POST `/api/session/choose-resume` `{ choice: 'reset' }` branch to call it.
 
 2. **Where does the head-SHA comparison live — in the session-manager or in the ingest adapters?**
    - What we know: the ingest adapters (`ingestGithub`, `ingestLocal`) already know how to reach GitHub / git. A "fetchCurrentHeadSha" helper is a subset of their logic.
    - What's unclear: whether adding a standalone `fetchCurrentHeadSha(source)` helper in the ingest module is cleaner than teaching the manager to call `ingestGithub` / `ingestLocal` in a metadata-only mode.
    - Recommendation: new helper `fetchCurrentHeadSha(source)` co-located with the full ingest; shares the execa-argv pattern. Avoids pulling the full diff just to check a SHA.
+   - **RESOLVED:** Plan 03 Task 1 adds `fetchCurrentHeadSha` as a standalone export co-located in each ingest adapter (`server/src/ingest/github.ts` uses `gh pr view <id> --json headRefOid`; `server/src/ingest/local.ts` uses `git rev-parse --verify <headRef>`). Plan 03 Task 2 wires the SessionManager's private `fetchCurrentHeadSha(source)` dispatcher to call the appropriate adapter version based on `source.kind`.
 
 3. **How does the reset path coordinate with browser tabs that were already showing the old snapshot?**
    - What we know: SSE pushes the new snapshot; the store's `onSnapshot` handler replaces state. The stale-diff modal disappears naturally.
    - What's unclear: whether the modal should visually animate to success / indicate "refreshing" during the re-ingest round-trip (which could take seconds on a big PR) or just freeze.
    - Recommendation: show a lightweight "Refreshing diff..." overlay while the POST is in flight; the subsequent snapshot arrival removes the overlay. UX detail; not load-bearing.
+   - **RESOLVED:** Plan 04 Task 3's `StaleDiffModal.tsx` implements the "Refreshing diff…" overlay exactly as recommended — when a button is clicked, `pending` state is set, buttons are disabled, and the overlay text replaces the button stack until the next SSE snapshot/update arrives, at which point `state.staleDiff` clears and the modal unmounts naturally.
 
 ## Environment Availability
 
