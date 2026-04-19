@@ -14,7 +14,7 @@ A Claude Code plugin that pairs the user with an LLM to review pull requests thr
 
 <!-- Shipped and confirmed valuable. -->
 
-(None yet — ship to validate)
+- [x] Web UI renders a first-class PR diff view with syntax highlighting and hunk anchoring (Phase 3: bespoke DiffViewer with github-light Shiki, unified/split toggle, scrollIntoView hunk anchoring, file-tree sidebar)
 
 ### Active
 
@@ -22,7 +22,6 @@ A Claude Code plugin that pairs the user with an LLM to review pull requests thr
 
 - [ ] Claude Code plugin launches a local web GUI for a given PR (GitHub URL or local branch diff)
 - [ ] Plugin exposes MCP tools that let the LLM drive the web UI (navigate hunks, run self-review, post comments, submit review)
-- [ ] Web UI renders a first-class PR diff view with syntax highlighting and hunk anchoring
 - [ ] LLM generates a PR summary (intent, key changes, risk areas) visible in the GUI
 - [ ] LLM self-review runs against a criticality-ranked checklist with code references linking back to diff locations
 - [ ] Built-in default checklist ships with the plugin (correctness, security, tests, performance, style)
@@ -101,4 +100,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 after requirements definition (checklist scope narrowed: repo override moved to v2)*
+*Last updated: 2026-04-19 after Phase 3 completion (diff UI + file tree + navigation shipped; first-class PR diff view requirement moved to Validated)*
