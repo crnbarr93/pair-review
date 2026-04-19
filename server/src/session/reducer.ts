@@ -25,6 +25,26 @@ export function applyEvent(s: ReviewSession, e: SessionEvent): ReviewSession {
     case 'session.viewBoth':
       // Phase 2 stub: flag only. UI consumption lands in Plan 04.
       return { ...s, viewBothMode: true, staleDiff: undefined };
+    case 'file.reviewStatusSet':
+      return {
+        ...s,
+        fileReviewStatus: {
+          ...(s.fileReviewStatus ?? {}),
+          [e.fileId]: e.status,
+        },
+      };
+    case 'file.generatedExpandToggled':
+      return {
+        ...s,
+        expandedGeneratedFiles: {
+          ...(s.expandedGeneratedFiles ?? {}),
+          [e.fileId]: e.expanded,
+        },
+      };
+    case 'existingComments.loaded':
+      return { ...s, existingComments: e.comments };
+    case 'ciChecks.loaded':
+      return { ...s, ciStatus: e.ciStatus };
     default: {
       // Exhaustiveness guard — adding an event variant without handling it is a compile error.
       const _never: never = e;
