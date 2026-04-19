@@ -4,21 +4,23 @@ vi.mock('execa', () => ({ execa: vi.fn() }));
 
 describe('ingestGithub', () => {
   const GH_FIELDS =
-    'title,body,author,baseRefName,headRefName,baseRefOid,headRefOid,additions,deletions,changedFiles';
+    'title,body,author,baseRefName,headRefName,headRefOid,additions,deletions,changedFiles,number';
 
-  const fakeMeta = {
+  // `gh pr view --json` response — note: baseRefOid is NOT here; gh doesn't expose it.
+  const fakePrView = {
     title: 'Test PR',
     body: 'desc',
     author: { login: 'testuser' },
     baseRefName: 'main',
     headRefName: 'feat/x',
-    baseRefOid: 'abc000',
     headRefOid: 'def111',
     additions: 10,
     deletions: 2,
     changedFiles: 1,
+    number: 42,
   };
 
+  const BASE_SHA = 'abc0000000000000000000000000000000000000';
   const fakeDiff = 'diff --git a/foo.ts b/foo.ts\n+const x = 1;\n';
 
   beforeEach(() => {
@@ -29,19 +31,33 @@ describe('ingestGithub', () => {
     vi.clearAllMocks();
   });
 
-  it('calls execa with exact argv arrays for pr view and pr diff', async () => {
-    const { execa } = await import('execa');
-    (execa as ReturnType<typeof vi.fn>).mockImplementation(
-      (_bin: string, args: string[]) => {
-        if (args[0] === 'pr' && args[1] === 'view') {
-          return Promise.resolve({ stdout: JSON.stringify(fakeMeta) });
-        }
-        if (args[0] === 'pr' && args[1] === 'diff') {
-          return Promise.resolve({ stdout: fakeDiff });
-        }
-        return Promise.reject(new Error('unexpected call'));
+  function makeExecaMock(opts: {
+    repoView?: { owner: string; name: string };
+    baseSha?: string;
+  } = {}) {
+    return (_bin: string, args: string[]) => {
+      if (args[0] === 'pr' && args[1] === 'view') {
+        return Promise.resolve({ stdout: JSON.stringify(fakePrView) });
       }
-    );
+      if (args[0] === 'pr' && args[1] === 'diff') {
+        return Promise.resolve({ stdout: fakeDiff });
+      }
+      if (args[0] === 'repo' && args[1] === 'view') {
+        const rv = opts.repoView ?? { owner: 'acme', name: 'widgets' };
+        return Promise.resolve({
+          stdout: JSON.stringify({ owner: { login: rv.owner }, name: rv.name }),
+        });
+      }
+      if (args[0] === 'api') {
+        return Promise.resolve({ stdout: (opts.baseSha ?? BASE_SHA) + '\n' });
+      }
+      return Promise.reject(new Error(`unexpected call: ${args.join(' ')}`));
+    };
+  }
+
+  it('fetches pr view + pr diff + base SHA via gh api, merges into GitHubPrViewJson', async () => {
+    const { execa } = await import('execa');
+    (execa as ReturnType<typeof vi.fn>).mockImplementation(makeExecaMock());
 
     const { ingestGithub } = await import('../github.js');
     const result = await ingestGithub('42');
@@ -53,42 +69,53 @@ describe('ingestGithub', () => {
     const diffCall = calls.find(
       ([_b, args]: [string, string[]]) => args[0] === 'pr' && args[1] === 'diff'
     );
+    const apiCall = calls.find(([_b, args]: [string, string[]]) => args[0] === 'api');
 
-    expect(viewCall).toBeDefined();
-    expect(viewCall[0]).toBe('gh');
     expect(viewCall[1]).toEqual(['pr', 'view', '42', '--json', GH_FIELDS]);
-
-    expect(diffCall).toBeDefined();
-    expect(diffCall[0]).toBe('gh');
     expect(diffCall[1]).toEqual(['pr', 'diff', '42']);
+    expect(apiCall[1]).toEqual([
+      'api',
+      'repos/acme/widgets/pulls/42',
+      '--jq',
+      '.base.sha',
+    ]);
 
     expect(result.meta.title).toBe('Test PR');
+    expect(result.meta.baseRefOid).toBe(BASE_SHA);
+    expect(result.meta.headRefOid).toBe('def111');
     expect(result.diffText).toBe(fakeDiff);
   });
 
-  it('invokes both calls in parallel (both are started before either resolves)', async () => {
+  it('parses owner/repo from a full PR URL (skips gh repo view)', async () => {
     const { execa } = await import('execa');
-    const callOrder: string[] = [];
+    (execa as ReturnType<typeof vi.fn>).mockImplementation(makeExecaMock());
 
+    const { ingestGithub } = await import('../github.js');
+    await ingestGithub('https://github.com/alice/proj/pull/42');
+
+    const calls = (execa as ReturnType<typeof vi.fn>).mock.calls;
+    const apiCall = calls.find(([_b, args]: [string, string[]]) => args[0] === 'api');
+    const repoViewCall = calls.find(
+      ([_b, args]: [string, string[]]) => args[0] === 'repo' && args[1] === 'view'
+    );
+
+    expect(repoViewCall).toBeUndefined();
+    expect(apiCall[1]).toEqual([
+      'api',
+      'repos/alice/proj/pulls/42',
+      '--jq',
+      '.base.sha',
+    ]);
+  });
+
+  it('throws when gh api returns a non-SHA-40 value (fail closed)', async () => {
+    const { execa } = await import('execa');
     (execa as ReturnType<typeof vi.fn>).mockImplementation(
-      (_bin: string, args: string[]) => {
-        callOrder.push(`${args[0]}-${args[1]}`);
-        if (args[0] === 'pr' && args[1] === 'view') {
-          return Promise.resolve({ stdout: JSON.stringify(fakeMeta) });
-        }
-        if (args[0] === 'pr' && args[1] === 'diff') {
-          return Promise.resolve({ stdout: fakeDiff });
-        }
-        return Promise.reject(new Error('unexpected call'));
-      }
+      makeExecaMock({ baseSha: 'not-a-sha' })
     );
 
     const { ingestGithub } = await import('../github.js');
-    await ingestGithub('42');
-
-    // Both calls should have been started
-    expect(callOrder).toContain('pr-view');
-    expect(callOrder).toContain('pr-diff');
+    await expect(ingestGithub('42')).rejects.toThrow(/invalid base\.sha/i);
   });
 
   it('maps gh-auth failure to a friendly error containing "gh auth login"', async () => {

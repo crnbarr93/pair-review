@@ -1,8 +1,10 @@
 import { execa } from 'execa';
 import type { GitHubPrViewJson } from '@shared/types';
 
+// `gh pr view --json` does NOT expose `baseRefOid` (only `headRefOid`). We fetch everything else
+// here and use the REST API in `fetchBaseRefOid` to resolve the base SHA separately.
 const GH_FIELDS =
-  'title,body,author,baseRefName,headRefName,baseRefOid,headRefOid,additions,deletions,changedFiles';
+  'title,body,author,baseRefName,headRefName,headRefOid,additions,deletions,changedFiles,number';
 
 export async function ingestGithub(
   numberOrUrl: string
@@ -13,11 +15,51 @@ export async function ingestGithub(
       execa('gh', ['pr', 'view', id, '--json', GH_FIELDS]),
       execa('gh', ['pr', 'diff', id]),
     ]);
-    const meta = JSON.parse(metaRaw.stdout) as GitHubPrViewJson;
+    const metaPartial = JSON.parse(metaRaw.stdout) as Omit<GitHubPrViewJson, 'baseRefOid'> & {
+      number: number;
+    };
+    const baseRefOid = await fetchBaseRefOid(id, metaPartial.number);
+    const { number: _n, ...rest } = metaPartial;
+    const meta: GitHubPrViewJson = { ...rest, baseRefOid };
     return { meta, diffText: diffRaw.stdout };
   } catch (err) {
     throw mapGhError(err);
   }
+}
+
+/**
+ * Resolve the PR's base SHA via the REST API because `gh pr view --json` omits `baseRefOid`.
+ *
+ * Strategy:
+ * - If `numberOrUrl` is a GitHub PR URL, extract owner/repo directly from it.
+ * - Otherwise resolve owner/repo from the cwd's default via `gh repo view --json owner,name`.
+ *
+ * Throws on any resolution/API error (FAIL CLOSED — matches the rest of the ingest contract).
+ */
+async function fetchBaseRefOid(numberOrUrl: string, prNumber: number): Promise<string> {
+  const urlMatch = numberOrUrl.match(/github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?\/pull\/\d+/);
+  let owner: string;
+  let repo: string;
+  if (urlMatch) {
+    owner = urlMatch[1]!;
+    repo = urlMatch[2]!;
+  } else {
+    const { stdout } = await execa('gh', ['repo', 'view', '--json', 'owner,name']);
+    const parsed = JSON.parse(stdout) as { owner: { login: string }; name: string };
+    owner = parsed.owner.login;
+    repo = parsed.name;
+  }
+  const { stdout } = await execa('gh', [
+    'api',
+    `repos/${owner}/${repo}/pulls/${prNumber}`,
+    '--jq',
+    '.base.sha',
+  ]);
+  const sha = stdout.trim();
+  if (!/^[0-9a-f]{40}$/.test(sha)) {
+    throw new Error(`gh api returned invalid base.sha: ${JSON.stringify(sha)}`);
+  }
+  return sha;
 }
 
 /**
