@@ -215,3 +215,41 @@ None — all new surfaces (plugin manifest, slash-command prompt) are static con
 | Commit 5f12172 (feat GREEN — manifests + paraphrase) | FOUND |
 | Commit a62a4c1 (fix — e2e spawn + Zod v4 + path) | FOUND |
 | 154 tests pass (117 server + 37 web) | CONFIRMED |
+
+## Update (2026-04-18): Human-verify checkpoint APPROVED + shakedown fixes
+
+Task 2's human walkthrough surfaced a cascade of integration bugs that the
+automated vitest + Playwright stub coverage had missed. The fixes landed in
+9 commits between the original checkpoint commit (`5fdea73`) and approval:
+
+| Commit | Fix |
+|--------|-----|
+| `31b4c3f` | Inline `mcpServers` in plugin.json; delete root `.mcp.json`. The string-path form plus the auto-discovered file registered the same server twice; Claude Code's loader collapsed the duplicate and dropped the tool. |
+| `d4320b4` | Rename `/review` → `/pair-review`. A bare `/review` collided with a globally-installed review skill; the collision ran that skill and Claude performed a freeform code review instead of calling our MCP tool. |
+| `e7d6119` | Resolve `web/dist` via `CLAUDE_PLUGIN_ROOT`, not `process.cwd()`. The plugin is launched from the user's workspace, so the server was serving the SPA from `<user-repo>/web/dist` (not found → fallback HTML). |
+| `1f8e962` | Include `session=<prKey>` in `launchBrowser` URL and SSE snapshot's `launchUrl`. The web bootstrap reads `?session=` to subscribe to `/api/events`; the missing param was silently sending `?session=` (empty → 400). |
+| `e15e371` | Add `sessionLaunchUrl(prKey)` to test stubs so events-test expectations still hold after the manager-API change. |
+| `1d2c7ca` | Include `&session=` in the URL Claude prints to chat (not just the auto-launched one). The chat-copyable URL used the bare `getLaunchUrl()`. |
+| `7e84537` | Render diff hunks correctly: pass `l.text` verbatim (parse-diff already attaches the +/-/space prefix — we were double-prefixing into `++`/`--`) AND import `@git-diff-view/react/styles/diff-view-pure.css` so library classes style correctly. |
+| `267ce82` | Wrap each file's hunks in a unified-diff envelope (`--- a/path` + `+++ b/path` above the `@@` hunks). The library's parser silently produces zero rows without the envelope; the Plan-06 spike only verified API exports, never actual rendering. |
+
+### Final Self-Check (supersedes the initial pre-checkpoint table)
+
+| Check | Result |
+|-------|--------|
+| .claude-plugin/plugin.json with INLINE mcpServers | CONFIRMED |
+| No separate .mcp.json (merge-ambiguity defense) | CONFIRMED |
+| commands/pair-review.md (renamed to avoid global skill collision) | CONFIRMED |
+| `allowed-tools: mcp__git-review-plugin__start_review` frontmatter | CONFIRMED |
+| `CLAUDE_PLUGIN_ROOT` used for web/dist path resolution | CONFIRMED |
+| Browser auto-launch URL and chat-displayed URL both include `&session=<prKey>` | CONFIRMED |
+| 117 server tests + 37 web tests still green | CONFIRMED |
+| Human walkthrough: `/git-review-plugin:pair-review --local HEAD~1 HEAD` produces populated browser diff view with 14 files, Shiki highlighting, session-active header, footer URL | APPROVED |
+
+### Handoff Note for Phase 2 (updated)
+
+The Phase 2 entry-point expectations changed only cosmetically:
+
+- Invoke via `/git-review-plugin:pair-review` (not `/pair-review`) — plugin commands are namespaced.
+- `SessionManager.sessionLaunchUrl(prKey)` is now the canonical launch-URL builder; Phase 2's persistence layer should continue using it.
+- The `@git-diff-view/react` integration now works end-to-end, but requires the unified-diff envelope. If Phase 3+ adds inline comments or widgets, build them against the library's per-line hooks — the render path is confirmed functional.

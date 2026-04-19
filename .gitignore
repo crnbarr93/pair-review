@@ -5,3 +5,7 @@ dist
 .DS_Store
 coverage
 .vitest-cache
+
+# Playwright MCP debug artifacts
+.playwright-mcp/
+phase1-*.png
