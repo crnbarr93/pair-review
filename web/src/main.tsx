@@ -1,7 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@git-diff-view/react/styles/diff-view-pure.css';
-import { adoptSession, openEventStream } from './api';
+import { adoptSession, openEventStream, setReviewToken } from './api';
+import type { ChooseResumeSource } from './api';
 import { actions } from './store';
 import App from './App';
 
@@ -10,12 +11,39 @@ function renderFatal(msg: string): void {
   if (root) root.textContent = msg;
 }
 
+/**
+ * Reconstruct the source argument that would have been passed to the MCP
+ * start_review tool, using only the prKey carried on the launch URL. Works
+ * cleanly for GitHub PRs (prKey format `gh:owner/repo#number`).
+ *
+ * PHASE 2 LIMITATION: local-mode prKeys are sha-hashes of the cwd + refs and
+ * therefore cannot recover base/head from the prKey alone. Returns an empty
+ * local source as a best-effort placeholder; the server's zod schema for
+ * choose-resume requires non-empty base/head so "Refresh to current PR" on
+ * a local session may 400. "Discard session" still works.
+ *
+ * A future plan (Phase 2.1 or Phase 3) may widen the launchUrl to carry
+ * `source=<b64>` so local mode can round-trip cleanly.
+ */
+export function sourceFromPrKey(prKey: string): ChooseResumeSource {
+  const gh = prKey.match(/^gh:([^/]+)\/([^#]+)#(\d+)$/);
+  if (gh) return { kind: 'github', number: parseInt(gh[3], 10) };
+  return { kind: 'local', base: '', head: '' };
+}
+
 export async function bootstrap(): Promise<void> {
   const params = new URLSearchParams(location.search);
   const token = params.get('token');
   const sessionKey = params.get('session') ?? '';
 
   if (!token) return renderFatal('Missing session token. Re-run /review.');
+
+  // Capture token + source from URL BEFORE history.replaceState wipes them.
+  // Order is load-bearing: T-2-04-03 (token-leak mitigation) requires that
+  // the in-memory capture happens first, so after the URL wipe there is no
+  // path for the launch token to be recovered.
+  setReviewToken(token);
+  actions.setSource(sourceFromPrKey(sessionKey));
 
   const ok = await adoptSession(token);
   if (!ok) {
@@ -29,6 +57,7 @@ export async function bootstrap(): Promise<void> {
   openEventStream(
     sessionKey,
     (msg) => actions.onSnapshot(msg),
+    (msg) => actions.onUpdate(msg),
     () => actions.onSessionExpired()
   );
 

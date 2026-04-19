@@ -10,6 +10,7 @@ import { InlineThread } from './components/InlineThread';
 import { StageStepper, TopBar } from './components/TopBar';
 import { TweaksPanel, TWEAK_DEFAULTS, type Tweaks } from './components/TweaksPanel';
 import { Ic } from './components/icons';
+import { StaleDiffModal } from './components/StaleDiffModal';
 
 export default function App() {
   const [activePath, setActivePath] = useState('src/middleware/auth.ts');
@@ -40,59 +41,62 @@ export default function App() {
   }
 
   return (
-    <div className="app" data-screen-label="Claude Pair Review">
-      <TopBar />
-      <StageStepper stages={STAGES} active={activeStage} onPick={setActiveStage} />
-      <div className="main">
-        <FileExplorer
-          filter={filter}
-          setFilter={setFilter}
-          activePath={activePath}
-          onPick={setActivePath}
-        />
-        <div
-          style={{
-            position: 'relative',
-            display: 'flex',
-            flexDirection: 'column',
-            minHeight: 0,
-            minWidth: 0,
-            overflow: 'hidden',
-          }}
-        >
-          <DiffViewer
-            diff={AUTH_DIFF}
-            view={view}
-            onViewChange={setView}
-            openThreadId={openThreadId}
-            onOpenThread={openThread}
-            onCloseThread={() => setOpenThreadId(null)}
-            threadLayout={tweaks.threadLayout}
+    <>
+      <div className="app" data-screen-label="Claude Pair Review">
+        <TopBar />
+        <StageStepper stages={STAGES} active={activeStage} onPick={setActiveStage} />
+        <div className="main">
+          <FileExplorer
+            filter={filter}
+            setFilter={setFilter}
+            activePath={activePath}
+            onPick={setActivePath}
           />
-          {tweaks.threadLayout === 'gutter' && gutterPop && (
-            <GutterBubble tid={gutterPop} onClose={() => setGutterPop(null)} />
+          <div
+            style={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
+              minWidth: 0,
+              overflow: 'hidden',
+            }}
+          >
+            <DiffViewer
+              diff={AUTH_DIFF}
+              view={view}
+              onViewChange={setView}
+              openThreadId={openThreadId}
+              onOpenThread={openThread}
+              onCloseThread={() => setOpenThreadId(null)}
+              threadLayout={tweaks.threadLayout}
+            />
+            {tweaks.threadLayout === 'gutter' && gutterPop && (
+              <GutterBubble tid={gutterPop} onClose={() => setGutterPop(null)} />
+            )}
+          </div>
+          {tweaks.threadLayout === 'side' && sideThreadId ? (
+            <SideThread tid={sideThreadId} onClose={() => setSideThreadId(null)} />
+          ) : (
+            <ChatPanel
+              progressViz={tweaks.progressViz}
+              stages={STAGES}
+              activeStage={activeStage}
+              chat={CHAT}
+              threadIndex={THREAD_INDEX}
+              onOpenThread={openThread}
+            />
           )}
         </div>
-        {tweaks.threadLayout === 'side' && sideThreadId ? (
-          <SideThread tid={sideThreadId} onClose={() => setSideThreadId(null)} />
-        ) : (
-          <ChatPanel
-            progressViz={tweaks.progressViz}
-            stages={STAGES}
-            activeStage={activeStage}
-            chat={CHAT}
-            threadIndex={THREAD_INDEX}
-            onOpenThread={openThread}
-          />
-        )}
+        <TweaksPanel
+          open={tweaksOpen}
+          tweaks={tweaks}
+          setTweaks={setTweaks}
+          onClose={() => setTweaksOpen(false)}
+        />
       </div>
-      <TweaksPanel
-        open={tweaksOpen}
-        tweaks={tweaks}
-        setTweaks={setTweaks}
-        onClose={() => setTweaksOpen(false)}
-      />
-    </div>
+      <StaleDiffModal />
+    </>
   );
 }
 
