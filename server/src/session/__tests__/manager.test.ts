@@ -157,4 +157,94 @@ describe('SessionManager', () => {
     // The mock ingestLocal returns a diff with one file; toDiffModel should parse it
     expect(session.diff.files.length).toBeGreaterThanOrEqual(1);
   });
+
+  it('startReview sets lastEventId=0 on the newly-created session', async () => {
+    const manager = new SessionManager({ sessionToken: 'testtoken1234' });
+    manager.setLaunchUrl('http://127.0.0.1:8080/?token=testtoken1234');
+    const session = await manager.startReview({ kind: 'local', base: 'main', head: 'HEAD' });
+    expect(session.lastEventId).toBe(0);
+  });
+});
+
+describe('SessionManager.applyEvent', () => {
+  let SessionManager: typeof import('../manager.js').SessionManager;
+  let writeStateMock: ReturnType<typeof vi.fn>;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const managerMod = await import('../manager.js');
+    SessionManager = managerMod.SessionManager;
+    const storeMod = await import('../../persist/store.js');
+    writeStateMock = vi.mocked(storeMod.writeState);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  async function seedSession() {
+    const manager = new SessionManager({ sessionToken: 'testtoken1234' });
+    manager.setLaunchUrl('http://127.0.0.1:8080/?token=testtoken1234');
+    const source = { kind: 'local' as const, base: 'main', head: 'feat/seed' };
+    const session = await manager.startReview(source);
+    return { manager, session };
+  }
+
+  it('applyEvent-1: persist-then-broadcast ordering (writeState resolves before bus emit)', async () => {
+    const { manager, session } = await seedSession();
+    const order: string[] = [];
+
+    writeStateMock.mockImplementation(async () => {
+      order.push('writeState');
+    });
+    manager.bus.on('session:updated', () => {
+      order.push('bus');
+    });
+
+    await manager.applyEvent(session.prKey, { type: 'session.viewBoth' });
+    expect(order).toEqual(['writeState', 'bus']);
+  });
+
+  it('applyEvent-2: increments lastEventId monotonically', async () => {
+    const { manager, session } = await seedSession();
+    expect(session.lastEventId).toBe(0);
+
+    const after1 = await manager.applyEvent(session.prKey, { type: 'session.viewBoth' });
+    expect(after1.lastEventId).toBe(1);
+
+    const after2 = await manager.applyEvent(session.prKey, { type: 'session.viewBoth' });
+    expect(after2.lastEventId).toBe(2);
+  });
+
+  it('applyEvent-3: persisted JSON includes the incremented lastEventId', async () => {
+    const { manager, session } = await seedSession();
+    await manager.applyEvent(session.prKey, { type: 'session.viewBoth' });
+    const lastCall = writeStateMock.mock.calls[writeStateMock.mock.calls.length - 1];
+    const persistedBlob = lastCall[1] as { lastEventId: number };
+    expect(persistedBlob.lastEventId).toBe(1);
+  });
+
+  it('applyEvent-4: concurrent calls on same prKey serialize via queue', async () => {
+    const { manager, session } = await seedSession();
+    const seen: number[] = [];
+    manager.bus.on('session:updated', (payload) => {
+      seen.push(payload.state.lastEventId);
+    });
+
+    await Promise.all([
+      manager.applyEvent(session.prKey, { type: 'session.viewBoth' }),
+      manager.applyEvent(session.prKey, { type: 'session.viewBoth' }),
+    ]);
+
+    const final = manager.get(session.prKey)!;
+    expect(final.lastEventId).toBe(2);
+    expect(seen).toEqual([1, 2]);
+  });
+
+  it('applyEvent-5: rejects with "No session for prKey" on unknown prKey', async () => {
+    const manager = new SessionManager({ sessionToken: 'testtoken1234' });
+    await expect(
+      manager.applyEvent('gh:unknown/repo#999', { type: 'session.viewBoth' })
+    ).rejects.toThrow(/No session for prKey/);
+  });
 });

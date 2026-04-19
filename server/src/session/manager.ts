@@ -4,16 +4,21 @@ import type {
   DiffModel,
   ShikiFileTokens,
   GitHubPrViewJson,
+  SessionEvent,
 } from '@shared/types';
 import { githubKey, localKey } from './key.js';
-import { writeState } from '../persist/store.js';
+import { writeState, readState } from '../persist/store.js';
 import { launchBrowser } from '../browser-launch.js';
 import { logger } from '../logger.js';
-import { ingestGithub } from '../ingest/github.js';
-import { ingestLocal } from '../ingest/local.js';
+import { ingestGithub, fetchCurrentHeadSha as fetchGithubHeadSha } from '../ingest/github.js';
+import { ingestLocal, fetchCurrentHeadSha as fetchLocalHeadSha } from '../ingest/local.js';
 import { inferRepoFromCwd } from '../ingest/repo-infer.js';
 import { toDiffModel } from '../ingest/parse.js';
 import { highlightHunks } from '../highlight/shiki.js';
+import { applyEvent as reduce } from './reducer.js';
+import { SessionBus } from './bus.js';
+import { promises as fs } from 'node:fs';
+import { stateFilePath } from '../persist/paths.js';
 
 export type SourceArg =
   | { kind: 'github'; url: string }
@@ -26,6 +31,8 @@ export class SessionManager {
   private launchUrl = '';
   private sessions = new Map<string, ReviewSession>();
   private launched = new Set<string>(); // prKeys whose browser was already launched (D-21)
+  private queues = new Map<string, Promise<unknown>>();
+  public readonly bus = new SessionBus();
 
   constructor(opts: { sessionToken: string }) {
     this.sessionToken = opts.sessionToken;
@@ -68,10 +75,50 @@ export class SessionManager {
   async startReview(source: SourceArg): Promise<ReviewSession> {
     const prKey = await this.derivePrKey(source);
 
-    // Idempotency: return existing session, don't re-launch browser (D-21)
+    // (1) Idempotency: return existing session, don't re-launch browser (D-21)
     const existing = this.sessions.get(prKey);
     if (existing) return existing;
 
+    // (2) Phase 2 disk-load path: persisted state on disk, nothing in memory.
+    const persistedRaw = await readState(prKey);
+    if (persistedRaw) {
+      const persisted = persistedRaw as Partial<ReviewSession> & Record<string, unknown>;
+      // Legacy Phase-1 `state.json` may lack `lastEventId` — migrate forward.
+      const migrated: ReviewSession = {
+        ...(persisted as ReviewSession),
+        lastEventId: typeof persisted.lastEventId === 'number' ? persisted.lastEventId : 0,
+      };
+
+      // Stale-diff detection (Pattern 4). Fail closed per Pitfall F: any error from
+      // fetchCurrentHeadSha surfaces as session.error; do NOT default to "stale".
+      let staleDiff: ReviewSession['staleDiff'];
+      let headShaError: ReviewSession['error'] = null;
+      try {
+        const currentSha = await this.fetchCurrentHeadSha(source);
+        if (currentSha !== migrated.headSha) {
+          staleDiff = { storedSha: migrated.headSha, currentSha };
+        }
+      } catch (err) {
+        headShaError = {
+          variant: 'fetch-failed',
+          message: `head-sha-check-failed: ${err instanceof Error ? err.message : String(err)}`,
+        };
+      }
+
+      const session: ReviewSession = {
+        ...migrated,
+        staleDiff,
+        error: headShaError,
+      };
+      this.sessions.set(prKey, session);
+      if (!this.launched.has(prKey)) {
+        this.launched.add(prKey);
+        await launchBrowser(this.sessionLaunchUrl(prKey));
+      }
+      return session;
+    }
+
+    // (3) Fall-through: full ingest — original Phase-1 behavior
     let pr: PullRequestMeta;
     let diffText: string;
 
@@ -140,6 +187,7 @@ export class SessionManager {
       createdAt: new Date().toISOString(),
       headSha: pr.headSha,
       error: null,
+      lastEventId: 0,
     };
     this.sessions.set(prKey, session);
 
@@ -157,6 +205,75 @@ export class SessionManager {
     }
 
     return session;
+  }
+
+  /**
+   * THE ONE FUNNEL for Phase 2+ mutations. Persist-then-broadcast.
+   *
+   * Order:
+   *   1. Serialize per-prKey via a Promise chain (closes Pitfall D)
+   *   2. Read current session from in-memory Map
+   *   3. Run pure reducer
+   *   4. Increment lastEventId (reducer never touches the counter)
+   *   5. Persist snapshot to disk (source of truth)
+   *   6. Update in-memory Map
+   *   7. Emit on bus (broadcast)
+   *
+   * Disk confirms BEFORE memory updates BEFORE broadcast. A crash between
+   * 5 and 6 leaves disk ahead of memory — but memory is empty on restart
+   * and gets repopulated via readState; zero drift.
+   */
+  async applyEvent(id: string, event: SessionEvent): Promise<ReviewSession> {
+    const prev = this.queues.get(id) ?? Promise.resolve();
+    const run = prev.then(async () => {
+      const current = this.sessions.get(id);
+      if (!current) throw new Error(`No session for prKey: ${id}`);
+      const reduced = reduce(current, event);
+      const next: ReviewSession = { ...reduced, lastEventId: current.lastEventId + 1 };
+      await writeState(id, next); // disk first
+      this.sessions.set(id, next); // memory second
+      this.bus.emit('session:updated', { id, event, state: next }); // broadcast last
+      return next;
+    });
+    // Save the chain without leaking rejections to subsequent callers
+    this.queues.set(id, run.catch(() => undefined));
+    return run;
+  }
+
+  /**
+   * Concrete behavior for the `session.reset` resume choice.
+   * Deletes state.json from disk, clears in-memory Map, then re-runs the full
+   * ingest pipeline as if this were a first-ever startReview. Returns the fresh session.
+   *
+   * Called from the HTTP handler for POST /api/session/choose-resume { choice: 'reset' }.
+   * NOT meant to be called directly by MCP tools — the user-initiated reset flow is HTTP-only.
+   */
+  async resetSession(prKey: string, source: SourceArg): Promise<ReviewSession> {
+    // Delete the on-disk snapshot (best-effort — ENOENT is fine)
+    try {
+      await fs.unlink(stateFilePath(prKey));
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+        logger.warn('resetSession: failed to unlink state.json', err);
+      }
+    }
+    this.sessions.delete(prKey);
+    // Also reset launched marker so if something truly catastrophic happened we re-launch
+    this.launched.delete(prKey);
+    // Re-run full ingest via startReview — fall-through to path (3)
+    return this.startReview(source);
+  }
+
+  /**
+   * Route-to-ingest-adapter SHA lookup for Phase 2 stale-diff detection.
+   * Each adapter is already fail-closed (Pitfall F); this only dispatches.
+   */
+  private async fetchCurrentHeadSha(source: SourceArg): Promise<string> {
+    if (source.kind === 'github') {
+      const id = 'url' in source ? source.url : String(source.number);
+      return fetchGithubHeadSha(id);
+    }
+    return fetchLocalHeadSha(source.head, process.cwd());
   }
 
   /**
