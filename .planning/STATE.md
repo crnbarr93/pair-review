@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 01-07-PLAN.md (checkpoint: awaiting human-verify Task 2)"
-last_updated: "2026-04-19T12:12:31.439Z"
-last_activity: 2026-04-19 -- Phase 2 planning complete
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-04-19T13:24:08.911Z"
+last_activity: 2026-04-19
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 11
-  completed_plans: 7
-  percent: 64
+  completed_plans: 8
+  percent: 73
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** A pair-review workflow that produces a posted GitHub review of real reviewer quality, faster and with better coverage than reviewing alone or chatting with an LLM in a generic UI.
-**Current focus:** Phase 01 — plugin-skeleton-secure-vertical-slice
+**Current focus:** Phase 02 — persistent-session-store-resume
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
+Phase: 02 (persistent-session-store-resume) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-04-19 -- Phase 2 planning complete
+Last activity: 2026-04-19
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -54,6 +54,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01 P07 | 12 minutes | 1 tasks | 5 files |
+| Phase 02 P01 | 4 minutes | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -68,6 +69,9 @@ Recent decisions affecting current work:
 - [Phase 01]: paraphrase-split-first: Split description paragraphs on newlines before stripping markdown to preserve paragraph boundaries
 - [Phase 01]: spawn-not-execa-in-vitest: Use node:child_process.spawn for long-lived server subprocess in e2e tests (execa v9 streams don't emit data events in vitest worker threads)
 - [Phase 01]: zod-v4-union: Zod v4 rejects duplicate discriminator values — use nested z.union for github url/number variants
+- [Phase 02]: SessionEvent co-located in shared/types.ts (not server/src/session/events.ts) — event type is part of the server↔web SSE contract via UpdateMessage
+- [Phase 02]: Reducer must NOT touch lastEventId — that invariant belongs to SessionManager.applyEvent (Plan 02-03); grep-enforced to 0 occurrences in reducer.ts
+- [Phase 02]: SessionBus uses WeakMap to preserve off() semantics while wrapping listeners with safeWrap for error isolation
 
 ### Pending Todos
 
@@ -95,6 +99,6 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-04-16T17:04:23.428Z
-Stopped at: Completed 01-07-PLAN.md (checkpoint: awaiting human-verify Task 2)
+Last session: 2026-04-19T13:24:08.909Z
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None

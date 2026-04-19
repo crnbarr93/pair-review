@@ -63,7 +63,7 @@ Plans:
   4. All mutations (from any entry point) go through `sessionManager.applyEvent(id, event)` — unit tests cover the reducer exhaustively for every event type in use so far.
 **Plans**: 4 plans in 3 waves
 Plans:
-- [ ] 02-01-PLAN.md — Shared types + pure reducer + typed SessionBus (Wave 1)
+- [x] 02-01-PLAN.md — Shared types + pure reducer + typed SessionBus (Wave 1)
 - [ ] 02-02-PLAN.md — SESS-03 persistence proofs: crash-interrupt + concurrency + stale-lock tests (Wave 1)
 - [ ] 02-03-PLAN.md — SessionManager applyEvent + disk-load resume + stale-SHA + POST /choose-resume + SSE update fan-out (Wave 2)
 - [ ] 02-04-PLAN.md — Web StaleDiffModal + chooseResume API + store onUpdate + main.tsx wiring + human-verify checkpoint (Wave 3)
