@@ -41,6 +41,7 @@ export interface DiffFile {
   status: FileStatus;
   binary: boolean;
   hunks: Hunk[];
+  generated: boolean;         // Phase 3 D-14: true if path matches GENERATED_PATTERNS allowlist
 }
 
 export interface DiffModel {
@@ -86,6 +87,11 @@ export interface ReviewSession {
   viewBothMode?: boolean;
   pendingReset?: boolean;
   lastEventId: number;   // monotonic per-session counter; starts at 0 on first persist
+  // Phase 3 additions (all optional — pre-Phase-3 sessions omit them):
+  fileReviewStatus?: Record<string, FileReviewStatus>;
+  expandedGeneratedFiles?: Record<string, boolean>;
+  existingComments?: ReadOnlyComment[];
+  ciStatus?: CIStatus;
 }
 
 // Phase 2 event union — Phase 4/5/6 variants will extend this.
@@ -98,7 +104,12 @@ export type SessionEvent =
       newShikiTokens: Record<string, ShikiFileTokens>;
     }
   | { type: 'session.reset' }
-  | { type: 'session.viewBoth' };
+  | { type: 'session.viewBoth' }
+  // Phase 3 additions (D-27):
+  | { type: 'file.reviewStatusSet'; fileId: string; status: FileReviewStatus }
+  | { type: 'file.generatedExpandToggled'; fileId: string; expanded: boolean }
+  | { type: 'existingComments.loaded'; comments: ReadOnlyComment[] }
+  | { type: 'ciChecks.loaded'; ciStatus: CIStatus };
 
 // SSE message envelope (server → browser)
 export interface SnapshotMessage {
@@ -126,4 +137,41 @@ export interface AppState {
   errorVariant?: 'unreachable' | 'fetch-failed';
   launchUrl: string;
   tokenLast4: string;
+  // Phase 3 additions (mirrored from ReviewSession for web consumption):
+  fileReviewStatus?: Record<string, FileReviewStatus>;
+  expandedGeneratedFiles?: Record<string, boolean>;
+  existingComments?: ReadOnlyComment[];
+  ciStatus?: CIStatus;
+}
+
+// Phase 3 additions (D-11 state machine)
+export type FileReviewStatus = 'untouched' | 'in-progress' | 'reviewed';
+
+// Phase 3 addition — existing PR review comment, server-resolved to a DiffLine.id.
+// SECURITY: `body` MUST be rendered via React text nodes in the client — never innerHTML (T-3-03).
+export interface ReadOnlyComment {
+  id: number;
+  lineId: string | null;   // null = orphan (hidden in Phase 3; server logs count to stderr per D-22)
+  path: string;
+  line: number | null;
+  side: 'LEFT' | 'RIGHT' | 'BOTH';
+  author: string;
+  createdAt: string;       // ISO timestamp
+  body: string;            // Raw GitHub comment body — render via React text nodes, NOT innerHTML
+  htmlUrl: string;         // "View on GitHub" link destination
+  threadId?: number;       // in_reply_to_id — used for visual grouping in Phase 3
+}
+
+// Phase 3 addition — CI check run (normalized from `gh pr checks --json name,state,bucket,link`).
+// NOTE: gh CLI field names are `bucket` and `link` — NOT `conclusion`/`detailsUrl`.
+// See PROJECT.md Key Decision (Phase 3, gh-pr-checks field correction).
+export interface CheckRun {
+  name: string;
+  bucket: 'pass' | 'fail' | 'pending' | 'skipping' | 'cancel';
+  link: string;   // external details URL
+}
+
+export interface CIStatus {
+  aggregate: 'pass' | 'fail' | 'pending' | 'none';
+  checks: CheckRun[];
 }
