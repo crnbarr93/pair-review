@@ -107,7 +107,16 @@ Plans:
   3. User can trigger `run_self_review` and see findings grouped by checklist category, each tagged `blocker` / `major` / `minor` / `nit`, ordered by criticality, each with a clickable `file:line` reference that scrolls the diff to the hunk.
   4. User can see per-category coverage (pass / partial / fail) derived from the self-review findings in a checklist sidebar or equivalent UI surface.
   5. On a fixture PR with a genuine bug, the first self-review pass does NOT default to "Approve" — the prompt framing (adversarial stance, default verdict = "Request changes") visibly forces the LLM to argue down from "Request changes" rather than up from "Approve" (mitigating Pitfall 4 — sycophantic self-review).
-**Plans**: TBD
+**Plans**: 8 plans in 4 waves
+Plans:
+- [ ] 04-01-PLAN.md — shared/types.ts extensions (PrSummary, SelfReview, Finding, ResolvedFinding, Severity, ChecklistCategory, Verdict, CategoryCoverage, SummaryIntent, 2 new SessionEvent variants, ReviewSession+AppState fields) (Wave 1)
+- [ ] 04-02-PLAN.md — server/src/checklist/index.ts TS-const CHECKLIST + ChecklistItem type (Wave 1)
+- [ ] 04-03-PLAN.md — Reducer branches for summary.set + selfReview.set + exhaustive purity tests (Wave 2)
+- [ ] 04-04-PLAN.md — list_files + get_hunk MCP tools with cursor pagination + generated-file filtering (Wave 2)
+- [ ] 04-05-PLAN.md — set_pr_summary MCP tool with paraphrase-discipline description + atomic replace (Wave 3)
+- [ ] 04-06-PLAN.md — run_self_review MCP tool with zod nit cap + lineId regex + server-side resolution + adversarial framing + default verdict inversion (Wave 3)
+- [ ] 04-07-PLAN.md — Frontend: StageStepper mount + FindingsSidebar + SummaryDrawer + 5-chip coverage strip + store dispatch routing + human-verify checkpoint (Wave 4)
+- [ ] 04-08-PLAN.md — Evaluation harness: 5 fixtures (01/04/06/07/08) + dim-02 (anchor) + dim-03 (verdict calibration) + dim-04 (coverage breadth) + Phase-4 baseline (Wave 3)
 **UI hint**: yes
 
 **Placement rationale**: Summary is the lowest-risk LLM integration — no anchoring, no posting — so it's the right place to nail prompting discipline (adversarial framing, intent classification, nit caps in the schema) before that discipline has to survive the harder surfaces of Phase 5. Checklist and self-review are scaffolding that walkthrough and comments depend on: the walkthrough uses the self-review's findings to prioritize hunks; the comment drafts anchor on the self-review's `file:line` refs. Running this phase ahead of Phase 5 means the narrative order has something to reason about.
