@@ -115,7 +115,7 @@ Plans:
 - [x] 04-04-PLAN.md — list_files + get_hunk MCP tools with cursor pagination + generated-file filtering (Wave 2)
 - [x] 04-05-PLAN.md — set_pr_summary MCP tool with paraphrase-discipline description + atomic replace (Wave 3)
 - [x] 04-06-PLAN.md — run_self_review MCP tool with zod nit cap + lineId regex + server-side resolution + adversarial framing + default verdict inversion (Wave 3)
-- [ ] 04-07-PLAN.md — Frontend: StageStepper mount + FindingsSidebar + SummaryDrawer + 5-chip coverage strip + store dispatch routing + human-verify checkpoint (Wave 4)
+- [x] 04-07-PLAN.md — Frontend: StageStepper mount + FindingsSidebar + SummaryDrawer + 5-chip coverage strip + store dispatch routing + human-verify checkpoint (Wave 4)
 - [x] 04-08-PLAN.md — Evaluation harness: 5 fixtures (01/04/06/07/08) + dim-02 (anchor) + dim-03 (verdict calibration) + dim-04 (coverage breadth) + Phase-4 baseline (Wave 3)
 **UI hint**: yes
 
