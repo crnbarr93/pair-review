@@ -109,8 +109,8 @@ Plans:
   5. On a fixture PR with a genuine bug, the first self-review pass does NOT default to "Approve" — the prompt framing (adversarial stance, default verdict = "Request changes") visibly forces the LLM to argue down from "Request changes" rather than up from "Approve" (mitigating Pitfall 4 — sycophantic self-review).
 **Plans**: 8 plans in 4 waves
 Plans:
-- [ ] 04-01-PLAN.md — shared/types.ts extensions (PrSummary, SelfReview, Finding, ResolvedFinding, Severity, ChecklistCategory, Verdict, CategoryCoverage, SummaryIntent, 2 new SessionEvent variants, ReviewSession+AppState fields) (Wave 1)
-- [ ] 04-02-PLAN.md — server/src/checklist/index.ts TS-const CHECKLIST + ChecklistItem type (Wave 1)
+- [x] 04-01-PLAN.md — shared/types.ts extensions (PrSummary, SelfReview, Finding, ResolvedFinding, Severity, ChecklistCategory, Verdict, CategoryCoverage, SummaryIntent, 2 new SessionEvent variants, ReviewSession+AppState fields) (Wave 1)
+- [x] 04-02-PLAN.md — server/src/checklist/index.ts TS-const CHECKLIST + ChecklistItem type (Wave 1)
 - [ ] 04-03-PLAN.md — Reducer branches for summary.set + selfReview.set + exhaustive purity tests (Wave 2)
 - [ ] 04-04-PLAN.md — list_files + get_hunk MCP tools with cursor pagination + generated-file filtering (Wave 2)
 - [ ] 04-05-PLAN.md — set_pr_summary MCP tool with paraphrase-discipline description + atomic replace (Wave 3)
