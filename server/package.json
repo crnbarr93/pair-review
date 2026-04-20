@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/index.ts",
     "test": "vitest",
+    "test:eval": "vitest run src/__tests__/evals",
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {

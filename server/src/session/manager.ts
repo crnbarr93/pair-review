@@ -349,4 +349,9 @@ export class SessionManager {
       url: 'url' in source ? source.url : undefined,
     };
   }
+
+  /** Test-only: seed a pre-built ReviewSession without the full ingest pipeline. */
+  adoptSyntheticSession(prKey: string, session: ReviewSession): void {
+    this.sessions.set(prKey, session);
+  }
 }

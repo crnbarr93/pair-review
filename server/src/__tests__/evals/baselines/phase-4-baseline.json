@@ -1,0 +1,11 @@
+{
+  "phase": "04",
+  "capturedAt": "2026-04-20T13:29:00Z",
+  "fixtures": ["01-null-pointer-bug", "04-pure-rename-refactor", "06-intent-mismatch-trap", "07-nit-temptation", "08-anchor-trap"],
+  "dimensions": {
+    "dim-02-anchor-correctness": "pass",
+    "dim-03-verdict-calibration": "pass",
+    "dim-04-coverage-breadth": "pass"
+  },
+  "notes": "Phase-4 mechanical dimensions only. Dim-01 (signal ratio) and Dim-05 (paraphrase fidelity) require LLM-as-judge and are deferred."
+}
