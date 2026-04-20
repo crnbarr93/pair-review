@@ -1,11 +1,14 @@
 import { useSyncExternalStore } from 'react';
 import type {
   AppStatePhase,
+  ChecklistCategory,
   CIStatus,
   DiffModel,
   FileReviewStatus,
+  PrSummary,
   PullRequestMeta,
   ReadOnlyComment,
+  SelfReview,
   ShikiFileTokens,
   SnapshotMessage,
   UpdateMessage,
@@ -41,6 +44,11 @@ export interface AppState {
   // Empty string sentinel when no snapshot has arrived yet; consumers use a falsy
   // check to short-circuit (T-3-13 mitigation).
   prKey: string;
+  // Phase 4 additions
+  summary: PrSummary | null;
+  selfReview: SelfReview | null;
+  findingsSidebarOpen: boolean;
+  activeCategory: ChecklistCategory | null;
 }
 
 const INITIAL: AppState = {
@@ -54,6 +62,10 @@ const INITIAL: AppState = {
   existingComments: [],
   ciStatus: undefined,
   prKey: '',
+  summary: null,
+  selfReview: null,
+  findingsSidebarOpen: false,
+  activeCategory: null,
 };
 
 let state: AppState = { ...INITIAL };
@@ -113,6 +125,8 @@ export const actions = {
         isHeadShaError && s.error
           ? { variant: 'head-sha-check-failed', message: s.error.message }
           : undefined,
+      summary: s.summary ?? null,
+      selfReview: s.selfReview ?? null,
     };
     emit();
   },
@@ -133,7 +147,34 @@ export const actions = {
       existingComments: s.existingComments ?? [],
       ciStatus: s.ciStatus,
       headShaError: undefined, // an update arrived → previous head-sha-check-failed is cleared
+      summary: s.summary ?? null,
+      selfReview: s.selfReview ?? null,
     };
+    emit();
+  },
+
+  onSummarySet(msg: UpdateMessage) {
+    state = { ...state, summary: msg.state.summary ?? null };
+    emit();
+  },
+
+  onSelfReviewSet(msg: UpdateMessage) {
+    const wasNull = state.selfReview == null;
+    state = {
+      ...state,
+      selfReview: msg.state.selfReview ?? null,
+      findingsSidebarOpen: wasNull && msg.state.selfReview != null ? true : state.findingsSidebarOpen,
+    };
+    emit();
+  },
+
+  toggleFindingsSidebar() {
+    state = { ...state, findingsSidebarOpen: !state.findingsSidebarOpen };
+    emit();
+  },
+
+  setActiveCategory(cat: ChecklistCategory | null) {
+    state = { ...state, activeCategory: cat };
     emit();
   },
 

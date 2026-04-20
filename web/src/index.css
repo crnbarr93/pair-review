@@ -86,9 +86,8 @@ button {
 .app {
   height: 100vh;
   display: grid;
-  /* Phase 3 D-02: 2-row layout — TopBar (44px) then main 1fr.
-     StageStepper row (previously 52px) is deferred to Phase 4. */
-  grid-template-rows: 44px 1fr;
+  /* Phase 4: TopBar (44px) + StageStepper (52px) + main (1fr). */
+  grid-template-rows: 44px 52px 1fr;
   background: var(--paper);
 }
 
@@ -1143,4 +1142,205 @@ button {
 }
 @media (prefers-reduced-motion: reduce) {
   .hunk.focused { animation: none; }
+}
+
+/* ============================================
+   Phase 4 — FindingsSidebar + SummaryDrawer + Coverage Chips
+   All colors use existing :root tokens. No new --vars.
+   ============================================ */
+
+@media (min-width: 1280px) {
+  .main--findings-open {
+    grid-template-columns: 280px 1fr 280px;
+  }
+}
+
+.topbtn--active {
+  background: var(--claude-2);
+  color: var(--claude);
+}
+
+.findings-sidebar {
+  background: var(--paper);
+  border-left: 1px solid var(--line);
+  height: 100%;
+  overflow-y: auto;
+}
+.findings-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.findings-sidebar-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.filter-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--claude-2);
+  color: var(--claude);
+  border: none;
+  cursor: pointer;
+}
+.findings-category-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+}
+.findings-count { font-weight: 400; color: var(--ink-4); }
+.findings-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--paper);
+  font-size: 13px;
+  color: var(--ink-2);
+  min-height: 36px;
+}
+.findings-row:hover { background: var(--paper-2); }
+.findings-row.active {
+  background: var(--claude-2);
+  border-left: 2px solid var(--claude);
+}
+.findings-file-ref {
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--ink-4);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.findings-file-ref:hover { color: var(--claude); }
+.findings-title {
+  flex: 1;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  color: var(--ink-2);
+}
+.findings-rationale {
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 4px;
+  background: var(--paper-2);
+  border-radius: 4px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.severity-pill {
+  display: inline-block;
+  width: 54px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+}
+.severity-pill--blocker { background: var(--block-bg); color: var(--block); }
+.severity-pill--major { background: var(--warn-bg); color: var(--warn); }
+.severity-pill--minor { background: var(--paper-2); color: var(--ink-2); }
+.severity-pill--nit { background: var(--paper-2); color: var(--ink-4); }
+
+.coverage-chip {
+  display: inline-block;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  cursor: pointer;
+  background: var(--paper);
+}
+.coverage-chip--pass { background: var(--ok-bg); color: var(--ok); }
+.coverage-chip--partial { background: var(--warn-bg); color: var(--warn); }
+.coverage-chip--fail { background: var(--block-bg); color: var(--block); }
+.coverage-chip.active { font-weight: 600; border-width: 2px; }
+
+.stages-coverage-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 0 8px;
+}
+
+.summary-drawer {
+  background: #FFFDF7;
+  border-bottom: 1px solid var(--line);
+  padding: 24px 16px 16px;
+  min-height: 180px;
+}
+.intent-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.intent-chip--bug-fix { background: var(--block-bg); color: var(--block); }
+.intent-chip--feature { background: var(--claude-2); color: var(--claude); }
+.intent-chip--refactor { background: var(--warn-bg); color: var(--warn); }
+.intent-chip--chore { background: var(--paper-2); color: var(--ink-3); }
+.intent-chip--other { background: var(--paper-2); color: var(--ink-4); }
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.text-btn {
+  background: none;
+  border: none;
+  color: var(--claude);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+
+@media (max-width: 1279px) {
+  .findings-sidebar {
+    position: fixed;
+    top: 96px;
+    right: 0;
+    bottom: 0;
+    width: 280px;
+    z-index: 30;
+    box-shadow: -4px 0 12px rgba(0,0,0,0.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .findings-sidebar, .summary-drawer {
+    transition: none !important;
+    animation: none !important;
+  }
 }

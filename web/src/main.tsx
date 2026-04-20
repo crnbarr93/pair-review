@@ -56,7 +56,15 @@ export async function bootstrap(): Promise<void> {
   openEventStream(
     sessionKey,
     (msg) => actions.onSnapshot(msg),
-    (msg) => actions.onUpdate(msg),
+    (msg) => {
+      if (msg.event?.type === 'selfReview.set') {
+        actions.onSelfReviewSet(msg);
+      } else if (msg.event?.type === 'summary.set') {
+        actions.onSummarySet(msg);
+      } else {
+        actions.onUpdate(msg);
+      }
+    },
     () => actions.onSessionExpired()
   );
 

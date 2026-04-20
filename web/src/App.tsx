@@ -11,12 +11,18 @@
 // every postSessionEvent call site below early-returns on falsy (T-3-13 mitigation).
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { DiffModel, FileReviewStatus } from '@shared/types';
-import { useAppStore } from './store';
+import { useAppStore, actions } from './store';
 import { postSessionEvent } from './api';
-import { TopBar } from './components/TopBar';
+import { TopBar, StageStepper } from './components/TopBar';
 import { FileExplorer } from './components/FileExplorer';
 import { DiffViewer, type DiffView } from './components/DiffViewer';
 import { StaleDiffModal } from './components/StaleDiffModal';
+import { FindingsSidebar } from './components/FindingsSidebar';
+import { SummaryDrawer } from './components/SummaryDrawer';
+
+function cn(...parts: Array<string | false | undefined | null>): string {
+  return parts.filter(Boolean).join(' ');
+}
 
 type PhaseStatus = 'untouched' | 'in-progress' | 'reviewed';
 
@@ -28,6 +34,7 @@ export default function App() {
   // silently fails for local-branch sessions — see Plan 03-05 threat T-3-13).
   const prKey = state.prKey;
 
+  const [summaryDrawerOpen, setSummaryDrawerOpen] = useState(false);
   const [view, setView] = useState<DiffView>('unified');
   const [focusedHunkId, setFocusedHunkId] = useState<string | null>(null);
   const [focusedFileId, setFocusedFileId] = useState<string | null>(null);
@@ -254,17 +261,41 @@ export default function App() {
   }, [state.expandedGeneratedFiles]);
 
   return (
-    <div className="app">
+    <div className={cn('app', state.findingsSidebarOpen && 'app--findings-open')}>
       {state.pr && (
         <TopBar
           pr={state.pr}
           ciStatus={state.ciStatus}
+          summary={state.summary}
+          selfReview={state.selfReview}
+          activeCategory={state.activeCategory}
+          findingsSidebarOpen={state.findingsSidebarOpen}
+          onSummaryStep={() => setSummaryDrawerOpen((o) => !o)}
+          onSelfReviewStep={() => actions.toggleFindingsSidebar()}
+          onCategoryClick={(cat) => actions.setActiveCategory(cat)}
+          onToggleFindingsSidebar={() => actions.toggleFindingsSidebar()}
           onSettingsClick={() => handleCTAStub('Settings coming in Phase 7')}
           onRequestChanges={() => handleCTAStub('Verdict picker available in Phase 6')}
           onApprove={() => handleCTAStub('Submit available in Phase 6')}
         />
       )}
-      <main className="main">
+      <StageStepper
+        summary={state.summary}
+        selfReview={state.selfReview}
+        activeCategory={state.activeCategory}
+        onSummaryStep={() => setSummaryDrawerOpen((o) => !o)}
+        onSelfReviewStep={() => actions.toggleFindingsSidebar()}
+        onCategoryClick={(cat) => actions.setActiveCategory(cat)}
+      />
+      {state.summary && summaryDrawerOpen && (
+        <SummaryDrawer
+          summary={state.summary}
+          authorDescription={state.pr?.description}
+          open={summaryDrawerOpen}
+          onClose={() => setSummaryDrawerOpen(false)}
+        />
+      )}
+      <main className={cn('main', state.findingsSidebarOpen && 'main--findings-open')}>
         {diff && (
           <>
             <FileExplorer
@@ -288,6 +319,16 @@ export default function App() {
               readOnlyComments={state.existingComments ?? []}
               onMarkReviewed={handleMarkReviewed}
               onExpandGenerated={handleExpandGenerated}
+            />
+            <FindingsSidebar
+              selfReview={state.selfReview}
+              open={state.findingsSidebarOpen}
+              onClose={() => actions.toggleFindingsSidebar()}
+              activeCategory={state.activeCategory}
+              onCategoryClick={(cat) => actions.setActiveCategory(cat)}
+              onFindingClick={(lineId) => {
+                document.getElementById(lineId)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }}
             />
           </>
         )}

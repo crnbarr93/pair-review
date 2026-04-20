@@ -1,16 +1,31 @@
-// TopBar + StageStepper — Phase 3: live-wired to store props per D-25, D-26.
-// StageStepper export retained on disk (Phase 4 mounts it — D-02 keeps it off in Phase 3).
 import { Fragment, useState } from 'react';
-import type { CIStatus, PullRequestMeta } from '@shared/types';
+import type { ChecklistCategory, CIStatus, PrSummary, PullRequestMeta, SelfReview } from '@shared/types';
 import { Ic } from './icons';
 
 function cn(...parts: Array<string | false | undefined | null>): string {
   return parts.filter(Boolean).join(' ');
 }
 
+const CATEGORIES: ChecklistCategory[] = ['correctness', 'security', 'tests', 'performance', 'style'];
+const CAT_LABELS: Record<ChecklistCategory, string> = {
+  correctness: 'Correctness',
+  security: 'Security',
+  tests: 'Tests',
+  performance: 'Performance',
+  style: 'Style',
+};
+
 interface TopBarProps {
   pr: PullRequestMeta;
   ciStatus?: CIStatus;
+  summary?: PrSummary | null;
+  selfReview?: SelfReview | null;
+  activeCategory: ChecklistCategory | null;
+  findingsSidebarOpen: boolean;
+  onSummaryStep: () => void;
+  onSelfReviewStep: () => void;
+  onCategoryClick: (cat: ChecklistCategory | null) => void;
+  onToggleFindingsSidebar: () => void;
   onSettingsClick: () => void;
   onRequestChanges: () => void;
   onApprove: () => void;
@@ -19,6 +34,14 @@ interface TopBarProps {
 export function TopBar({
   pr,
   ciStatus,
+  summary,
+  selfReview,
+  activeCategory,
+  findingsSidebarOpen,
+  onSummaryStep,
+  onSelfReviewStep,
+  onCategoryClick,
+  onToggleFindingsSidebar,
   onSettingsClick,
   onRequestChanges,
   onApprove,
@@ -48,6 +71,13 @@ export function TopBar({
         <span style={{ color: 'var(--ink-4)' }}>→</span> {pr.baseBranch}
       </div>
       <CIPill ciStatus={ciStatus} />
+      <button
+        type="button"
+        className={cn('topbtn', findingsSidebarOpen && 'topbtn--active')}
+        onClick={onToggleFindingsSidebar}
+      >
+        Findings
+      </button>
       <div className="spacer" />
       <button type="button" className="topbtn" onClick={onSettingsClick}>
         <Ic.settings /> Settings
@@ -133,28 +163,70 @@ function CIPill({ ciStatus }: { ciStatus: CIStatus | undefined }) {
   );
 }
 
-// Phase 3 does not mount StageStepper (D-02), but the export stays on disk so
-// Phase 4 can import it without a file rename. Keep the legacy signature.
 export function StageStepper({
-  stages,
-  active,
-  onPick,
+  summary,
+  selfReview,
+  activeCategory,
+  onSummaryStep,
+  onSelfReviewStep,
+  onCategoryClick,
 }: {
-  stages: Array<{ id: string; label: string; sub: string; status?: string }>;
-  active: string;
-  onPick: (id: string) => void;
+  summary?: PrSummary | null;
+  selfReview?: SelfReview | null;
+  activeCategory: ChecklistCategory | null;
+  onSummaryStep: () => void;
+  onSelfReviewStep: () => void;
+  onCategoryClick: (cat: ChecklistCategory | null) => void;
 }) {
+  const steps = [
+    {
+      label: 'Summary',
+      sub: summary
+        ? `${summary.intent} · ${Math.round(summary.intentConfidence * 100)}% confident`
+        : 'Not generated',
+      status: summary ? 'done' : 'active',
+      onClick: summary ? onSummaryStep : undefined,
+      disabled: false,
+    },
+    {
+      label: 'Self-review',
+      sub: selfReview
+        ? `${selfReview.findings.length} finding${selfReview.findings.length !== 1 ? 's' : ''}`
+        : 'Not run',
+      status: selfReview ? 'done' : summary ? 'active' : 'default',
+      onClick: selfReview ? onSelfReviewStep : undefined,
+      disabled: false,
+    },
+    {
+      label: 'Walkthrough',
+      sub: 'Phase 5',
+      status: 'default',
+      onClick: undefined,
+      disabled: true,
+      tooltip: 'Walkthrough available in Phase 5',
+    },
+    {
+      label: 'Submit',
+      sub: 'Phase 6',
+      status: 'default',
+      onClick: undefined,
+      disabled: true,
+      tooltip: 'Submit available in Phase 6',
+    },
+  ];
+
   return (
-    <div className="stages">
-      {stages.map((s, i) => (
-        <Fragment key={s.id}>
+    <div className="stages" role="list" aria-label="Review stages">
+      {steps.map((s, i) => (
+        <Fragment key={s.label}>
           <div
-            className={cn(
-              'stage',
-              s.status === 'done' && 'done',
-              s.id === active && 'active'
-            )}
-            onClick={() => onPick(s.id)}
+            className={cn('stage', s.status === 'done' && 'done', s.status === 'active' && 'active', s.disabled && 'disabled')}
+            role="listitem"
+            aria-current={s.status === 'active' ? 'step' : undefined}
+            aria-disabled={s.disabled || undefined}
+            title={('tooltip' in s && s.tooltip) ? s.tooltip as string : undefined}
+            onClick={s.disabled ? undefined : s.onClick}
+            style={s.disabled ? { opacity: 0.5, cursor: 'not-allowed' } : s.onClick ? { cursor: 'pointer' } : undefined}
           >
             <div className="num">{s.status === 'done' ? <Ic.check /> : i + 1}</div>
             <div className="meta">
@@ -162,13 +234,33 @@ export function StageStepper({
               <div className="sub">{s.sub}</div>
             </div>
           </div>
-          {i < stages.length - 1 && (
+          {i < steps.length - 1 && (
             <div className="stage-connector">
               <Ic.chev />
             </div>
           )}
         </Fragment>
       ))}
+      {selfReview && (
+        <div className="stages-coverage-strip" role="group" aria-label="Category coverage">
+          {CATEGORIES.map((cat) => {
+            const count = selfReview.findings.filter((f) => f.category === cat).length;
+            const coverageStatus = selfReview.coverage[cat];
+            const isActive = activeCategory === cat;
+            return (
+              <button
+                key={cat}
+                type="button"
+                className={cn(`coverage-chip`, `coverage-chip--${coverageStatus}`, isActive && 'active')}
+                onClick={() => onCategoryClick(isActive ? null : cat)}
+                aria-label={`${cat}: ${coverageStatus}`}
+              >
+                {CAT_LABELS[cat]} ({count})
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
