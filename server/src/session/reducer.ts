@@ -45,6 +45,10 @@ export function applyEvent(s: ReviewSession, e: SessionEvent): ReviewSession {
       return { ...s, existingComments: e.comments };
     case 'ciChecks.loaded':
       return { ...s, ciStatus: e.ciStatus };
+    case 'summary.set':
+      return { ...s, summary: e.summary };
+    case 'selfReview.set':
+      return { ...s, selfReview: e.selfReview };
     default: {
       // Exhaustiveness guard — adding an event variant without handling it is a compile error.
       const _never: never = e;
