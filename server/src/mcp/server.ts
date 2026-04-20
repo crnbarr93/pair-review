@@ -4,6 +4,7 @@ import type { SessionManager } from '../session/manager.js';
 import { registerStartReview } from './tools/start-review.js';
 import { registerListFiles } from './tools/list-files.js';
 import { registerGetHunk } from './tools/get-hunk.js';
+import { registerSetPrSummary } from './tools/set-pr-summary.js';
 
 export async function startMcp(manager: SessionManager): Promise<McpServer> {
   const mcp = new McpServer(
@@ -13,6 +14,7 @@ export async function startMcp(manager: SessionManager): Promise<McpServer> {
   registerStartReview(mcp, manager);
   registerListFiles(mcp, manager);
   registerGetHunk(mcp, manager);
+  registerSetPrSummary(mcp, manager);
   await mcp.connect(new StdioServerTransport());
   return mcp;
 }
