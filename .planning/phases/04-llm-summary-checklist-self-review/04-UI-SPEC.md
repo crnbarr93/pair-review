@@ -589,4 +589,19 @@ Per `04-CONTEXT.md §Explicitly NOT in scope`:
 
 ---
 
-*Phase 4 UI contract drafted 2026-04-20. Extends `03-UI-SPEC.md` — both documents required for complete contract.*
+## Appendix C — Checker Exceptions Accepted
+
+The `gsd-ui-checker` (2026-04-20) returned BLOCKED on two rule-based findings. Both stem from the Phase 3 prototype design system, which is authoritative per Phase 3 decisions D-01 ("committed prototype as authoritative") and D-05 ("prototype-first; no parallel Figma source"). The user (crnbarr@gmail.com) was surfaced the conflict between generic checker heuristics and locked prototype fidelity, and elected to force-approve with the exceptions recorded here.
+
+| Dimension | Checker rule | Value in this spec | Accepted because |
+|-----------|--------------|---------------------|------------------|
+| 4 Typography | "≤ 2 font weights" | 3 weights: 400 (body), 500 (active labels), 600 (brand + `who` names + stepper `done` number, uppercase micro) | Inherited from `web/src/index.css` and the committed prototype. The three weights are visually load-bearing in Inter Tight and collapsing to two would flatten the brand wordmark or the active-label state. Locked by Phase 3 D-01/D-05. |
+| 5 Spacing | "All spacing values multiples of 4; scale within {4, 8, 16, 24, 32, 48, 64}" | 6px, 14px, 18px, 22px inherited from Phase 3; 5px chip vertical padding added in Phase 4 | Inherited from the committed prototype HTML/CSS. Prototype is authoritative (D-01/D-05). Snapping to multiples of 4 would drift the FindingsSidebar, StageStepper, and diff header from the agreed visual. The 5px chip padding targets the 24–27px coverage-chip line-height the prototype established for CI pill alignment. |
+
+**Non-blocking recommendation accepted for future revision:** `Hide` (single-word CTA in FindingsSidebar rationale toggle) may be reworded to `Hide rationale` during implementation for copy parity with its paired `Show rationale`. Not treated as a blocker; implementer's discretion.
+
+**Guidance for Phase 5+ UI-SPECs:** The prototype-authoritative exception covers Phase 3-inherited tokens only. New off-grid additions require explicit user sign-off; do not treat this exception as a blanket license.
+
+---
+
+*Phase 4 UI contract drafted 2026-04-20. Extends `03-UI-SPEC.md` — both documents required for complete contract. Force-approved 2026-04-20 with Appendix C exceptions.*
