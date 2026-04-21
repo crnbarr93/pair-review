@@ -92,71 +92,73 @@ export function TopBar({
   );
 }
 
-/**
- * CI status pill — D-25 palette, D-26 hide-when-none.
- * `bucket`/`link` come from `gh pr checks --json` (D-24 correction).
- */
+const CI_PALETTE: Record<string, { bg: string; fg: string; dot: string }> = {
+  pass: { bg: 'var(--ok-bg)', fg: 'var(--ok)', dot: 'var(--ok)' },
+  fail: { bg: 'var(--block-bg)', fg: 'var(--block)', dot: 'var(--block)' },
+  pending: { bg: 'var(--warn-bg)', fg: 'var(--warn)', dot: 'var(--warn)' },
+  none: { bg: 'var(--paper-2)', fg: 'var(--ink-4)', dot: 'var(--ink-4)' },
+};
+
+const BUCKET_LABEL: Record<string, string> = {
+  pass: 'PASS', fail: 'FAIL', pending: 'RUNNING', skipping: 'SKIP', cancel: 'CANCEL',
+};
+
 function CIPill({ ciStatus }: { ciStatus: CIStatus | undefined }) {
   const [expanded, setExpanded] = useState(false);
-  // D-26: hide entirely when no CI (local-branch mode or PR with no checks)
   if (!ciStatus || ciStatus.aggregate === 'none') return null;
 
-  const palette: Record<CIStatus['aggregate'], { bg: string; fg: string }> = {
-    pass: { bg: 'var(--ok-bg)', fg: 'var(--ok)' },
-    fail: { bg: 'var(--block-bg)', fg: 'var(--block)' },
-    pending: { bg: 'var(--warn-bg)', fg: 'var(--warn)' },
-    none: { bg: 'var(--paper-2)', fg: 'var(--ink-4)' },
-  };
-  const { bg, fg } = palette[ciStatus.aggregate];
+  const { bg, fg } = CI_PALETTE[ciStatus.aggregate] ?? CI_PALETTE.none;
+  const total = ciStatus.checks.length;
+  const passCount = ciStatus.checks.filter((c) => c.bucket === 'pass').length;
   const failCount = ciStatus.checks.filter((c) => c.bucket === 'fail').length;
-  const pendingCount = ciStatus.checks.filter(
-    (c) => c.bucket === 'pending'
-  ).length;
+
   const label =
     ciStatus.aggregate === 'pass'
-      ? 'All checks passed'
+      ? `All checks passed | ${passCount}/${total}`
       : ciStatus.aggregate === 'fail'
-        ? `${failCount} check${failCount !== 1 ? 's' : ''} failing`
-        : `${pendingCount} check${pendingCount !== 1 ? 's' : ''} pending`;
+        ? `${failCount} check${failCount !== 1 ? 's' : ''} failing | ${passCount}/${total}`
+        : `Checks running | ${passCount}/${total}`;
 
   return (
-    <div
-      className="ci-pill"
-      style={{ background: bg, color: fg, position: 'relative' }}
-      aria-label={`CI checks: ${ciStatus.aggregate} — ${ciStatus.checks.length} checks`}
-    >
+    <div className="ci-pill" style={{ position: 'relative' }}>
       <button
         type="button"
+        className="ci-pill-btn"
+        style={{ background: bg, color: fg }}
         onClick={() => setExpanded((v) => !v)}
-        style={{ background: 'transparent', color: 'inherit', border: 'none' }}
+        aria-label={`CI checks: ${ciStatus.aggregate} — ${total} checks`}
+        aria-expanded={expanded}
       >
+        {ciStatus.aggregate === 'pass' && <Ic.check />}
         {label}
       </button>
       {expanded && (
-        <div
-          className="ci-dropdown"
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            minWidth: 220,
-            background: 'var(--paper-1)',
-            border: '1px solid var(--ink-5)',
-            borderRadius: 6,
-            padding: 6,
-            zIndex: 10,
-          }}
-        >
-          {ciStatus.checks.map((c) => (
-            <div key={c.name} className="ci-row">
-              {c.name} · {c.bucket}{' '}
-              {c.link && (
-                <a href={c.link} target="_blank" rel="noreferrer">
-                  ↗
-                </a>
-              )}
-            </div>
-          ))}
+        <div className="ci-dropdown" onClick={() => setExpanded(false)}>
+          <div className="ci-dropdown-header">
+            <span style={{ fontWeight: 600 }}>Continuous integration</span>
+          </div>
+          <div className="ci-dropdown-body">
+            {ciStatus.checks.map((c) => {
+              const bucketStyle = CI_PALETTE[c.bucket] ?? CI_PALETTE.none;
+              return (
+                <div key={c.name} className="ci-check-row">
+                  <span className="ci-dot" style={{ background: bucketStyle.dot }} />
+                  <span className="ci-check-name">{c.name}</span>
+                  <span
+                    className="ci-check-badge"
+                    style={{ background: bucketStyle.bg, color: bucketStyle.fg }}
+                  >
+                    {BUCKET_LABEL[c.bucket] ?? c.bucket.toUpperCase()}
+                  </span>
+                  {c.link && (
+                    <a href={c.link} target="_blank" rel="noreferrer" className="ci-check-link" aria-label={`Open ${c.name} details`}>
+                      ↗
+                    </a>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

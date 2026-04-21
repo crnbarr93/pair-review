@@ -7,6 +7,15 @@ afterEach(() => {
   cleanup();
 });
 
+const phase4Defaults = {
+  activeCategory: null as null,
+  findingsSidebarOpen: false,
+  onSummaryStep: () => {},
+  onSelfReviewStep: () => {},
+  onCategoryClick: () => {},
+  onToggleFindingsSidebar: () => {},
+};
+
 const basePr: PullRequestMeta = {
   source: 'github',
   title: 'Fix bug',
@@ -33,6 +42,7 @@ describe('TopBar (Phase 3 live-wired)', () => {
         onSettingsClick={() => {}}
         onRequestChanges={() => {}}
         onApprove={() => {}}
+        {...phase4Defaults}
       />
     );
     expect(container.textContent).toContain('connorbarr/git-review-plugin');
@@ -54,6 +64,7 @@ describe('TopBar (Phase 3 live-wired)', () => {
         onSettingsClick={() => {}}
         onRequestChanges={() => {}}
         onApprove={() => {}}
+        {...phase4Defaults}
       />
     );
     expect(container.querySelector('.ci-pill')).toBeTruthy();
@@ -67,6 +78,7 @@ describe('TopBar (Phase 3 live-wired)', () => {
         onSettingsClick={() => {}}
         onRequestChanges={() => {}}
         onApprove={() => {}}
+        {...phase4Defaults}
       />
     );
     expect(container.querySelector('.ci-pill')).toBeNull();
@@ -80,6 +92,7 @@ describe('TopBar (Phase 3 live-wired)', () => {
         onSettingsClick={() => {}}
         onRequestChanges={() => {}}
         onApprove={() => {}}
+        {...phase4Defaults}
       />
     );
     expect(container.querySelector('.ci-pill')).toBeNull();
@@ -100,6 +113,7 @@ describe('TopBar (Phase 3 live-wired)', () => {
         onSettingsClick={() => {}}
         onRequestChanges={() => {}}
         onApprove={() => {}}
+        {...phase4Defaults}
       />
     );
     const pillBtn = container.querySelector(
@@ -128,6 +142,7 @@ describe('TopBar (Phase 3 live-wired)', () => {
         onSettingsClick={onSet}
         onRequestChanges={onReq}
         onApprove={onApp}
+        {...phase4Defaults}
       />
     );
     const reqBtn = Array.from(container.querySelectorAll('button')).find((b) =>
@@ -165,10 +180,11 @@ describe('TopBar (Phase 3 live-wired)', () => {
         onSettingsClick={() => {}}
         onRequestChanges={() => {}}
         onApprove={() => {}}
+        {...phase4Defaults}
       />
     );
-    const pill = container.querySelector('.ci-pill') as HTMLElement | null;
-    expect(pill?.getAttribute('aria-label')).toMatch(/pending/);
-    expect(pill?.getAttribute('aria-label')).toMatch(/2/);
+    const btn = container.querySelector('.ci-pill-btn') as HTMLElement | null;
+    expect(btn?.getAttribute('aria-label')).toMatch(/pending/);
+    expect(btn?.getAttribute('aria-label')).toMatch(/2/);
   });
 });
