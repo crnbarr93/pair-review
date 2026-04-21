@@ -133,33 +133,50 @@ function CIPill({ ciStatus }: { ciStatus: CIStatus | undefined }) {
         {label}
       </button>
       {expanded && (
-        <div className="ci-dropdown" onClick={() => setExpanded(false)}>
-          <div className="ci-dropdown-header">
-            <span style={{ fontWeight: 600 }}>Continuous integration</span>
+        <>
+          <div className="ci-backdrop" onClick={() => setExpanded(false)} />
+          <div className="ci-dropdown">
+            <div className="ci-dropdown-header">
+              Continuous integration
+            </div>
+            <div className="ci-dropdown-body">
+              {ciStatus.checks.map((c) => {
+                const bucketStyle = CI_PALETTE[c.bucket] ?? CI_PALETTE.none;
+                return (
+                  <div key={c.name} className="ci-check-row">
+                    <span className="ci-dot" style={{ background: bucketStyle.dot }} />
+                    <span className="ci-check-name">{c.name}</span>
+                    <span className="ci-check-spacer" />
+                    <span
+                      className="ci-check-badge"
+                      style={{ background: bucketStyle.bg, color: bucketStyle.fg }}
+                    >
+                      {BUCKET_LABEL[c.bucket] ?? c.bucket.toUpperCase()}
+                    </span>
+                    {c.link && (
+                      <a href={c.link} target="_blank" rel="noreferrer" className="ci-check-link" aria-label={`Open ${c.name} details`}>
+                        ↗
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="ci-dropdown-footer">
+              <button type="button" className="ci-rerun-btn">Re-run all</button>
+              {ciStatus.checks[0]?.link && (
+                <a
+                  href={ciStatus.checks[0].link.replace(/\/[^/]*$/, '')}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ci-open-link"
+                >
+                  Open in CI ↗
+                </a>
+              )}
+            </div>
           </div>
-          <div className="ci-dropdown-body">
-            {ciStatus.checks.map((c) => {
-              const bucketStyle = CI_PALETTE[c.bucket] ?? CI_PALETTE.none;
-              return (
-                <div key={c.name} className="ci-check-row">
-                  <span className="ci-dot" style={{ background: bucketStyle.dot }} />
-                  <span className="ci-check-name">{c.name}</span>
-                  <span
-                    className="ci-check-badge"
-                    style={{ background: bucketStyle.bg, color: bucketStyle.fg }}
-                  >
-                    {BUCKET_LABEL[c.bucket] ?? c.bucket.toUpperCase()}
-                  </span>
-                  {c.link && (
-                    <a href={c.link} target="_blank" rel="noreferrer" className="ci-check-link" aria-label={`Open ${c.name} details`}>
-                      ↗
-                    </a>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        </>
       )}
     </div>
   );
