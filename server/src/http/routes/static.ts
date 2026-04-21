@@ -14,7 +14,14 @@ export function mountStatic(app: Hono, _manager: SessionManager) {
   // is exposed regardless of what process.cwd() points to.
   const dist = webDistDir();
   const cwdRelative = path.relative(process.cwd(), dist);
-  app.use('/assets/*', serveStatic({ root: cwdRelative === '' ? '.' : cwdRelative }));
+  app.use('/assets/*', serveStatic({
+    root: cwdRelative === '' ? '.' : cwdRelative,
+    mimes: {
+      css: 'text/css',
+      js: 'application/javascript',
+      map: 'application/json',
+    },
+  }));
 
   // GET / — bootstrap HTML with nonce substitution
   app.get('/', (c) => {

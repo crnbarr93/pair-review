@@ -6,11 +6,8 @@ const FALLBACK = `<!doctype html><html><head><meta charset="UTF-8"><title>Git Re
 <script nonce="__NONCE__">document.getElementById('root').textContent='Run \`pnpm --filter web build\` to produce web/dist/index.html';</script>
 </body></html>`;
 
-let template: string | null = null;
 export function renderIndex(nonce: string): string {
-  if (template == null) {
-    const distIndex = webDistIndexHtml();
-    template = existsSync(distIndex) ? readFileSync(distIndex, 'utf8') : FALLBACK;
-  }
+  const distIndex = webDistIndexHtml();
+  const template = existsSync(distIndex) ? readFileSync(distIndex, 'utf8') : FALLBACK;
   return template.replaceAll('__NONCE__', nonce);
 }

@@ -45,10 +45,12 @@ export default defineConfig({
     },
   },
   server: {
-    // Dev-mode proxy so `vite` dev + the Hono server can coexist during local development
     port: 5173,
     proxy: {
-      '/api': 'http://127.0.0.1:0', // Replaced by developer's actual port in dev; fine to leave
+      '/api': {
+        target: `http://127.0.0.1:${process.env.REVIEW_SERVER_PORT || '50351'}`,
+        changeOrigin: true,
+      },
     },
   },
 });

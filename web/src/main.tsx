@@ -32,8 +32,14 @@ export function sourceFromPrKey(prKey: string): ChooseResumeSource {
 
 export async function bootstrap(): Promise<void> {
   const params = new URLSearchParams(location.search);
-  const token = params.get('token');
-  const sessionKey = params.get('session') ?? '';
+  let token = params.get('token');
+  let sessionKey = params.get('session') ?? '';
+
+  // On refresh: URL params are wiped, recover from sessionStorage
+  if (!token) {
+    token = sessionStorage.getItem('reviewToken');
+    sessionKey = sessionStorage.getItem('reviewSession') ?? '';
+  }
 
   if (!token) return renderFatal('Missing session token. Re-run /review.');
 
@@ -49,6 +55,11 @@ export async function bootstrap(): Promise<void> {
     actions.onAdoptFailed('unreachable');
     return renderFatal('Session rejected. Re-run /review.');
   }
+
+  // Persist to sessionStorage so browser refresh can reconnect without re-running /review.
+  // sessionStorage is tab-scoped and cleared on tab close — no cross-tab leak.
+  sessionStorage.setItem('reviewToken', token);
+  sessionStorage.setItem('reviewSession', sessionKey);
 
   // T-03 TOKEN LEAK MITIGATION: wipe query BEFORE opening EventSource or painting anything
   history.replaceState('', '', '/');
