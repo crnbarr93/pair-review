@@ -25,10 +25,10 @@
   --claude-3: #CFDFD9;
 
   /* Status */
-  --add-bg: #EAF3EA;
+  --add-bg: #F0F7F0;
   --add-gutter: #CFE3CF;
   --add-ink: #2D5F31;
-  --rem-bg: #F7EAE8;
+  --rem-bg: #FBF2F0;
   --rem-gutter: #ECCDC8;
   --rem-ink: #7A3A34;
 
@@ -519,8 +519,6 @@ button {
 }
 .diff-table tr.add .content::before { content: "+ "; color: var(--add-ink); margin-left: -12px; }
 .diff-table tr.rem .content::before { content: "− "; color: var(--rem-ink); margin-left: -12px; }
-.diff-table tr.rem .content span { color: var(--rem-ink) !important; }
-.diff-table tr.add .content span { color: var(--add-ink) !important; }
 .diff-table tr.context .content::before { content: "  "; margin-left: -12px; }
 .diff-table tr:hover .gutter { background: var(--paper-3); }
 .diff-table tr.add:hover .gutter { background: var(--add-gutter); }
