@@ -2,33 +2,33 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 04 UI-SPEC approved (force-approved; Appendix C exceptions)
-last_updated: "2026-04-20T09:40:17.351Z"
-last_activity: 2026-04-20 -- Phase 04 execution started
+status: ready_to_plan
+stopped_at: Phase 04 complete, ready to plan Phase 05
+last_updated: "2026-04-21T17:30:00Z"
+last_activity: 2026-04-21 -- Phase 04 verified and transitioned
 progress:
   total_phases: 7
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 25
   completed_plans: 17
-  percent: 68
+  percent: 57
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-16)
+See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** A pair-review workflow that produces a posted GitHub review of real reviewer quality, faster and with better coverage than reviewing alone or chatting with an LLM in a generic UI.
-**Current focus:** Phase 04 — llm-summary-checklist-self-review
+**Current focus:** Phase 05 — walkthrough-+-inline-threaded-comments
 
 ## Current Position
 
-Phase: 04 (llm-summary-checklist-self-review) — EXECUTING
-Plan: 1 of 8
-Status: Executing Phase 04
-Last activity: 2026-04-20 -- Phase 04 execution started
+Phase: 5
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-04-21
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -36,7 +36,7 @@ Progress: [░░░░░░░░░░] 0%
 
 **Velocity:**
 
-- Total plans completed: 17
+- Total plans completed: 25
 - Average duration: —
 - Total execution time: —
 
@@ -48,6 +48,7 @@ Progress: [░░░░░░░░░░] 0%
 | 01 | 7 | - | - |
 | 02 | 4 | - | - |
 | 03 | 6 | - | - |
+| 04 | 8 | - | - |
 
 **Recent Trend:**
 
@@ -89,6 +90,12 @@ Recent decisions affecting current work:
 - [Phase 02]: Plan 04: AppState redefined locally in web/src/store.ts as the authoritative web shape; shared/types AppState preserved for backward compat
 - [Phase 02]: Plan 04: Modal auto-unmount via SSE round-trip — click button → chooseResume POST → server applyEvent → SSE snapshot/update → store clears staleDiff → modal's early-return fires
 - [Phase 02]: Plan 04: Token-capture ordering gate in main.tsx — setReviewToken + actions.setSource happen BEFORE history.replaceState (T-2-04-03 mitigation), enforced by a main-bootstrap call-order test
+- [Phase 04]: Default verdict request_changes (D-05) — adversarial framing forces LLM to argue down from "Request changes"
+- [Phase 04]: Tool descriptions as sole prompt surface (D-20) — no system prompt injection; prompt engineering visible in tool registration code
+- [Phase 04]: FindingsSidebar auto-opens on first selfReview.set (D-12); stays open on regenerate
+- [Phase 04]: Generated-file filtering at list_files enumeration level only (D-16); get_hunk does not filter
+- [Phase 04]: Nit cap (≤3) enforced handler-side — MCP SDK drops zod .refine() refinements from Input.shape
+- [Phase 04]: lineId resolution maps opaque anchors to (path, line, side) server-side before emitting selfReview.set — Phase 5 reuses this pattern for draft_comment
 
 ### Pending Todos
 
@@ -96,11 +103,8 @@ None yet.
 
 ### Blockers/Concerns
 
-From research — items to watch but not blocking Phase 1 start:
-
 - **Pitfall 1** (GitHub `position` vs `line`/`side` confusion) — addressed in Phase 6, but the internal `Anchor` type should be designed with `line`+`side` from the start of Phase 5.
-- **Pitfall 2** (LLM hallucinated line numbers) — opaque-ID MCP schema must ship in Phase 5; do not let Phase 4's `file:line` refs in self-review become a freeform-string shortcut that Phase 5 has to undo.
-- **Pitfall 6** (DNS-rebinding / CSRF) — must ship day-one in Phase 1; no "hardening pass later".
+- **Pitfall 2** (LLM hallucinated line numbers) — Phase 4 proved the opaque-ID + server-side resolution pattern (lineId regex gate + resolveLineId). Phase 5 must extend this to draft_comment/reply_in_thread — never expose freeform path/line strings in MCP tool schemas.
 
 ## Deferred Items
 
@@ -116,6 +120,6 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-04-20T08:55:49.895Z
-Stopped at: Phase 04 UI-SPEC approved (force-approved; Appendix C exceptions)
-Resume file: .planning/phases/04-llm-summary-checklist-self-review/04-UI-SPEC.md
+Last session: 2026-04-21
+Stopped at: Phase 04 complete, ready to plan Phase 05
+Resume file: None

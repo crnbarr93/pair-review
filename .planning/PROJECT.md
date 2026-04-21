@@ -15,6 +15,9 @@ A Claude Code plugin that pairs the user with an LLM to review pull requests thr
 <!-- Shipped and confirmed valuable. -->
 
 - [x] Web UI renders a first-class PR diff view with syntax highlighting and hunk anchoring (Phase 3: bespoke DiffViewer with github-light Shiki, unified/split toggle, scrollIntoView hunk anchoring, file-tree sidebar)
+- [x] LLM generates a PR summary (intent, key changes, risk areas) visible in the GUI (Phase 4: set_pr_summary MCP tool + SummaryDrawer with intent chip, paraphrase, key changes)
+- [x] LLM self-review runs against a criticality-ranked checklist with code references linking back to diff locations (Phase 4: run_self_review MCP tool + FindingsSidebar with click-to-scroll, lineId resolution to path/line/side)
+- [x] Built-in default checklist ships with the plugin (correctness, security, tests, performance, style) (Phase 4: 24-item checklist across 5 categories, criticality-ranked 1-3)
 
 ### Active
 
@@ -22,9 +25,6 @@ A Claude Code plugin that pairs the user with an LLM to review pull requests thr
 
 - [ ] Claude Code plugin launches a local web GUI for a given PR (GitHub URL or local branch diff)
 - [ ] Plugin exposes MCP tools that let the LLM drive the web UI (navigate hunks, run self-review, post comments, submit review)
-- [ ] LLM generates a PR summary (intent, key changes, risk areas) visible in the GUI
-- [ ] LLM self-review runs against a criticality-ranked checklist with code references linking back to diff locations
-- [ ] Built-in default checklist ships with the plugin (correctness, security, tests, performance, style)
 - [ ] Step-by-step walkthrough orders changes as an LLM-chosen narrative over curated "core changes"
 - [ ] "Show all" escape in the walkthrough expands beyond curated core to walk the remaining hunks
 - [ ] Inline conversational comments anchored to file+line, supporting a GitHub-style threaded dialogue between user and LLM during the walkthrough
@@ -81,6 +81,11 @@ A Claude Code plugin that pairs the user with an LLM to review pull requests thr
 | **D-01 (Phase 3)** Phase-1 `01-UI-SPEC.md` formally superseded by the committed prototype at commit `c7fe93f` | Paper-and-teal light-mode design is the authoritative direction for Phase 3+; dark-mode palette + `@theme` block + `@git-diff-view/react` recommendation are abandoned in favor of bespoke components + `:root` CSS vars | Resolved (Phase 3 planning) — see `.planning/phases/03-diff-ui-file-tree-navigation/03-CONTEXT.md` D-01 and `03-UI-SPEC.md` |
 | **D-05 (Phase 3)** Open Decision 1 (diff viewer library) resolves to the bespoke `DiffViewer.tsx` | `@git-diff-view/react` removed; bespoke renderer consumes server-side Shiki tokens and reuses the prototype's thread-marker gutter slot for read-only comment markers. Validated by the committed synthetic fixture render test at `web/src/__tests__/fixtures/` (≤500ms first paint on 50-hunk PR, ±20% advisory tolerance) | Resolved (Phase 3 planning) — see `.planning/phases/03-diff-ui-file-tree-navigation/03-CONTEXT.md` D-05, D-09 and `03-RESEARCH.md` Q1 |
 | **D-24 correction (Phase 3)** `gh pr checks --json` field names are `bucket` and `link` — NOT `conclusion` and `detailsUrl` | CONTEXT D-24 originally specified `conclusion`/`detailsUrl`; verified against `gh pr checks --help` these fields do not exist. Correct fields are `name,state,bucket,link`. Also: exit code 8 = "checks pending" is not an error — stdout must be parsed anyway. `CheckRun` type in `shared/types.ts` uses `bucket` and `link` | Resolved (Phase 3 planning) — see `.planning/phases/03-diff-ui-file-tree-navigation/03-RESEARCH.md` Q6, Pitfall B, Pitfall F |
+| **D-05 (Phase 4)** Default verdict: `request_changes` (adversarial framing) | Anchors the LLM toward finding real issues rather than rubber-stamping; user can always override to approve. | Resolved (Phase 4) |
+| **D-09 (Phase 4)** Paraphrase-fidelity discipline carried via tool description only | Tool description is the sole prompt surface (D-20); no system prompt injection. Keeps prompt engineering visible and auditable in the tool registration code. | Resolved (Phase 4) |
+| **D-12 (Phase 4)** FindingsSidebar auto-opens on first selfReview.set | Immediate visibility of findings without requiring user action; stays open on regenerate. | Resolved (Phase 4) |
+| **D-16 (Phase 4)** Generated-file filtering at list_files level only | get_hunk does NOT filter generated files — LLM may still inspect them if it knows the fileId. Enumeration-level filter is sufficient to steer LLM attention. | Resolved (Phase 4) |
+| **Nit cap (Phase 4)** Zod `.refine()` not propagated by MCP SDK — handler-side validation | MCP SDK constructs its own validator from `Input.shape` and drops `.refine()` refinements. Nit cap (≤3) enforced in handler with `isError: true` response. | Resolved (Phase 4) |
 
 ## Evolution
 
@@ -100,4 +105,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-19 after Phase 3 completion (diff UI + file tree + navigation shipped; first-class PR diff view requirement moved to Validated)*
+*Last updated: 2026-04-21 after Phase 4 completion (LLM summary + self-review + checklist + eval harness shipped; 3 requirements moved to Validated)*
