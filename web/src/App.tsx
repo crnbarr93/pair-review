@@ -327,7 +327,9 @@ export default function App() {
               activeCategory={state.activeCategory}
               onCategoryClick={(cat) => actions.setActiveCategory(cat)}
               onFindingClick={(lineId) => {
-                document.getElementById(lineId)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                const el = document.getElementById(lineId)
+                  ?? document.getElementById(lineId.replace(/:l\d+$/, ''));
+                el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
               }}
             />
           </>

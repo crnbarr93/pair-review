@@ -272,7 +272,7 @@ function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments }: HunkProps)
           const tokens = fileTokens?.[hunkIdx]?.[lineIdx] ?? [{ content: line.text }];
           const markers = readOnlyComments.filter((c) => c.lineId === line.id);
           return (
-            <tr key={line.id} className={rowClassName(line.kind)}>
+            <tr key={line.id} id={line.id} className={rowClassName(line.kind)}>
               <td className="gutter">
                 <span
                   style={{
@@ -399,7 +399,7 @@ function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments }: HunkProps) {
           const rightKindClass = pair.right.line ? rowClassName(pair.right.line.kind) : 'empty';
 
           return (
-            <tr key={idx} className="diff-row-split">
+            <tr key={idx} id={pair.left.line?.id ?? pair.right.line?.id} className="diff-row-split">
               {/* Left side: old line number + content */}
               <td className={`gutter ${leftKindClass}`}>
                 {pair.left.line
