@@ -14,14 +14,13 @@ export function mountStatic(app: Hono, _manager: SessionManager) {
   // is exposed regardless of what process.cwd() points to.
   const dist = webDistDir();
   const cwdRelative = path.relative(process.cwd(), dist);
-  app.use('/assets/*', serveStatic({
-    root: cwdRelative === '' ? '.' : cwdRelative,
-    mimes: {
-      css: 'text/css',
-      js: 'application/javascript',
-      map: 'application/json',
-    },
-  }));
+  app.use('/assets/*', async (c, next) => {
+    await next();
+    const url = c.req.url;
+    if (url.endsWith('.css')) c.header('Content-Type', 'text/css');
+    else if (url.endsWith('.js')) c.header('Content-Type', 'application/javascript');
+  });
+  app.use('/assets/*', serveStatic({ root: cwdRelative === '' ? '.' : cwdRelative }));
 
   // GET / — bootstrap HTML with nonce substitution
   app.get('/', (c) => {
