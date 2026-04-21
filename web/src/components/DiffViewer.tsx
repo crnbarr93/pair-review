@@ -46,12 +46,25 @@ function escapeHtml(s: string): string {
 // T-3-01a: Validate color is a well-formed hex code before interpolating into style.
 const HEX_COLOR = /^#[0-9a-fA-F]{3,8}$/;
 
+function darkenIfTooLight(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  if (luminance <= 160) return hex;
+  const scale = 160 / luminance;
+  const dr = Math.round(r * scale);
+  const dg = Math.round(g * scale);
+  const db = Math.round(b * scale);
+  return `#${dr.toString(16).padStart(2, '0')}${dg.toString(16).padStart(2, '0')}${db.toString(16).padStart(2, '0')}`;
+}
+
 function tokenToHtml(tokens: ShikiToken[]): string {
   return tokens
     .map((tok) => {
       const styles: string[] = [];
       if (tok.color && HEX_COLOR.test(tok.color)) {
-        styles.push(`color:${tok.color}`);
+        styles.push(`color:${tok.color.length === 7 ? darkenIfTooLight(tok.color) : tok.color}`);
       }
       if (tok.fontStyle) {
         if (tok.fontStyle & 1) styles.push('font-style:italic');
