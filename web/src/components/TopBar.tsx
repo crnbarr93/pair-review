@@ -1,7 +1,6 @@
 import { Fragment, useState } from 'react';
 import type { ChecklistCategory, CIStatus, PrSummary, PullRequestMeta, SelfReview, Walkthrough } from '@shared/types';
 import { Ic } from './icons';
-import { WalkthroughStepList } from './WalkthroughStepList';
 
 function cn(...parts: Array<string | false | undefined | null>): string {
   return parts.filter(Boolean).join(' ');
@@ -288,13 +287,6 @@ export function StageStepper({
             );
           })}
         </div>
-      )}
-      {walkthrough && (
-        <WalkthroughStepList
-          walkthrough={walkthrough}
-          onStepClick={onWalkthroughStepClick ?? (() => {})}
-          onShowAllToggle={onShowAllToggle ?? (() => {})}
-        />
       )}
     </div>
   );

@@ -1,8 +1,4 @@
-import type { Walkthrough } from '@shared/types';
-
-function cn(...parts: Array<string | false | undefined | null>): string {
-  return parts.filter(Boolean).join(' ');
-}
+import type { Walkthrough, WalkthroughStep } from '@shared/types';
 
 interface WalkthroughStepListProps {
   walkthrough: Walkthrough;
@@ -10,93 +6,58 @@ interface WalkthroughStepListProps {
   onShowAllToggle: (showAll: boolean) => void;
 }
 
+function statusIcon(step: WalkthroughStep, isActive: boolean) {
+  if (step.status === 'visited') return <span className="wsl-icon wsl-icon--done">&#10003;</span>;
+  if (step.status === 'skipped') return <span className="wsl-icon wsl-icon--skipped">&#8212;</span>;
+  if (isActive) return <span className="wsl-icon wsl-icon--active">&#9679;</span>;
+  return <span className="wsl-icon wsl-icon--pending">&#9675;</span>;
+}
+
+function statusLabel(step: WalkthroughStep, isActive: boolean) {
+  if (step.status === 'visited') return 'Done';
+  if (step.status === 'skipped') return 'Skipped';
+  if (isActive) return 'Reviewing';
+  return 'Not started';
+}
+
 export function WalkthroughStepList({ walkthrough, onStepClick, onShowAllToggle }: WalkthroughStepListProps) {
   const { steps, cursor, showAll } = walkthrough;
-  const visitedCount = steps.filter(s => s.status === 'visited').length;
-  const allVisited = visitedCount === steps.length;
+  const doneCount = steps.filter(s => s.status === 'visited').length;
 
   return (
-    <div className="walkthrough-step-list" style={{ padding: '8px 0' }}>
-      {/* Show-all toggle */}
-      <div className="exp-toggle" style={{ marginBottom: 8, display: 'inline-flex' }}>
-        <button
-          type="button"
-          className={cn(!showAll && 'on')}
-          onClick={() => onShowAllToggle(false)}
-          style={{ fontSize: 11 }}
-        >
-          Curated
-        </button>
-        <button
-          type="button"
-          className={cn(showAll && 'on')}
-          onClick={() => onShowAllToggle(true)}
-          style={{ fontSize: 11 }}
-        >
-          All hunks
-        </button>
+    <div className="wsl">
+      <div className="wsl-header">
+        <span className="wsl-title">Walkthrough</span>
+        <span className="wsl-counter">{doneCount}/{steps.length}</span>
       </div>
 
-      {/* SC-1: "change this order?" affordance — Pitfall 14 mitigation */}
-      <div className="walkthrough-reorder-hint" style={{
-        padding: '6px 8px',
-        marginBottom: 6,
-        fontSize: 12,
-        color: 'var(--ink-3)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-      }}>
-        <span style={{ fontSize: 14 }} aria-hidden="true">&#8693;</span>
-        <span>Want a different order? Ask Claude to reorder the walkthrough.</span>
-      </div>
-
-      {/* Step list */}
-      <div role="list" aria-label="Walkthrough steps">
+      <div className="wsl-steps" role="list" aria-label="Walkthrough steps">
         {steps.map((step, i) => {
           const isActive = i === cursor;
-          const isDone = step.status === 'visited';
-          const isSkipped = step.status === 'skipped';
           return (
             <div
               key={step.hunkId}
               role="listitem"
-              className={cn(
-                'walkthrough-step-entry',
-                isActive && 'walkthrough-step-entry--active',
-                isDone && 'walkthrough-step-entry--done',
-                isSkipped && 'walkthrough-step-entry--skipped',
-              )}
+              className={`wsl-step${isActive ? ' wsl-step--active' : ''}`}
               onClick={() => onStepClick(i)}
-              style={{ cursor: 'pointer', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 8 }}
             >
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-4)', minWidth: 20 }}>
-                {step.stepNum}
+              {statusIcon(step, isActive)}
+              <span className={`wsl-step-text${isActive ? ' wsl-step-text--active' : ''}`}>
+                {step.commentary.length > 50 ? step.commentary.slice(0, 50) + '...' : step.commentary}
               </span>
-              <span style={{
-                fontSize: 13,
-                fontWeight: isActive ? 600 : 400,
-                color: isSkipped ? 'var(--ink-4)' : 'var(--ink-2)',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                flex: 1,
-              }}>
-                {step.commentary.slice(0, 60)}{step.commentary.length > 60 ? '...' : ''}
-              </span>
-              {isDone && <span style={{ color: 'var(--ok)', fontSize: 11 }}>Done</span>}
-              {isSkipped && <span style={{ color: 'var(--ink-4)', fontSize: 11 }}>Skipped</span>}
+              <span className="wsl-step-status">{statusLabel(step, isActive)}</span>
             </div>
           );
         })}
       </div>
 
-      {/* Completion state */}
-      {allVisited && (
-        <div style={{ padding: '8px', fontSize: 12, color: 'var(--ok)' }}>
-          Walkthrough complete — {visitedCount} of {steps.length} steps visited
+      <div className="wsl-footer">
+        <div className="wsl-toggle">
+          <button type="button" className={!showAll ? 'wsl-toggle-btn wsl-toggle-btn--on' : 'wsl-toggle-btn'} onClick={() => onShowAllToggle(false)}>Curated</button>
+          <button type="button" className={showAll ? 'wsl-toggle-btn wsl-toggle-btn--on' : 'wsl-toggle-btn'} onClick={() => onShowAllToggle(true)}>All hunks</button>
         </div>
-      )}
+        <div className="wsl-hint">Want a different order? Ask Claude to reorder.</div>
+      </div>
     </div>
   );
 }

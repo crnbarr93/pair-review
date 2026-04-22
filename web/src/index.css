@@ -163,20 +163,6 @@ button {
   background: var(--paper);
   padding: 0 16px;
   gap: 0;
-  position: relative;
-}
-.stages > .walkthrough-step-list {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  z-index: 20;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-top: none;
-  border-radius: 0 0 6px 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  min-width: 320px;
-  max-width: 420px;
 }
 .stage {
   flex: 1;
@@ -243,6 +229,9 @@ button {
   grid-template-columns: 280px 1fr;
   overflow: hidden;
   min-height: 0;
+}
+.main--panel-open {
+  grid-template-columns: 240px 1fr 340px;
 }
 .main > * {
   min-height: 0;
@@ -1502,19 +1491,144 @@ button {
   border-left: 3px solid var(--claude);
 }
 
-.walkthrough-step-entry {
-  border-radius: 4px;
+/* Walkthrough step list panel */
+.wsl {
+  padding: 8px 0;
 }
-.walkthrough-step-entry:hover {
+.wsl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 4px 14px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.wsl-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.wsl-counter {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-4);
+}
+.wsl-steps {
+  padding: 4px 0;
+}
+.wsl-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.wsl-step:hover {
   background: var(--paper-2);
 }
-.walkthrough-step-entry--active {
-  border-bottom: 2px solid var(--ink);
+.wsl-step--active {
+  background: var(--paper-2);
+}
+.wsl-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border-radius: 4px;
+}
+.wsl-icon--done {
+  background: var(--claude);
+  color: #fff;
+  font-size: 11px;
+}
+.wsl-icon--active {
+  color: var(--ink);
+  font-size: 14px;
+}
+.wsl-icon--pending {
+  color: var(--ink-4);
+  font-size: 14px;
+}
+.wsl-icon--skipped {
+  color: var(--ink-4);
+  font-size: 14px;
+}
+.wsl-step-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wsl-step-text--active {
+  font-weight: 600;
+}
+.wsl-step-status {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--ink-4);
+}
+.wsl-footer {
+  padding: 8px 14px 4px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.wsl-toggle {
+  display: inline-flex;
+}
+.wsl-toggle-btn {
+  font-size: 11px;
+  padding: 3px 10px;
+  border: 1px solid var(--line-2);
+  background: var(--paper);
+  cursor: pointer;
+  color: var(--ink-4);
+}
+.wsl-toggle-btn:first-child {
+  border-radius: 4px 0 0 4px;
+}
+.wsl-toggle-btn:last-child {
+  border-radius: 0 4px 4px 0;
+  border-left: none;
+}
+.wsl-toggle-btn--on {
+  background: var(--paper-2);
+  color: var(--ink);
+  font-weight: 600;
+}
+.wsl-hint {
+  font-size: 11px;
+  color: var(--ink-4);
 }
 
-/* SC-1: Reorder affordance separator — Pitfall 14 mitigation (Plan 05-06) */
-.walkthrough-reorder-hint {
-  border-bottom: 1px solid var(--paper-3);
+/* Right-hand review panel */
+.review-panel {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--line);
+  background: var(--paper);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.review-panel-conversation {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid var(--line);
+}
+.review-panel-placeholder {
+  font-size: 13px;
+  color: var(--ink-4);
+  text-align: center;
+  padding: 24px;
 }
 
 /* Thread marker correction: 14px -> 16px per UI-SPEC spacing conformance */

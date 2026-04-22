@@ -18,6 +18,7 @@ import { FileExplorer } from './components/FileExplorer';
 import { DiffViewer, type DiffView } from './components/DiffViewer';
 import { StaleDiffModal } from './components/StaleDiffModal';
 import { FindingsSidebar } from './components/FindingsSidebar';
+import { WalkthroughStepList } from './components/WalkthroughStepList';
 import { SummaryDrawer } from './components/SummaryDrawer';
 
 function cn(...parts: Array<string | false | undefined | null>): string {
@@ -439,7 +440,7 @@ export default function App() {
           onClose={() => setSummaryDrawerOpen(false)}
         />
       )}
-      <main className={cn('main', state.findingsSidebarOpen && 'main--findings-open')}>
+      <main className={cn('main', state.findingsSidebarOpen && 'main--findings-open', state.walkthrough && 'main--panel-open')}>
         {diff && (
           <>
             <FileExplorer
@@ -481,6 +482,20 @@ export default function App() {
                 el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
               }}
             />
+            {state.walkthrough && (
+              <aside className="review-panel">
+                <WalkthroughStepList
+                  walkthrough={state.walkthrough}
+                  onStepClick={handleWalkthroughStepClick}
+                  onShowAllToggle={handleShowAllToggle}
+                />
+                <div className="review-panel-conversation">
+                  <div className="review-panel-placeholder">
+                    Conversation
+                  </div>
+                </div>
+              </aside>
+            )}
           </>
         )}
       </main>
