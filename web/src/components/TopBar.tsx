@@ -214,23 +214,23 @@ export function StageStepper({
       disabled: false,
     },
     {
-      label: 'Self-review',
-      sub: selfReview
-        ? `${selfReview.findings.length} finding${selfReview.findings.length !== 1 ? 's' : ''}`
-        : 'Not run',
-      status: selfReview ? 'done' : summary ? 'active' : 'default',
-      onClick: selfReview ? onSelfReviewStep : undefined,
-      disabled: false,
-    },
-    {
       label: 'Walkthrough',
       sub: walkthrough
         ? `${walkthrough.steps.filter(s => s.status === 'visited').length}/${walkthrough.steps.length} steps`
         : 'Not started',
-      status: walkthrough ? (walkthrough.steps.every(s => s.status !== 'pending') ? 'done' : 'active') : selfReview ? 'active' : 'default',
+      status: walkthrough ? (walkthrough.steps.every(s => s.status !== 'pending') ? 'done' : 'active') : summary ? 'active' : 'default',
       onClick: undefined,
       disabled: !walkthrough,
       tooltip: !walkthrough ? 'Ask Claude to set_walkthrough' : undefined,
+    },
+    {
+      label: 'Review',
+      sub: selfReview
+        ? `${selfReview.findings.length} finding${selfReview.findings.length !== 1 ? 's' : ''}`
+        : 'Not run',
+      status: selfReview ? 'done' : walkthrough ? 'active' : 'default',
+      onClick: selfReview ? onSelfReviewStep : undefined,
+      disabled: false,
     },
     {
       label: 'Submit',
