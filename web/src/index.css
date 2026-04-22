@@ -1521,7 +1521,7 @@ button {
 .rp-avatar {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: 8px;
   background: var(--claude);
   color: #fff;
   display: grid;
@@ -1540,12 +1540,16 @@ button {
 }
 
 /* Walkthrough step list */
-.wsl { padding: 0; }
+.wsl {
+  padding: 0;
+  background: var(--paper-2);
+}
 .wsl-header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   padding: 12px 16px 8px;
+  border-top: 1px solid var(--line);
 }
 .wsl-title {
   font-size: 13px;
