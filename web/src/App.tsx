@@ -444,7 +444,6 @@ export default function App() {
               activeFileId={focusedFileId}
               onPickFile={handlePickFile}
             />
-            {/* filteredDiff: curated hunk subset in walkthrough mode (Gap 1 closure) */}
             <DiffViewer
               diff={filteredDiff ?? diff}
               shikiTokens={state.shikiTokens ?? {}}
