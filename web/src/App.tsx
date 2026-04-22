@@ -217,11 +217,21 @@ export default function App() {
 
   const handleSkipStep = useCallback(() => {
     if (!prKey || !state.walkthrough) return;
+    const skippedIndex = state.walkthrough.cursor;
     const nextCursor = Math.min(state.walkthrough.cursor + 1, state.walkthrough.steps.length - 1);
     postSessionEvent(prKey, {
       type: 'walkthrough.stepAdvanced',
       cursor: nextCursor,
+      skippedIndex,
     }).catch(() => showToast('Could not skip step. Retry.'));
+    // Scroll to next step (same as handleNextStep for consistent UX)
+    const nextStep = state.walkthrough.steps[nextCursor];
+    if (nextStep) {
+      setTimeout(() => {
+        document.getElementById(nextStep.hunkId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setFocusedHunkId(nextStep.hunkId);
+      }, 100);
+    }
   }, [prKey, state.walkthrough, showToast]);
 
   const handleNextStep = useCallback(() => {

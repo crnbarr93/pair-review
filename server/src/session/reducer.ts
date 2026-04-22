@@ -58,11 +58,15 @@ export function applyEvent(s: ReviewSession, e: SessionEvent): ReviewSession {
           ? {
               ...s.walkthrough,
               cursor: e.cursor,
-              steps: s.walkthrough.steps.map((step, i) =>
-                i < e.cursor && step.status === 'pending'
-                  ? { ...step, status: 'visited' as const }
-                  : step
-              ),
+              steps: s.walkthrough.steps.map((step, i) => {
+                if (i === e.skippedIndex && step.status === 'pending') {
+                  return { ...step, status: 'skipped' as const };
+                }
+                if (i < e.cursor && step.status === 'pending') {
+                  return { ...step, status: 'visited' as const };
+                }
+                return step;
+              }),
             }
           : s.walkthrough,
       };
