@@ -67,10 +67,6 @@ export function WalkthroughStepList({ walkthrough, onStepClick, onShowAllToggle 
       </div>
 
       <div className="wsl-footer">
-        <div className="wsl-toggle">
-          <button type="button" className={!showAll ? 'wsl-toggle-btn wsl-toggle-btn--on' : 'wsl-toggle-btn'} onClick={() => onShowAllToggle(false)}>Curated</button>
-          <button type="button" className={showAll ? 'wsl-toggle-btn wsl-toggle-btn--on' : 'wsl-toggle-btn'} onClick={() => onShowAllToggle(true)}>All hunks</button>
-        </div>
         <div className="wsl-hint">Want a different order? Ask Claude to reorder.</div>
       </div>
     </div>

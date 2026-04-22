@@ -490,6 +490,10 @@ export default function App() {
                     <div className="rp-name">Claude</div>
                     <div className="rp-status"><span className="rp-live" /> Reviewing</div>
                   </div>
+                  <div className="wsl-toggle">
+                    <button type="button" className={!state.walkthrough.showAll ? 'wsl-toggle-btn wsl-toggle-btn--on' : 'wsl-toggle-btn'} onClick={() => handleShowAllToggle(false)}>Curated</button>
+                    <button type="button" className={state.walkthrough.showAll ? 'wsl-toggle-btn wsl-toggle-btn--on' : 'wsl-toggle-btn'} onClick={() => handleShowAllToggle(true)}>All hunks</button>
+                  </div>
                 </div>
                 <WalkthroughStepList
                   walkthrough={state.walkthrough}

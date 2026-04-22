@@ -1654,7 +1654,7 @@ button {
   padding: 32px 24px;
   max-width: 240px;
 }
-.rp-future-icon { color: var(--ink-4); margin-bottom: 12px; }
+.rp-future-icon { color: var(--ink-4); margin-bottom: 12px; display: flex; justify-content: center; }
 .rp-future-title {
   font-size: 14px;
   font-weight: 600;
