@@ -96,6 +96,35 @@ export function applyEvent(s: ReviewSession, e: SessionEvent): ReviewSession {
         threads: { ...s.threads, [e.threadId]: { ...existing, resolved: true } },
       };
     }
+    // Phase 6 additions (D-16) — submission state machine and pending-review handling:
+    case 'submission.proposed':
+      return { ...s, pendingSubmission: { verdict: e.verdict, body: e.body } };
+    case 'submission.confirmed':
+      return { ...s, submissionState: { status: 'submitting', submissionId: e.submissionId } };
+    case 'submission.completed':
+      return {
+        ...s,
+        submissionState: {
+          status: 'submitted',
+          reviewId: e.reviewId,
+          url: e.url,
+          submissionId: e.submissionId,
+        },
+        pendingSubmission: undefined,
+      };
+    case 'submission.failed':
+      return { ...s, submissionState: { status: 'failed', error: e.error } };
+    case 'pendingReview.detected':
+      return {
+        ...s,
+        pendingReview: {
+          reviewId: e.reviewId,
+          createdAt: e.createdAt,
+          commentCount: e.commentCount,
+        },
+      };
+    case 'pendingReview.resolved':
+      return { ...s, pendingReview: undefined };
     default: {
       // Exhaustiveness guard — adding an event variant without handling it is a compile error.
       const _never: never = e;
