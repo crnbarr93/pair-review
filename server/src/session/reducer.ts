@@ -49,6 +49,47 @@ export function applyEvent(s: ReviewSession, e: SessionEvent): ReviewSession {
       return { ...s, summary: e.summary };
     case 'selfReview.set':
       return { ...s, selfReview: e.selfReview };
+    case 'walkthrough.set':
+      return { ...s, walkthrough: e.walkthrough };
+    case 'walkthrough.stepAdvanced':
+      return {
+        ...s,
+        walkthrough: s.walkthrough
+          ? {
+              ...s.walkthrough,
+              cursor: e.cursor,
+              steps: s.walkthrough.steps.map((step, i) =>
+                i < e.cursor && step.status === 'pending'
+                  ? { ...step, status: 'visited' as const }
+                  : step
+              ),
+            }
+          : s.walkthrough,
+      };
+    case 'walkthrough.showAllToggled':
+      return {
+        ...s,
+        walkthrough: s.walkthrough ? { ...s.walkthrough, showAll: e.showAll } : s.walkthrough,
+      };
+    case 'thread.replyAdded':
+      return {
+        ...s,
+        threads: { ...(s.threads ?? {}), [e.threadId]: e.thread },
+      };
+    case 'thread.draftSet':
+      return {
+        ...s,
+        threads: s.threads
+          ? { ...s.threads, [e.threadId]: { ...s.threads[e.threadId], draftBody: e.body } }
+          : s.threads,
+      };
+    case 'thread.resolved':
+      return {
+        ...s,
+        threads: s.threads
+          ? { ...s.threads, [e.threadId]: { ...s.threads[e.threadId], resolved: true } }
+          : s.threads,
+      };
     default: {
       // Exhaustiveness guard — adding an event variant without handling it is a compile error.
       const _never: never = e;
