@@ -37,6 +37,7 @@ const stepAdvancedSchema = z
   .object({
     type: z.literal('walkthrough.stepAdvanced'),
     cursor: z.number().int().min(0),
+    skippedIndex: z.number().int().min(0).optional(),
   })
   .strict();
 
