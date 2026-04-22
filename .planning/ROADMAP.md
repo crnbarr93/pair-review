@@ -133,13 +133,14 @@ Plans:
   3. User can carry on a conversational thread with the LLM on any diff line, anchored to `{path, line, side}`, that visibly flattens to a single posted comment via a designated editable post-body slot (not auto-concatenation of the whole thread — mitigating Pitfall 19).
   4. MCP tool schema inspection confirms that `draft_comment` / `reply_in_thread` / `resolve_thread` accept only opaque `hunk_id` / `line_id` values generated server-side; an integration test feeding a garbage ID returns a schema error (mitigating Pitfall 2 — hallucinated coordinates); comments on unchanged context lines are rejected unless an explicit `pre_existing: true` flag is passed (mitigating Pitfall 12).
   5. Browser refresh mid-thread restores the drafted conversation and its anchor (leverages Phase 2 persistence).
-**Plans**: 5 plans in 3 waves
+**Plans**: 6 plans
 Plans:
 - [ ] 05-01-PLAN.md — Shared types + reducer (6 new event branches) + resolve-ids utility (Wave 1)
 - [ ] 05-02-PLAN.md — MCP tools: set_walkthrough + reply_in_thread with opaque ID + preExisting gate (Wave 2)
 - [ ] 05-03-PLAN.md — MCP tools: draft_comment + resolve_thread + server.ts registration + session-events.ts (Wave 2)
 - [ ] 05-04-PLAN.md — Store extensions + WalkthroughBanner + WalkthroughStepList + StageStepper activation + CSS (Wave 3)
 - [ ] 05-05-PLAN.md — ThreadCard + DiffViewer integration + App.tsx walkthrough wiring + c-key + human-verify (Wave 3)
+- [ ] 05-06-PLAN.md — Gap closure: walkthrough hunk filtering in DiffViewer + "change this order?" affordance (Wave 4, gap closure)
 **UI hint**: yes
 
 **Placement rationale**: All prior phases exist to make this work. Walkthrough needs summary + self-review (Phase 4) as inputs because the narrative order is informed by what the self-review discovered. Inline threads need the diff UI (Phase 3) for anchoring and the persistence layer (Phase 2) for draft survival. Per the instructions, the opaque-ID MCP schema ships no later than Phase 5 — it ships *here*, in the same phase that introduces `draft_comment`, because introducing it any later means retrofitting every tool handler. This is explicitly called out as a must-research phase by SUMMARY.md (tool schema shape, filter-not-reset, thread synthesis UX).
@@ -187,7 +188,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 2. Persistent Session Store + Resume | 0/4 | Not started | - |
 | 3. Diff UI + File Tree + Navigation | 0/TBD | Not started | - |
 | 4. LLM Summary + Checklist + Self-Review | 0/TBD | Not started | - |
-| 5. Walkthrough + Inline Threaded Comments | 0/5 | Planning | - |
+| 5. Walkthrough + Inline Threaded Comments | 0/6 | Planning | - |
 | 6. Review Submission + Verdict UI | 0/TBD | Not started | - |
 | 7. Polish + Concurrency | 0/TBD | Not started | - |
 
