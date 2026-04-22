@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-04-22
+revised: 2026-04-22
 ---
 
 # Phase 6 — UI Design Contract
@@ -34,9 +35,9 @@ Declared values from established token system (all multiples of 4):
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| xs | 4px | Icon gaps, inline badge padding |
-| sm | 8px | Button internal gap, pill padding |
-| md | 16px | Modal section padding, TopBar horizontal padding |
+| xs | 4px | Icon gaps, inline badge padding, retype input vertical padding |
+| sm | 8px | Button internal gap, pill padding, verdict card vertical padding, stats strip vertical padding, verdict card gap, thread row gap, textarea internal padding |
+| md | 16px | Modal section padding, TopBar horizontal padding, stats strip horizontal padding, verdict card horizontal padding |
 | lg | 24px | Modal body padding, major section gaps |
 | xl | 32px | Modal max-content padding |
 | 2xl | 48px | Modal max-width breathing room |
@@ -47,8 +48,9 @@ Declared values from established token system (all multiples of 4):
 Exceptions for Phase 6:
 - Modal overlay: `position: fixed; inset: 0` — full viewport coverage, no spacing token.
 - Modal card max-width: 560px (matches design.html submit modal proportions — wider than `StaleDiffModal` 448px to accommodate verdict cards + threads list).
-- Verdict cards: 12px vertical padding, full-width horizontal layout with 8px gap between cards.
-- Stats strip: 12px 16px padding — matches `.findings-sidebar-header` convention.
+- Verdict cards: `padding: 8px 16px` (sm vertical, md horizontal) — 8px is the nearest standard token below the previous non-standard 12px.
+- Stats strip: `padding: 8px 16px` (sm vertical, md horizontal) — same rationale; aligns with the xs/sm/md scale rather than the non-standard `.findings-sidebar-header` 12px convention.
+- Verdict card gap between cards: 8px (sm).
 
 ---
 
@@ -56,14 +58,18 @@ Exceptions for Phase 6:
 
 Established from `web/src/index.css` body declaration and existing component patterns. No new sizes introduced for Phase 6.
 
+**Maximum 2 weights are in use.** The former "Label / UI" role (previously weight 500) is reassigned to weight 600 — it is a UI label, closer in visual hierarchy to headings than to body text.
+
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
 | Body | 13px | 400 (regular) | 1.5 |
-| Label / UI | 12px | 500 (medium) | 1.2 |
+| Label / UI | 12px | 600 (semibold) | 1.2 |
 | Heading (modal title) | 14px | 600 (semibold) | 1.2 |
 | Mono / code / stats | 11px–12px | 400 (regular) | 1.45 |
 
-**Source:** `body { font-size: 13px; line-height: 1.45 }`, `.rp-name { font-size: 14px; font-weight: 600 }`, `.thread-msg .body { font-size: 12.5px }`, `.severity-pill { font-size: 11px; font-weight: 500 }` — all from `index.css`.
+**Source:** `body { font-size: 13px; line-height: 1.45 }`, `.rp-name { font-size: 14px; font-weight: 600 }`, `.thread-msg .body { font-size: 12.5px }` — all from `index.css`.
+
+Note: `.severity-pill { font-weight: 500 }` in existing code used weight 500. Phase 6 does not introduce new instances at weight 500; existing severity pills are out of scope for this phase's typography contract. New elements created in Phase 6 use only weights 400 or 600.
 
 Phase 6 additions follow these exact sizes. No new type ramp entries.
 
@@ -107,52 +113,54 @@ New components for Phase 6 (to be created in `web/src/components/`):
 
 Self-guarding: renders only when `state.pendingSubmission` is set. Not dismissible via Escape or backdrop click — verdict must be explicitly chosen (mirrors `StaleDiffModal` non-dismissible pattern, per D-03 early-submit gate friction requirement).
 
+**Focal point:** The three verdict cards are the primary visual focal element of the modal. They are rendered above the fold, immediately below the stats strip, in a full-width column layout. The selected card state (colored border + tinted background + focus ring) draws the eye. No decorative imagery competes with them.
+
 Structure (top to bottom):
 1. **Modal backdrop** — `position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 50; display: grid; place-items: center`
 2. **Modal card** — `background: var(--paper); border-radius: var(--radius-lg); max-width: 560px; width: calc(100% - 32px); box-shadow: 0 16px 48px rgba(0,0,0,0.12)`
-3. **Modal header** — `padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between`
+3. **Modal header** — `padding: 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between`
    - Title: "Post review" at 14px weight 600 using `--ink`
-   - Close button: icon-only `×`, `padding: 4px 6px; border-radius: 4px; color: var(--ink-4)` — enabled only when walkthrough is complete (see D-03)
-4. **Stats strip** — `padding: 12px 20px; background: var(--paper-2); border-bottom: 1px solid var(--line); display: flex; gap: 16px; flex-wrap: wrap`
+   - Close button: icon-only `×`, `aria-label="Close submit modal"`, `padding: 4px 8px; border-radius: 4px; color: var(--ink-4)` — enabled only when walkthrough is complete (see D-03)
+4. **Stats strip** — `padding: 8px 16px; background: var(--paper-2); border-bottom: 1px solid var(--line); display: flex; gap: 16px; flex-wrap: wrap`
    - Four stat pills: `{N} blocker`, `{N} major`, `{N} minor`, `{N} nit` — each `font-family: var(--mono); font-size: 11px`
    - When nit-heavy: nit count pill turns `color: var(--warn); background: var(--warn-bg)`; whole strip adds an inline warning label "Nit-heavy review" at `color: var(--warn); font-size: 12px`
    - Walkthrough progress: "Walkthrough: {N}/{M} steps" monospace pill alongside stat pills
-5. **Verdict cards section** — `padding: 16px 20px; display: flex; flex-direction: column; gap: 8px`
+5. **Verdict cards section** — `padding: 16px; display: flex; flex-direction: column; gap: 8px`
    - Section label: "Verdict" at `font-size: 12px; font-weight: 600; color: var(--ink-3); margin-bottom: 4px`
-   - Three verdict cards, each: `display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: var(--radius); cursor: pointer; background: var(--paper)`
+   - Three verdict cards, each: `display: flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1.5px solid var(--line); border-radius: var(--radius); cursor: pointer; background: var(--paper)`
    - Selected verdict card: border color + background per color contract above; `box-shadow: 0 0 0 2px {accent-color}`
-   - Card contents: radio-style dot (16px circle) + label text (13px weight 500) + optional badge (blocker count, `--block-bg`/`--block` using `.severity-pill--blocker` pattern)
-6. **Review body textarea** — `padding: 0 20px 12px`
+   - Card contents: radio-style dot (16px circle) + label text (13px weight 400) + optional badge (blocker count, `--block-bg`/`--block` using `.severity-pill--blocker` pattern)
+6. **Review body textarea** — `padding: 0 16px 16px`
    - Section label: "Review summary" at 12px weight 600 `--ink-3`
-   - Textarea: `width: 100%; min-height: 120px; max-height: 240px; resize: vertical; font-family: var(--sans); font-size: 13px; color: var(--ink); background: var(--paper); border: 1px solid var(--line-2); border-radius: var(--radius); padding: 10px 12px; line-height: 1.5`
+   - Textarea: `width: 100%; min-height: 120px; max-height: 240px; resize: vertical; font-family: var(--sans); font-size: 13px; color: var(--ink); background: var(--paper); border: 1px solid var(--line-2); border-radius: var(--radius); padding: 8px; line-height: 1.5`
    - Focus: `border-color: var(--ink-3); outline: 2px solid var(--claude); outline-offset: -1px` (matches `.thread-draft-input:focus` pattern)
-7. **Threads-to-post list** — `padding: 0 20px 12px; max-height: 200px; overflow-y: auto`
+7. **Threads-to-post list** — `padding: 0 16px 16px; max-height: 200px; overflow-y: auto`
    - Section label: "Inline comments ({N})" at 12px weight 600 `--ink-3`
-   - Per thread row: `display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 12px`
+   - Per thread row: `display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 12px`
    - Thread row contents: severity badge (`.severity-pill--{level}`) + file path (mono 11px `--ink-4`) + first line of draft body (13px `--ink-2`, truncated to 2 lines)
-   - Empty state: "No inline comments drafted — the review will post summary only." at `color: var(--ink-4); font-size: 12px; padding: 12px 0`
+   - Empty state: "No inline comments drafted — the review will post summary only." at `color: var(--ink-4); font-size: 12px; padding: 8px 0`
 8. **Incomplete walkthrough warning** — shown only when walkthrough incomplete
-   - `padding: 10px 20px; background: var(--warn-bg); border-top: 1px solid var(--warn); color: var(--warn); font-size: 12px; display: flex; align-items: center; gap: 8px`
+   - `padding: 8px 16px; background: var(--warn-bg); border-top: 1px solid var(--warn); color: var(--warn); font-size: 12px; display: flex; align-items: center; gap: 8px`
    - Text: "Walkthrough incomplete ({N}/{M} steps visited). Type your verdict to confirm early submit:"
-   - Retype input: `border: 1px solid var(--warn); border-radius: var(--radius-sm); padding: 6px 10px; font-size: 12px; color: var(--ink); background: var(--paper); width: 100%`
-9. **Modal footer** — `padding: 14px 20px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 8px`
+   - Retype input: `border: 1px solid var(--warn); border-radius: var(--radius-sm); padding: 4px 8px; font-size: 12px; color: var(--ink); background: var(--paper); width: 100%`
+9. **Modal footer** — `padding: 16px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 8px`
    - Cancel button: `.btn-sm` — `background: var(--paper); border: 1px solid var(--line); color: var(--ink-2)` — only visible when walkthrough complete (when incomplete, there is no cancel — user must retype or not submit)
-   - Submit button: `.btn-sm.primary` (`background: var(--ink); color: var(--paper); font-weight: 500`) — label: "Post review"
+   - Submit button: `.btn-sm.primary` (`background: var(--ink); color: var(--paper); font-weight: 600`) — label: "Post review"
    - When nit-heavy AND walkthrough complete: submit button label changes to "Post anyway"
    - Disabled state when: no verdict selected, OR walkthrough incomplete AND retype not matched
 
 ### `PendingReviewModal.tsx`
 
-Shown at session start when a pending GitHub review is detected. Same overlay/card structure as `SubmitModal` but narrower (max-width: 440px). Three buttons: "Adopt comments", "Clear pending review", "Cancel". Not dismissible via backdrop.
+Shown at session start when a pending GitHub review is detected. Same overlay/card structure as `SubmitModal` but narrower (max-width: 440px). Three buttons: "Adopt comments", "Clear pending review", "Keep existing review". Not dismissible via backdrop.
 
 - Adopt: `.btn-sm.primary`
 - Clear: `.btn-sm.danger` (`color: var(--block)`)
-- Cancel: `.btn-sm`
+- Keep existing review: `.btn-sm`
 
 ### TopBar changes (in `TopBar.tsx`)
 
 Replace `onApprove` / `onRequestChanges` button stubs with a single **"Submit review"** button:
-- Class: `.topbar .primary` — `background: var(--ink); color: var(--paper); padding: 6px 12px; border-radius: 5px; font-weight: 500`
+- Class: `.topbar .primary` — `background: var(--ink); color: var(--paper); padding: 4px 8px; border-radius: 4px; font-weight: 600`
 - Opens `SubmitModal` on click
 - When `submissionState === 'submitted'`: button becomes "Review posted ✓" using `--ok` green, non-interactive
 
@@ -188,6 +196,7 @@ Activate "Submit" step (currently `disabled: true` with `opacity: 0.5`):
 | Pending review modal body | "A pending review exists on this PR. Adopt its comments into this session, or clear it before proceeding." |
 | Pending review adopt button | "Adopt comments" |
 | Pending review clear button | "Clear pending review" |
+| Pending review dismiss button | "Keep existing review" |
 | Error: submission failed | "Post failed — {error message}. Check your network and try again." |
 | Error: Octokit auth | "GitHub authentication error. Run `gh auth login` and reload." |
 | Submitting in-progress | "Posting review…" (submit button text while pending) |
@@ -195,6 +204,8 @@ Activate "Submit" step (currently `disabled: true` with `opacity: 0.5`):
 | Local export success | "Review exported to {path}" |
 
 **Source:** CONTEXT.md D-01 (modal surface), D-02 (signal-ratio warning), D-03 (incomplete walkthrough retype), D-04 (editable review body), design.html visual reference for verdict labels.
+
+**Note on "Keep existing review":** replaces the previously specified "Cancel" label on the `PendingReviewModal` dismiss button. "Cancel" is a generic blocked label — "Keep existing review" describes the consequence: the pending review on GitHub is left untouched and the session proceeds without adopting or clearing it.
 
 ---
 
@@ -240,6 +251,7 @@ Activate "Submit" step (currently `disabled: true` with `opacity: 0.5`):
 | Pending review modal | `role="alertdialog"` (blocking, requires action) |
 | Submit button disabled | `aria-disabled="true"` (not HTML `disabled` — keeps focusable for screen readers) |
 | Incomplete walkthrough | `aria-live="polite"` on retype validation message |
+| Close button (modal header) | `aria-label="Close submit modal"` on the icon-only `×` button |
 
 **Source:** Established pattern from `StaleDiffModal.tsx` (`role="dialog"`, `aria-modal="true"`, `aria-labelledby`).
 
