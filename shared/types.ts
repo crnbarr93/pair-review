@@ -95,6 +95,9 @@ export interface ReviewSession {
   // Phase 4 additions (D-18) — optional so pre-Phase-4 snapshots load without migration:
   summary?: PrSummary | null;
   selfReview?: SelfReview | null;
+  // Phase 5 additions (D-19) — optional so pre-Phase-5 snapshots load without migration:
+  walkthrough?: Walkthrough | null;
+  threads?: Record<string, Thread>;
 }
 
 // Phase 2 event union — Phase 4/5/6 variants will extend this.
@@ -115,7 +118,14 @@ export type SessionEvent =
   | { type: 'ciChecks.loaded'; ciStatus: CIStatus }
   // Phase 4 additions (D-17):
   | { type: 'summary.set'; summary: PrSummary }
-  | { type: 'selfReview.set'; selfReview: SelfReview };
+  | { type: 'selfReview.set'; selfReview: SelfReview }
+  // Phase 5 additions (D-18):
+  | { type: 'walkthrough.set'; walkthrough: Walkthrough }
+  | { type: 'walkthrough.stepAdvanced'; cursor: number }
+  | { type: 'walkthrough.showAllToggled'; showAll: boolean }
+  | { type: 'thread.replyAdded'; threadId: string; thread: Thread }
+  | { type: 'thread.draftSet'; threadId: string; body: string }
+  | { type: 'thread.resolved'; threadId: string };
 
 // SSE message envelope (server → browser)
 export interface SnapshotMessage {
@@ -284,4 +294,49 @@ export interface SelfReview {
   coverage: CategoryCoverage;
   verdict: Verdict;
   generatedAt: string;        // ISO timestamp.
+}
+
+// -------------------------------------------------------------------------
+// Phase 5 additions — Walkthrough + Inline Threaded Comments
+// D-01: Walkthrough at hunk-level granularity.
+// D-13: threadId is server-generated nanoid; lineId is the Phase-1 opaque rail extended to threads.
+// D-19: ReviewSession gains walkthrough/threads fields (all optional for backward compat).
+// -------------------------------------------------------------------------
+
+export type WalkthroughStepStatus = 'pending' | 'visited' | 'skipped';
+
+export interface WalkthroughStep {
+  stepNum: number;
+  hunkId: string;
+  /** SECURITY: render via React text nodes, NEVER innerHTML. */
+  commentary: string;
+  status: WalkthroughStepStatus;
+}
+
+export interface Walkthrough {
+  steps: WalkthroughStep[];
+  cursor: number;
+  showAll: boolean;
+  generatedAt: string;
+}
+
+export interface ThreadTurn {
+  author: 'llm' | 'user';
+  /** SECURITY: render via React text nodes, NEVER innerHTML. */
+  message: string;
+  createdAt: string;
+}
+
+export interface Thread {
+  threadId: string;
+  lineId: string;
+  path: string;
+  line: number;
+  side: LineSide;
+  preExisting: boolean;
+  turns: ThreadTurn[];
+  /** SECURITY: render via React text nodes, NEVER innerHTML. */
+  draftBody?: string;
+  resolved: boolean;
+  createdAt: string;
 }
