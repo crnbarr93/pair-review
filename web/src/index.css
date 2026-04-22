@@ -1490,6 +1490,11 @@ button {
   border-bottom: 2px solid var(--ink);
 }
 
+/* SC-1: Reorder affordance separator — Pitfall 14 mitigation (Plan 05-06) */
+.walkthrough-reorder-hint {
+  border-bottom: 1px solid var(--paper-3);
+}
+
 /* Thread marker correction: 14px -> 16px per UI-SPEC spacing conformance */
 .thread-marker {
   width: 16px;

@@ -37,6 +37,20 @@ export function WalkthroughStepList({ walkthrough, onStepClick, onShowAllToggle 
         </button>
       </div>
 
+      {/* SC-1: "change this order?" affordance — Pitfall 14 mitigation */}
+      <div className="walkthrough-reorder-hint" style={{
+        padding: '6px 8px',
+        marginBottom: 6,
+        fontSize: 12,
+        color: 'var(--ink-3)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+      }}>
+        <span style={{ fontSize: 14 }} aria-hidden="true">&#8693;</span>
+        <span>Want a different order? Ask Claude to reorder the walkthrough.</span>
+      </div>
+
       {/* Step list */}
       <div role="list" aria-label="Walkthrough steps">
         {steps.map((step, i) => {

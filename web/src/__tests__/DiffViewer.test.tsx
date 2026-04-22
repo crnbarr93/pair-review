@@ -3,7 +3,7 @@ import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { DiffViewer } from '../components/DiffViewer';
 import diffModelFixture from './fixtures/diff-model.fixture.json';
 import shikiTokensFixture from './fixtures/shiki-tokens.fixture.json';
-import type { DiffModel, ShikiFileTokens, ReadOnlyComment } from '@shared/types';
+import type { DiffModel, ShikiFileTokens, ReadOnlyComment, Walkthrough } from '@shared/types';
 
 // Phase 3 Plan 03-03 — DiffViewer render test suite
 // Validates Open Decision 1 (bespoke renderer). The split-mode DOM assertion catches
@@ -226,5 +226,102 @@ describe('DiffViewer (Phase 3 — Open Decision 1 validation)', () => {
       <DiffViewer {...baseProps()} diff={emptyDiff} shikiTokens={{}} />,
     );
     expect(container.firstChild).toBeTruthy();
+  });
+});
+
+describe('DiffViewer walkthrough hunk filtering (Gap 1 closure)', () => {
+  // The fixture non-generated files and their hunk IDs:
+  //   216381173f18 (src/app.ts)    h0..h7  (8 hunks)
+  //   d49e08f18c89 (src/utils.ts)  h0..h3  (4 hunks)
+  //   8ec9a00bfd09 (README.md)     h0      (1 hunk)
+  //   62c9fedb1aea (src/api.ts)    h0..h6  (7 hunks)
+  //   e3357f6213a8 (config/...)    h0..h5  (6 hunks)
+  // The generated file fa288d1472d2 (package-lock.json) is excluded from curated view.
+
+  it('in curated mode, only renders hunks present in walkthrough.steps', () => {
+    const fullDiff = diffModelFixture as unknown as DiffModel;
+    // Curate only the first hunk of src/app.ts
+    const curatedHunkId = '216381173f18:h0';
+    const walkthrough: Walkthrough = {
+      steps: [{ stepNum: 1, hunkId: curatedHunkId, commentary: 'First hunk', status: 'pending' }],
+      cursor: 0,
+      showAll: false,
+    };
+
+    // Reproduce the App.tsx filteredDiff memo logic to build the filtered DiffModel
+    const curatedHunkIds = new Set(walkthrough.steps.map(s => s.hunkId));
+    const filteredFiles = fullDiff.files
+      .filter(f => !f.generated)
+      .map(f => ({ ...f, hunks: f.hunks.filter(h => curatedHunkIds.has(h.id)) }))
+      .filter(f => f.hunks.length > 0);
+    const filteredDiff: DiffModel = {
+      files: filteredFiles,
+      totalHunks: filteredFiles.reduce((n, f) => n + f.hunks.length, 0),
+    };
+
+    const { container } = render(
+      <DiffViewer
+        {...baseProps()}
+        diff={filteredDiff}
+        walkthrough={walkthrough}
+      />,
+    );
+
+    // The curated hunk must be present
+    const curatedEl = container.querySelector(`[id="${curatedHunkId}"]`);
+    expect(curatedEl, 'curated hunk anchor must be present').toBeTruthy();
+
+    // Non-curated hunks must NOT be present
+    const nonCuratedHunkId = '216381173f18:h1';
+    const nonCuratedEl = container.querySelector(`[id="${nonCuratedHunkId}"]`);
+    expect(nonCuratedEl, 'non-curated hunk anchor must be absent in curated mode').toBeNull();
+
+    // Only 1 hunk element in the entire rendered output
+    const allHunks = container.querySelectorAll('.hunk');
+    expect(allHunks.length).toBe(1);
+  });
+
+  it('in show-all mode, renders all non-generated hunks and curated hunks have hunk--curated class', () => {
+    const fullDiff = diffModelFixture as unknown as DiffModel;
+    // Curate only h0 from src/app.ts, but showAll=true so everything renders
+    const curatedHunkId = '216381173f18:h0';
+    const walkthrough: Walkthrough = {
+      steps: [{ stepNum: 1, hunkId: curatedHunkId, commentary: 'First hunk', status: 'pending' }],
+      cursor: 0,
+      showAll: true,
+    };
+
+    const { container } = render(
+      <DiffViewer
+        {...baseProps()}
+        diff={fullDiff}
+        walkthrough={walkthrough}
+      />,
+    );
+
+    // All non-generated file hunk anchors must be present
+    for (const file of fullDiff.files) {
+      if (file.generated) continue;
+      for (const hunk of file.hunks) {
+        const el = container.querySelector(`[id="${hunk.id}"]`);
+        expect(el, `hunk anchor ${hunk.id} must be present in show-all mode`).toBeTruthy();
+      }
+    }
+
+    // The curated hunk must have the hunk--curated CSS class
+    const curatedEl = container.querySelector(`[id="${curatedHunkId}"]`);
+    expect(curatedEl, 'curated hunk element must exist').toBeTruthy();
+    expect(
+      curatedEl!.classList.contains('hunk--curated'),
+      'curated hunk must have hunk--curated class in show-all mode',
+    ).toBe(true);
+
+    // Non-curated hunks must NOT have hunk--curated class
+    const nonCuratedEl = container.querySelector('[id="216381173f18:h1"]');
+    expect(nonCuratedEl, 'non-curated hunk must exist in show-all mode').toBeTruthy();
+    expect(
+      nonCuratedEl!.classList.contains('hunk--curated'),
+      'non-curated hunk must NOT have hunk--curated class',
+    ).toBe(false);
   });
 });
