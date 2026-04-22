@@ -135,12 +135,12 @@ Plans:
   5. Browser refresh mid-thread restores the drafted conversation and its anchor (leverages Phase 2 persistence).
 **Plans**: 6 plans
 Plans:
-- [ ] 05-01-PLAN.md — Shared types + reducer (6 new event branches) + resolve-ids utility (Wave 1)
-- [ ] 05-02-PLAN.md — MCP tools: set_walkthrough + reply_in_thread with opaque ID + preExisting gate (Wave 2)
-- [ ] 05-03-PLAN.md — MCP tools: draft_comment + resolve_thread + server.ts registration + session-events.ts (Wave 2)
-- [ ] 05-04-PLAN.md — Store extensions + WalkthroughBanner + WalkthroughStepList + StageStepper activation + CSS (Wave 3)
-- [ ] 05-05-PLAN.md — ThreadCard + DiffViewer integration + App.tsx walkthrough wiring + c-key + human-verify (Wave 3)
-- [ ] 05-06-PLAN.md — Gap closure: walkthrough hunk filtering in DiffViewer + "change this order?" affordance (Wave 4, gap closure)
+- [x] 05-01-PLAN.md — Shared types + reducer (6 new event branches) + resolve-ids utility (Wave 1)
+- [x] 05-02-PLAN.md — MCP tools: set_walkthrough + reply_in_thread with opaque ID + preExisting gate (Wave 2)
+- [x] 05-03-PLAN.md — MCP tools: draft_comment + resolve_thread + server.ts registration + session-events.ts (Wave 2)
+- [x] 05-04-PLAN.md — Store extensions + WalkthroughBanner + WalkthroughStepList + StageStepper activation + CSS (Wave 3)
+- [x] 05-05-PLAN.md — ThreadCard + DiffViewer integration + App.tsx walkthrough wiring + c-key + human-verify (Wave 3)
+- [x] 05-06-PLAN.md — Gap closure: walkthrough hunk filtering in DiffViewer + "change this order?" affordance (Wave 4, gap closure)
 **UI hint**: yes
 
 **Placement rationale**: All prior phases exist to make this work. Walkthrough needs summary + self-review (Phase 4) as inputs because the narrative order is informed by what the self-review discovered. Inline threads need the diff UI (Phase 3) for anchoring and the persistence layer (Phase 2) for draft survival. Per the instructions, the opaque-ID MCP schema ships no later than Phase 5 — it ships *here*, in the same phase that introduces `draft_comment`, because introducing it any later means retrofitting every tool handler. This is explicitly called out as a must-research phase by SUMMARY.md (tool schema shape, filter-not-reset, thread synthesis UX).
