@@ -23,8 +23,8 @@ vi.mock('../../api', () => ({
 }));
 
 function makeState(overrides: Partial<AppState> = {}): AppState {
-  return {
-    phase: 'diff',
+  const base = {
+    phase: 'diff' as const,
     session: { active: true },
     launchUrl: '',
     tokenLast4: '',
@@ -36,8 +36,17 @@ function makeState(overrides: Partial<AppState> = {}): AppState {
     existingComments: [],
     ciStatus: undefined,
     prKey: 'gh:o/r#1',
-    ...overrides,
+    // Phase 4 AppState fields
+    summary: null,
+    selfReview: null,
+    findingsSidebarOpen: false,
+    activeCategory: null,
+    // Phase 5 AppState fields
+    walkthrough: null,
+    threads: {},
+    locallyEditedDrafts: new Set<string>(),
   };
+  return { ...base, ...overrides } as AppState;
 }
 
 async function importModal() {
