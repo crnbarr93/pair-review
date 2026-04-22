@@ -25,13 +25,11 @@ export function WalkthroughBanner({ step, stepNum, totalSteps, isActive, onSkip,
       aria-label={`Walkthrough step ${stepNum} of ${totalSteps}`}
       aria-live={isActive ? 'polite' : undefined}
     >
-      <div className="walkthrough-banner-step" style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-4)' }}>
-        Step {stepNum} of {totalSteps}
-        {step.status === 'skipped' && ' — Skipped'}
-      </div>
       {isActive ? (
         <>
-          {/* SECURITY: commentary is LLM-authored — render as React text node, NEVER innerHTML */}
+          <div className="walkthrough-banner-step" style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-4)' }}>
+            Step {stepNum} of {totalSteps}
+          </div>
           <p style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--ink-2)', margin: '4px 0 0', whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
             {step.commentary}
           </p>
@@ -45,8 +43,13 @@ export function WalkthroughBanner({ step, stepNum, totalSteps, isActive, onSkip,
           </div>
         </>
       ) : (
-        <div style={{ fontSize: 13, color: 'var(--ink-4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {step.status === 'skipped' ? 'Skipped' : step.commentary}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, minWidth: 0 }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-4)', flexShrink: 0 }}>
+            Step {stepNum}{step.status === 'skipped' ? ' skipped' : ''}
+          </span>
+          <span style={{ fontSize: 12, color: 'var(--ink-4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
+            {step.commentary}
+          </span>
         </div>
       )}
     </div>
