@@ -773,22 +773,25 @@ const DESCRIPTION = [
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Does `reply_in_thread` use `lineId`-for-new + `threadId`-for-existing, or a discriminated union?**
    - What we know: D-12/D-13 specify both anchors; CONTEXT.md Claude's Discretion leaves the shape to the planner
    - What's unclear: A single schema with optional fields + server branch is simpler to implement; a discriminated union is more type-safe
    - Recommendation: Single schema with optional fields + `.refine()` validation (matches Zod patterns already in use). The discriminated union adds a `kind` field that the LLM must supply correctly — one more failure point.
+   - RESOLVED: Single schema with optional fields + `.refine()` (implemented in 05-02 Task 2)
 
 2. **Should `draftBody` live on `Thread` or in a separate `draftComments: Record<string, DraftComment>` field?**
    - What we know: CONTEXT.md D-19 mentions both options; "Planner may inline this into Thread if cleaner."
    - What's unclear: A separate record adds indirection; inline is simpler for the browser to consume
    - Recommendation: Inline `draftBody?: string` on `Thread`. Simpler SSE update shape; Phase 6 just reads `thread.draftBody` for submission.
+   - RESOLVED: `draftBody` inlined on `Thread` (implemented in 05-01 Task 1)
 
 3. **How many `turns` are shown before collapsing?**
    - CONTEXT.md D-16 says "2-3 is the guidance; planner picks"
    - UI-SPEC says "last 3 turns visible by default"
    - Recommendation: Use 3 (matching UI-SPEC). No ambiguity.
+   - RESOLVED: 3 visible turns by default (implemented in 05-05 Task 1, `VISIBLE_TURNS = 3`)
 
 ---
 
