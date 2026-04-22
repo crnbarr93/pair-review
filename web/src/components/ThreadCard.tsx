@@ -3,7 +3,7 @@
 //   - turn.message is LLM-authored — rendered as React text node inside <p> (T-5-05-01).
 //     innerHTML is NEVER used for LLM content in this component.
 //   - draftBody rendered in <textarea value={localDraft}> — textarea values are always text, never HTML (T-5-05-02)
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Thread } from '@shared/types';
 
 function cn(...parts: Array<string | false | undefined | null>): string {
@@ -21,13 +21,13 @@ const VISIBLE_TURNS = 3;
 export function ThreadCard({ thread, onDraftChange, onCollapse }: ThreadCardProps) {
   const [showAllTurns, setShowAllTurns] = useState(false);
   const [localDraft, setLocalDraft] = useState(thread.draftBody ?? '');
+  const userHasEdited = useRef(false);
 
-  // Sync localDraft when server sets draftBody for the first time
+  // Sync localDraft when server updates draftBody, but only if user hasn't manually edited
   useEffect(() => {
-    if (thread.draftBody !== undefined && localDraft === '') {
+    if (thread.draftBody !== undefined && !userHasEdited.current) {
       setLocalDraft(thread.draftBody);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [thread.draftBody]);
 
   const visibleTurns = showAllTurns
@@ -130,7 +130,10 @@ export function ThreadCard({ thread, onDraftChange, onCollapse }: ThreadCardProp
           <textarea
             className="thread-draft-input"
             value={localDraft}
-            onChange={(e) => setLocalDraft(e.target.value)}
+            onChange={(e) => {
+              userHasEdited.current = true;
+              setLocalDraft(e.target.value);
+            }}
             onBlur={handleDraftBlur}
             aria-label="Draft comment body — edit before posting"
             placeholder="Synthesized comment — edit before posting"
