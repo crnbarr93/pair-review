@@ -246,6 +246,7 @@ describe('DiffViewer walkthrough hunk filtering (Gap 1 closure)', () => {
       steps: [{ stepNum: 1, hunkId: curatedHunkId, commentary: 'First hunk', status: 'pending' }],
       cursor: 0,
       showAll: false,
+      generatedAt: '2026-01-01T00:00:00Z',
     };
 
     // Reproduce the App.tsx filteredDiff memo logic to build the filtered DiffModel
@@ -289,6 +290,7 @@ describe('DiffViewer walkthrough hunk filtering (Gap 1 closure)', () => {
       steps: [{ stepNum: 1, hunkId: curatedHunkId, commentary: 'First hunk', status: 'pending' }],
       cursor: 0,
       showAll: true,
+      generatedAt: '2026-01-01T00:00:00Z',
     };
 
     const { container } = render(
