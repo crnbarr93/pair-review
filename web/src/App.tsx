@@ -10,7 +10,7 @@
 // onUpdate. Before the first snapshot arrives, state.prKey === '' (INITIAL sentinel) and
 // every postSessionEvent call site below early-returns on falsy (T-3-13 mitigation).
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { DiffModel, FileReviewStatus } from '@shared/types';
+import type { DiffModel, FileReviewStatus, Walkthrough, Thread } from '@shared/types';
 import { useAppStore, actions } from './store';
 import { postSessionEvent } from './api';
 import { TopBar, StageStepper } from './components/TopBar';
@@ -42,14 +42,27 @@ export default function App() {
   const focusedHunkIndex = useRef<number>(-1);
 
   // Build the cross-file virtual hunk list, excluding generated files (D-18).
-  // Recomputed from current diff each render so stale indices always map to
-  // the current file set (T-3-11 mitigation).
+  // Walkthrough-aware: in curated mode shows only walkthrough steps in step order (D-05).
+  // In show-all mode or when no walkthrough is active, shows all non-generated hunks (D-06).
+  // Recomputed from current diff + walkthrough each render so stale indices always map to
+  // the current file/step set (T-3-11 mitigation, Threat T-5-05-04: cursor vs virtualList coords kept separate).
   const virtualList = useMemo(() => {
     if (!diff) return [];
-    return diff.files
+    const allHunks = diff.files
       .filter((f) => !f.generated)
       .flatMap((f) => f.hunks.map((h) => ({ fileId: f.id, hunkId: h.id })));
-  }, [diff]);
+
+    const walkthrough = state.walkthrough;
+    if (walkthrough && !walkthrough.showAll) {
+      // Curated mode: only walkthrough steps in step order (D-05)
+      return walkthrough.steps.map((step) => {
+        const file = diff.files.find((f) => f.hunks.some((h) => h.id === step.hunkId));
+        return { fileId: file?.id ?? '', hunkId: step.hunkId };
+      });
+    }
+    // Show-all mode or no walkthrough: all non-generated hunks in file order (D-06)
+    return allHunks;
+  }, [diff, state.walkthrough]);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -137,6 +150,79 @@ export default function App() {
     [prKey, showToast]
   );
 
+  const handleWalkthroughStepClick = useCallback(
+    (cursor: number) => {
+      if (!prKey) return;
+      postSessionEvent(prKey, {
+        type: 'walkthrough.stepAdvanced',
+        cursor,
+      }).catch(() => showToast('Could not advance step. Retry.'));
+      // Scroll to the hunk
+      const step = state.walkthrough?.steps[cursor];
+      if (step) {
+        document.getElementById(step.hunkId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setFocusedHunkId(step.hunkId);
+        const fileWithHunk = diff?.files.find(f => f.hunks.some(h => h.id === step.hunkId));
+        if (fileWithHunk) setFocusedFileId(fileWithHunk.id);
+      }
+    },
+    [prKey, state.walkthrough, diff, showToast]
+  );
+
+  const handleShowAllToggle = useCallback(
+    (showAll: boolean) => {
+      if (!prKey) return;
+      postSessionEvent(prKey, {
+        type: 'walkthrough.showAllToggled',
+        showAll,
+      }).catch(() => showToast('Could not toggle view. Retry.'));
+      // D-07: toggling back to curated snaps to current walkthrough step
+      if (!showAll && state.walkthrough) {
+        const currentStep = state.walkthrough.steps[state.walkthrough.cursor];
+        if (currentStep) {
+          setTimeout(() => {
+            document.getElementById(currentStep.hunkId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setFocusedHunkId(currentStep.hunkId);
+          }, 100);
+        }
+      }
+    },
+    [prKey, state.walkthrough, showToast]
+  );
+
+  const handleSkipStep = useCallback(() => {
+    if (!prKey || !state.walkthrough) return;
+    const nextCursor = Math.min(state.walkthrough.cursor + 1, state.walkthrough.steps.length - 1);
+    postSessionEvent(prKey, {
+      type: 'walkthrough.stepAdvanced',
+      cursor: nextCursor,
+    }).catch(() => showToast('Could not skip step. Retry.'));
+  }, [prKey, state.walkthrough, showToast]);
+
+  const handleNextStep = useCallback(() => {
+    if (!prKey || !state.walkthrough) return;
+    const nextCursor = Math.min(state.walkthrough.cursor + 1, state.walkthrough.steps.length - 1);
+    postSessionEvent(prKey, {
+      type: 'walkthrough.stepAdvanced',
+      cursor: nextCursor,
+    }).catch(() => showToast('Could not advance step. Retry.'));
+    // Scroll to next step
+    const nextStep = state.walkthrough.steps[nextCursor];
+    if (nextStep) {
+      setTimeout(() => {
+        document.getElementById(nextStep.hunkId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setFocusedHunkId(nextStep.hunkId);
+      }, 100);
+    }
+  }, [prKey, state.walkthrough, showToast]);
+
+  const handleDraftChange = useCallback(
+    (threadId: string, body: string) => {
+      actions.updateLocalDraft(threadId, body);
+    },
+    []
+  );
+
   const handlePickFile = useCallback((fileId: string) => {
     setFocusedFileId(fileId);
   }, []);
@@ -179,7 +265,21 @@ export default function App() {
           break;
         case 'c':
           e.preventDefault();
-          showToast('Comments available in Phase 5');
+          if (focusedHunkId) {
+            // Find threads anchored to lines in the focused hunk
+            // hunkId format: "<fileId>:h<hunkIdx>", lineId format: "<fileId>:h<hunkIdx>:l<lineIdx>"
+            const threadEntries = Object.values(state.threads ?? {}).filter(t => {
+              return t.lineId.startsWith(focusedHunkId + ':l');
+            });
+            if (threadEntries.length > 0) {
+              const el = document.getElementById(`thread-${threadEntries[0].threadId}`);
+              el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+              showToast('Ask Claude to start a thread on this line');
+            }
+          } else {
+            showToast('Ask Claude to start a thread on this line');
+          }
           break;
         case 'v':
           e.preventDefault();
@@ -283,9 +383,12 @@ export default function App() {
         summary={state.summary}
         selfReview={state.selfReview}
         activeCategory={state.activeCategory}
+        walkthrough={state.walkthrough}
         onSummaryStep={() => setSummaryDrawerOpen((o) => !o)}
         onSelfReviewStep={() => actions.toggleFindingsSidebar()}
         onCategoryClick={(cat) => actions.setActiveCategory(cat)}
+        onWalkthroughStepClick={handleWalkthroughStepClick}
+        onShowAllToggle={handleShowAllToggle}
       />
       {state.summary && summaryDrawerOpen && (
         <SummaryDrawer
@@ -319,6 +422,11 @@ export default function App() {
               readOnlyComments={state.existingComments ?? []}
               onMarkReviewed={handleMarkReviewed}
               onExpandGenerated={handleExpandGenerated}
+              walkthrough={state.walkthrough}
+              threads={state.threads}
+              onDraftChange={handleDraftChange}
+              onSkipStep={handleSkipStep}
+              onNextStep={handleNextStep}
             />
             <FindingsSidebar
               selfReview={state.selfReview}
@@ -342,9 +450,9 @@ export default function App() {
         </div>
       )}
       <div className="footer-hint" aria-hidden="true">
-        <span style={{ color: 'var(--ink-3)' }}>n / p · r</span>
+        <span style={{ color: 'var(--ink-3)' }}>n / p · r · c</span>
         {' · '}
-        <span style={{ color: 'var(--ink-4)' }}>c v s</span>
+        <span style={{ color: 'var(--ink-4)' }}>v s</span>
       </div>
     </div>
   );
