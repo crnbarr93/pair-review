@@ -76,20 +76,22 @@ export function applyEvent(s: ReviewSession, e: SessionEvent): ReviewSession {
         ...s,
         threads: { ...(s.threads ?? {}), [e.threadId]: e.thread },
       };
-    case 'thread.draftSet':
+    case 'thread.draftSet': {
+      const existing = s.threads?.[e.threadId];
+      if (!existing) return s;
       return {
         ...s,
-        threads: s.threads
-          ? { ...s.threads, [e.threadId]: { ...s.threads[e.threadId], draftBody: e.body } }
-          : s.threads,
+        threads: { ...s.threads, [e.threadId]: { ...existing, draftBody: e.body } },
       };
-    case 'thread.resolved':
+    }
+    case 'thread.resolved': {
+      const existing = s.threads?.[e.threadId];
+      if (!existing) return s;
       return {
         ...s,
-        threads: s.threads
-          ? { ...s.threads, [e.threadId]: { ...s.threads[e.threadId], resolved: true } }
-          : s.threads,
+        threads: { ...s.threads, [e.threadId]: { ...existing, resolved: true } },
       };
+    }
     default: {
       // Exhaustiveness guard — adding an event variant without handling it is a compile error.
       const _never: never = e;
