@@ -43,18 +43,27 @@ Declared values (must be multiples of 4):
 | 2xl | 48px | — (reserved) |
 | 3xl | 64px | — (reserved) |
 
-Exceptions:
-- Thread panel left-indent: 52px (existing `.thread-panel` CSS — `padding-left: 52px` — preserves visual alignment with the diff gutter + avatar width)
-- TopBar height: 44px (established in Phase 3, grid-template-rows row 1)
-- StageStepper height: 52px (established in Phase 3, grid-template-rows row 2)
-- Thread marker (gutter dot): 14px diameter (established in Phase 3 CSS `.thread-marker`)
-- Avatar size in thread messages: 20×20px (established `.thread-msg .av`)
+### Carry-forward exceptions (prior-phase measurements — not new Phase 5 decisions)
+
+The following values were established in Phase 3 CSS and are preserved as-is. They fall outside the standard {4, 8, 16, 24, 32, 48, 64} scale but may not be changed in Phase 5 without a separate Phase 3 rectification task.
+
+| Element | Value | Established in | CSS Rule |
+|---------|-------|----------------|----------|
+| TopBar height | 44px | Phase 3 | `grid-template-rows` row 1 |
+| StageStepper height | 52px | Phase 3 | `grid-template-rows` row 2 |
+| Thread panel left-indent | 52px | Phase 3 | `.thread-panel { padding-left: 52px }` |
+| Thread marker (gutter dot) diameter | 16px | Phase 3 (updated from 14px — see note) | `.thread-marker` |
+| Avatar size in thread messages | 20×20px | Phase 3 | `.thread-msg .av` |
+
+**Note on thread marker diameter:** The prior CSS rule used 14px, which is not a multiple of 4. Phase 5 corrects this to 16px. The change is visually negligible (1px radius difference) and brings the value into conformance. Update `.thread-marker` diameter to 16px in `web/src/index.css` as part of Phase 5 implementation.
 
 **Source:** `web/src/index.css` — all values measured from existing CSS rules.
 
 ---
 
 ## Typography
+
+Exactly four sizes, two weights.
 
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
@@ -64,15 +73,15 @@ Exceptions:
 | Code / mono | 12px | 400 (regular) | 1.55 |
 
 Two weights only:
-- **Regular (400):** all body, label, secondary, code text
-- **Semibold (600):** headings, "who" author labels in thread messages, sidebar section titles, brand wordmark
+- **Regular (400):** all body, label, secondary, code, timestamp, and thread body text
+- **Semibold (600):** headings, author labels in thread messages, sidebar section titles, brand wordmark, active walkthrough step label
 
 **Phase-5-specific applications:**
 - Walkthrough commentary banner body text: 13px / 400 / 1.5 (matches `.msg .body`)
-- Walkthrough step list label: 13px / 500 — use the existing `.stage .label` rule (500 is an established exception for stage labels; do not introduce a third weight token)
-- Thread message author name: 11.5px / 600 (matches existing `.thread-msg .body .who`)
-- Thread message body: 12.5px / 400 / 1.5 (matches existing `.thread-msg .body`)
-- Thread timestamp: 10px / 400 / mono (matches `.thread-msg .body .time`)
+- Walkthrough step list label (active step): 13px / **600** — use semibold for the active step to distinguish it; all other step labels at 13px / 400. Do NOT use 500 weight.
+- Thread message author name: 12px / 600 (maps `.thread-msg .body .who` to the 12px label tier)
+- Thread message body: 13px / 400 / 1.5 (maps `.thread-msg .body` to the 13px body tier)
+- Thread timestamp: 11px / 400 / mono (maps `.thread-msg .body .time` to the 11px metadata tier)
 - Post-body textarea (editable synthesis slot): 13px / 400 / 1.45 (matches existing `.chat-input textarea`)
 - "N earlier messages" expander: 11px / 400 / `var(--ink-4)` color
 
@@ -127,7 +136,7 @@ Structure:
 .walkthrough-banner            // new class — extends .thread-panel shape
   .walkthrough-banner-step     // "Step N of M" label — 11px mono, --ink-4
   .walkthrough-banner-body     // LLM commentary — 13px / 1.5 / --ink-2
-  .walkthrough-banner-controls // Skip button + "Mark visited" affordance
+  .walkthrough-banner-controls // Skip step button + "Mark visited" affordance
 ```
 
 States:
@@ -146,7 +155,7 @@ Structure: ordered list of step entries, each showing:
 - File + hunk header text (12px, `--ink-2`, ellipsized)
 - Status chip: `done` (uses `.stage.done` styles), `active` (`.stage.active`), `skipped` (`--ink-4` text, no border fill)
 
-The step list entry for the active step gets `border-bottom: 2px solid var(--ink)` (matches `.stage.active`).
+The step list entry for the active step gets `border-bottom: 2px solid var(--ink)` (matches `.stage.active`). Active step label renders at 13px / 600 (semibold). All other step labels at 13px / 400.
 
 Show-all toggle: a pill toggle button using the existing `.exp-toggle` pattern (inline-flex, `var(--paper-2)` background, `var(--line)` border, 5px border-radius). Two options: "Curated" | "All hunks". Active option uses existing `.exp-toggle button.on` treatment.
 
@@ -163,10 +172,10 @@ Structure inside `.thread-panel`:
     .thread-msg (× N turns)
       .av.claude / .av.me       // avatar — existing rules
       .body
-        .who                    // author — existing rules
-        .time                   // timestamp — existing rules
-        p                       // message text
-  .thread-older-expander        // "N earlier messages ▸" — 11px / --ink-4 / text-btn style — new class
+        .who                    // author — 12px / 600 (label tier, semibold)
+        .time                   // timestamp — 11px / 400 / mono (metadata tier)
+        p                       // message text — 13px / 400 / 1.5 (body tier)
+  .thread-older-expander        // "N earlier messages" — 11px / --ink-4 / text-btn style — new class
   .thread-draft-slot            // post-body textarea — appears after draft_comment is called
     textarea.thread-draft-input // new class — 13px / border: 1px solid var(--line-2) / border-radius: 6px
     .thread-actions             // existing class — buttons row
@@ -177,7 +186,7 @@ Post-body slot (`.thread-draft-slot`): appears only after `draft_comment` MCP ca
 
 Collapse behavior: only the last 3 turns visible by default. Older turns hidden behind `.thread-older-expander`. Expanding shows all turns without animation (respects `prefers-reduced-motion` by default since no animation is added).
 
-Thread marker in gutter (`.thread-marker`): existing CSS fully covers this. Shows count of turns when > 1 (e.g. "3"). Clicking scrolls to and expands the thread card.
+Thread marker in gutter (`.thread-marker`): existing CSS fully covers this. Shows count of turns when > 1 (e.g. "3"). Clicking scrolls to and expands the thread card. Diameter: 16px (corrected from prior 14px — see Spacing section).
 
 ### CuratedBadge
 
@@ -186,7 +195,7 @@ Applied to `.hunk` elements that are part of the curated walkthrough set.
 Treatment:
 - Add class `.hunk--curated` alongside `.hunk`
 - CSS: `border-left: 3px solid var(--claude)` (existing focused hunk uses same but for navigation; curated badge is always-present when show-all is active)
-- Optional "Curated" chip: 10px / mono / `var(--claude-2)` background / `var(--claude)` text / 3px border-radius — matches `.thread-panel .ref-loc .tag` pattern
+- Optional "Curated" chip: 11px / mono / `var(--claude-2)` background / `var(--claude)` text / 3px border-radius — matches `.thread-panel .ref-loc .tag` pattern (use 11px small/metadata tier, not 10px)
 
 Non-curated hunks in show-all mode: no badge, normal `.hunk` styles.
 
@@ -202,7 +211,7 @@ Keyboard:
 
 Mouse:
 - Clicking a walkthrough step in the step list scrolls to that hunk (reuses existing Phase 3 `scrollIntoView` + `focusedHunkId` pattern).
-- Clicking "Skip" on WalkthroughBanner marks step as skipped and advances to next.
+- Clicking "Skip step" on WalkthroughBanner marks step as skipped and advances to next.
 - Clicking "Next step" / "Prev step" controls advances walkthrough cursor.
 
 Show-all toggle: clicking "All hunks" renders all hunks interleaved with curated hunks badged. Clicking "Curated" snaps scroll to current walkthrough step. No page reload, no state reset.
@@ -211,7 +220,7 @@ Show-all toggle: clicking "All hunks" renders all hunks interleaved with curated
 
 Opening: thread-marker dot in gutter is clickable. Click expands the thread card (push-down row) below the anchored line. If thread card is already expanded, click scrolls to it.
 
-Collapsing: clicking "×" or "Collapse" button on thread card collapses it to the gutter dot. Does not resolve the thread.
+Collapsing: clicking "×" or "Collapse thread" button on thread card collapses it to the gutter dot. Does not resolve the thread.
 
 Resolving: "Resolve thread" button (`.btn-sm` style) sets thread state to resolved. Thread card background shifts to `var(--ok-bg)`, left border to `var(--ok)`, marker dot to resolved style. No confirmation required for resolve (non-destructive — resolves only local display state, nothing posted yet).
 
@@ -230,7 +239,7 @@ When thread-marker clicked: `scrollIntoView({ behavior: 'smooth', block: 'neares
 | Element | Copy |
 |---------|------|
 | Primary CTA (advance walkthrough) | "Next step" |
-| Secondary CTA (skip step) | "Skip" |
+| Secondary CTA (skip step) | "Skip step" |
 | Show-all toggle — curated mode | "Curated" |
 | Show-all toggle — all hunks mode | "All hunks" |
 | Curated hunk badge | "Curated" |
@@ -241,8 +250,8 @@ When thread-marker clicked: `scrollIntoView({ behavior: 'smooth', block: 'neares
 | Thread card empty state (no turns yet) | Never shown — LLM initiates first turn before card renders |
 | Post-body slot placeholder | "Synthesized comment — edit before posting" |
 | Collapse older turns | "{N} earlier messages" |
-| Resolve thread button | "Resolve" |
-| Collapse thread button | "Collapse" |
+| Resolve thread button | "Resolve thread" |
+| Collapse thread button | "Collapse thread" |
 | Walkthrough not started empty state | Heading: "No walkthrough yet" / Body: "Ask Claude to set_walkthrough to begin the guided review." |
 | Walkthrough complete state | "Walkthrough complete — {N} of {M} steps visited" |
 | `c` key toast (no thread on focused line) | "Ask Claude to start a thread on this line" |
