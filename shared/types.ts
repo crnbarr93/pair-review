@@ -98,6 +98,10 @@ export interface ReviewSession {
   // Phase 5 additions (D-19) — optional so pre-Phase-5 snapshots load without migration:
   walkthrough?: Walkthrough | null;
   threads?: Record<string, Thread>;
+  // Phase 6 additions (D-17) — all optional for backward compat with pre-Phase-6 snapshots:
+  submissionState?: SubmissionState;
+  pendingSubmission?: { verdict: Verdict; body: string };
+  pendingReview?: PendingReview;
 }
 
 // Phase 2 event union — Phase 4/5/6 variants will extend this.
@@ -125,7 +129,14 @@ export type SessionEvent =
   | { type: 'walkthrough.showAllToggled'; showAll: boolean }
   | { type: 'thread.replyAdded'; threadId: string; thread: Thread }
   | { type: 'thread.draftSet'; threadId: string; body: string }
-  | { type: 'thread.resolved'; threadId: string };
+  | { type: 'thread.resolved'; threadId: string }
+  // Phase 6 additions (D-16):
+  | { type: 'submission.proposed'; verdict: Verdict; body: string }
+  | { type: 'submission.confirmed'; submissionId: string }
+  | { type: 'submission.completed'; reviewId?: number; url?: string; submissionId: string; exportPath?: string }
+  | { type: 'submission.failed'; error: string }
+  | { type: 'pendingReview.detected'; reviewId: number; createdAt: string; commentCount: number }
+  | { type: 'pendingReview.resolved' };
 
 // SSE message envelope (server → browser)
 export interface SnapshotMessage {
@@ -339,4 +350,26 @@ export interface Thread {
   draftBody?: string;
   resolved: boolean;
   createdAt: string;
+}
+
+// -------------------------------------------------------------------------
+// Phase 6 additions — Review Submission + Verdict UI
+// D-16: Six new SessionEvent variants for submission state changes and pending-review handling.
+// D-17: ReviewSession gains submissionState, pendingSubmission, pendingReview (all optional for backward compat).
+// -------------------------------------------------------------------------
+
+export type SubmissionStatus = 'not_yet' | 'submitting' | 'submitted' | 'failed';
+
+export interface SubmissionState {
+  status: SubmissionStatus;
+  submissionId?: string;
+  reviewId?: number;
+  url?: string;
+  error?: string;
+}
+
+export interface PendingReview {
+  reviewId: number;
+  createdAt: string;
+  commentCount: number;
 }
