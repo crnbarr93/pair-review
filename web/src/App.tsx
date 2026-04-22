@@ -10,7 +10,7 @@
 // onUpdate. Before the first snapshot arrives, state.prKey === '' (INITIAL sentinel) and
 // every postSessionEvent call site below early-returns on falsy (T-3-13 mitigation).
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { DiffModel, FileReviewStatus, Walkthrough, Thread } from '@shared/types';
+import type { DiffModel, DiffFile, FileReviewStatus, Thread } from '@shared/types';
 import { useAppStore, actions } from './store';
 import { postSessionEvent } from './api';
 import { TopBar, StageStepper } from './components/TopBar';
@@ -62,6 +62,31 @@ export default function App() {
     }
     // Show-all mode or no walkthrough: all non-generated hunks in file order (D-06)
     return allHunks;
+  }, [diff, state.walkthrough]);
+
+  // Compute the DiffModel that DiffViewer renders (Gap 1 closure -- LLM-04).
+  // In curated mode (walkthrough active + showAll=false): only hunks listed in
+  // walkthrough.steps are passed to DiffViewer; files with no remaining hunks are
+  // dropped entirely. Generated files are always excluded from the curated view.
+  // In show-all mode or when no walkthrough is active: DiffViewer receives the
+  // full diff unchanged. FileExplorer always receives the full diff (file tree).
+  const filteredDiff = useMemo((): DiffModel | undefined => {
+    if (!diff) return undefined;
+    const wt = state.walkthrough;
+    // No walkthrough active or show-all mode: render everything
+    if (!wt || wt.showAll) return diff;
+    // Curated mode: only hunks whose id appears in walkthrough.steps
+    const curatedHunkIds = new Set(wt.steps.map(s => s.hunkId));
+    const filtered: DiffFile[] = [];
+    for (const file of diff.files) {
+      // Always skip generated files (excluded from walkthrough narrative)
+      if (file.generated) continue;
+      const kept = file.hunks.filter(h => curatedHunkIds.has(h.id));
+      if (kept.length > 0) {
+        filtered.push({ ...file, hunks: kept });
+      }
+    }
+    return { files: filtered, totalHunks: filtered.reduce((n, f) => n + f.hunks.length, 0) };
   }, [diff, state.walkthrough]);
 
   const showToast = useCallback((msg: string) => {
@@ -409,8 +434,9 @@ export default function App() {
               activeFileId={focusedFileId}
               onPickFile={handlePickFile}
             />
+            {/* filteredDiff: curated hunk subset in walkthrough mode (Gap 1 closure) */}
             <DiffViewer
-              diff={diff}
+              diff={filteredDiff ?? diff}
               shikiTokens={state.shikiTokens ?? {}}
               view={view}
               onViewChange={setView}
