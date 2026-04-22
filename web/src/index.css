@@ -1449,3 +1449,49 @@ button {
   text-decoration: none;
 }
 .ci-open-link:hover { color: var(--ink); }
+
+/* ──────── Phase 5: Walkthrough + Inline Threaded Comments ──────── */
+
+.walkthrough-banner {
+  padding: 8px 16px;
+  background: #FFFDF7;
+  border-left: 3px solid var(--claude);
+  margin-bottom: 4px;
+}
+.walkthrough-banner--collapsed {
+  height: 32px;
+  overflow: hidden;
+  background: var(--paper-2);
+  border-left: none;
+}
+.walkthrough-banner-controls .btn-sm {
+  padding: 2px 8px;
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+  background: var(--paper);
+  cursor: pointer;
+  font-size: 12px;
+}
+.walkthrough-banner-controls .btn-sm:hover {
+  background: var(--paper-2);
+}
+
+.hunk--curated {
+  border-left: 3px solid var(--claude);
+}
+
+.walkthrough-step-entry {
+  border-radius: 4px;
+}
+.walkthrough-step-entry:hover {
+  background: var(--paper-2);
+}
+.walkthrough-step-entry--active {
+  border-bottom: 2px solid var(--ink);
+}
+
+/* Thread marker correction: 14px -> 16px per UI-SPEC spacing conformance */
+.thread-marker {
+  width: 16px;
+  height: 16px;
+}

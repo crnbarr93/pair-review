@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react';
-import type { ChecklistCategory, CIStatus, PrSummary, PullRequestMeta, SelfReview } from '@shared/types';
+import type { ChecklistCategory, CIStatus, PrSummary, PullRequestMeta, SelfReview, Walkthrough } from '@shared/types';
 import { Ic } from './icons';
+import { WalkthroughStepList } from './WalkthroughStepList';
 
 function cn(...parts: Array<string | false | undefined | null>): string {
   return parts.filter(Boolean).join(' ');
@@ -186,16 +187,22 @@ export function StageStepper({
   summary,
   selfReview,
   activeCategory,
+  walkthrough,
   onSummaryStep,
   onSelfReviewStep,
   onCategoryClick,
+  onWalkthroughStepClick,
+  onShowAllToggle,
 }: {
   summary?: PrSummary | null;
   selfReview?: SelfReview | null;
   activeCategory: ChecklistCategory | null;
+  walkthrough?: Walkthrough | null;
   onSummaryStep: () => void;
   onSelfReviewStep: () => void;
   onCategoryClick: (cat: ChecklistCategory | null) => void;
+  onWalkthroughStepClick?: (cursor: number) => void;
+  onShowAllToggle?: (showAll: boolean) => void;
 }) {
   const steps = [
     {
@@ -218,11 +225,13 @@ export function StageStepper({
     },
     {
       label: 'Walkthrough',
-      sub: 'Phase 5',
-      status: 'default',
+      sub: walkthrough
+        ? `${walkthrough.steps.filter(s => s.status === 'visited').length}/${walkthrough.steps.length} steps`
+        : 'Not started',
+      status: walkthrough ? (walkthrough.steps.every(s => s.status !== 'pending') ? 'done' : 'active') : selfReview ? 'active' : 'default',
       onClick: undefined,
-      disabled: true,
-      tooltip: 'Walkthrough available in Phase 5',
+      disabled: !walkthrough,
+      tooltip: !walkthrough ? 'Ask Claude to set_walkthrough' : undefined,
     },
     {
       label: 'Submit',
@@ -279,6 +288,13 @@ export function StageStepper({
             );
           })}
         </div>
+      )}
+      {walkthrough && (
+        <WalkthroughStepList
+          walkthrough={walkthrough}
+          onStepClick={onWalkthroughStepClick ?? (() => {})}
+          onShowAllToggle={onShowAllToggle ?? (() => {})}
+        />
       )}
     </div>
   );
