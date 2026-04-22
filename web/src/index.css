@@ -1518,44 +1518,17 @@ button {
 .wsl-step {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 14px;
+  gap: 12px;
+  padding: 10px 16px;
   cursor: pointer;
-  font-size: 13px;
-  color: var(--ink-2);
 }
 .wsl-step:hover {
   background: var(--paper-2);
 }
-.wsl-step--active {
-  background: var(--paper-2);
-}
 .wsl-icon {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  border-radius: 4px;
-}
-.wsl-icon--done {
-  background: var(--claude);
-  color: #fff;
-  font-size: 11px;
-}
-.wsl-icon--active {
-  color: var(--ink);
-  font-size: 14px;
-}
-.wsl-icon--pending {
-  color: var(--ink-4);
-  font-size: 14px;
-}
-.wsl-icon--skipped {
-  color: var(--ink-4);
-  font-size: 14px;
+  width: 22px;
+  height: 22px;
 }
 .wsl-step-text {
   flex: 1;
@@ -1563,14 +1536,23 @@ button {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 14px;
+  color: var(--ink-2);
 }
 .wsl-step-text--active {
   font-weight: 600;
+  color: var(--ink);
+}
+.wsl-step-text--pending {
+  color: var(--ink-4);
 }
 .wsl-step-status {
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--ink-4);
+}
+.wsl-step-status--done {
+  color: var(--ink-3);
 }
 .wsl-footer {
   padding: 8px 14px 4px;
