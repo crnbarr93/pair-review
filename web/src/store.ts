@@ -11,7 +11,9 @@ import type {
   SelfReview,
   ShikiFileTokens,
   SnapshotMessage,
+  Thread,
   UpdateMessage,
+  Walkthrough,
 } from '@shared/types';
 import type { ChooseResumeSource } from './api';
 
@@ -49,6 +51,11 @@ export interface AppState {
   selfReview: SelfReview | null;
   findingsSidebarOpen: boolean;
   activeCategory: ChecklistCategory | null;
+  // Phase 5 additions
+  walkthrough: Walkthrough | null;
+  threads: Record<string, Thread>;
+  /** Track threadIds where user has locally edited draftBody (Pitfall 3 protection) */
+  locallyEditedDrafts: Set<string>;
 }
 
 const INITIAL: AppState = {
@@ -66,6 +73,9 @@ const INITIAL: AppState = {
   selfReview: null,
   findingsSidebarOpen: false,
   activeCategory: null,
+  walkthrough: null,
+  threads: {},
+  locallyEditedDrafts: new Set<string>(),
 };
 
 let state: AppState = { ...INITIAL };
@@ -74,6 +84,25 @@ const listeners = new Set<() => void>();
 
 function emit() {
   listeners.forEach((l) => l());
+}
+
+/**
+ * Merge thread state from server while preserving locally-edited draftBody values.
+ * Pitfall 3 mitigation: user edits the draftBody textarea after draft_comment sets it;
+ * a subsequent SSE update must NOT overwrite the user's local edits.
+ */
+function mergeThreadsFromServer(
+  incoming: Record<string, Thread>,
+  local: Record<string, Thread>,
+  locallyEdited: Set<string>,
+): Record<string, Thread> {
+  const merged: Record<string, Thread> = { ...incoming };
+  for (const tid of locallyEdited) {
+    if (merged[tid] && local[tid] && local[tid].draftBody !== undefined) {
+      merged[tid] = { ...merged[tid], draftBody: local[tid].draftBody };
+    }
+  }
+  return merged;
 }
 
 export function useAppStore(): AppState {
@@ -127,6 +156,8 @@ export const actions = {
           : undefined,
       summary: s.summary ?? null,
       selfReview: s.selfReview ?? null,
+      walkthrough: s.walkthrough ?? null,
+      threads: mergeThreadsFromServer(s.threads ?? {}, state.threads, state.locallyEditedDrafts),
     };
     emit();
   },
@@ -149,6 +180,8 @@ export const actions = {
       headShaError: undefined, // an update arrived → previous head-sha-check-failed is cleared
       summary: s.summary ?? null,
       selfReview: s.selfReview ?? null,
+      walkthrough: s.walkthrough ?? null,
+      threads: mergeThreadsFromServer(s.threads ?? {}, state.threads, state.locallyEditedDrafts),
     };
     emit();
   },
@@ -164,6 +197,49 @@ export const actions = {
       ...state,
       selfReview: msg.state.selfReview ?? null,
       findingsSidebarOpen: wasNull && msg.state.selfReview != null ? true : state.findingsSidebarOpen,
+    };
+    emit();
+  },
+
+  onWalkthroughSet(msg: UpdateMessage) {
+    state = { ...state, walkthrough: msg.state.walkthrough ?? null };
+    emit();
+  },
+
+  onThreadReplyAdded(msg: UpdateMessage) {
+    state = {
+      ...state,
+      threads: mergeThreadsFromServer(msg.state.threads ?? {}, state.threads, state.locallyEditedDrafts),
+    };
+    emit();
+  },
+
+  onDraftSet(msg: UpdateMessage) {
+    state = {
+      ...state,
+      threads: mergeThreadsFromServer(msg.state.threads ?? {}, state.threads, state.locallyEditedDrafts),
+    };
+    emit();
+  },
+
+  onThreadResolved(msg: UpdateMessage) {
+    state = {
+      ...state,
+      threads: mergeThreadsFromServer(msg.state.threads ?? {}, state.threads, state.locallyEditedDrafts),
+    };
+    emit();
+  },
+
+  /** Called when user edits a draft comment textarea locally */
+  updateLocalDraft(threadId: string, body: string) {
+    const thread = state.threads[threadId];
+    if (!thread) return;
+    const newEdited = new Set(state.locallyEditedDrafts);
+    newEdited.add(threadId);
+    state = {
+      ...state,
+      threads: { ...state.threads, [threadId]: { ...thread, draftBody: body } },
+      locallyEditedDrafts: newEdited,
     };
     emit();
   },
