@@ -484,14 +484,25 @@ export default function App() {
             />
             {state.walkthrough && (
               <aside className="review-panel">
+                <div className="rp-head">
+                  <div className="rp-avatar">C</div>
+                  <div className="rp-meta">
+                    <div className="rp-name">Claude</div>
+                    <div className="rp-status"><span className="rp-live" /> Reviewing</div>
+                  </div>
+                </div>
                 <WalkthroughStepList
                   walkthrough={state.walkthrough}
                   onStepClick={handleWalkthroughStepClick}
                   onShowAllToggle={handleShowAllToggle}
                 />
-                <div className="review-panel-conversation">
-                  <div className="review-panel-placeholder">
-                    Conversation
+                <div className="rp-conversation">
+                  <div className="rp-future">
+                    <div className="rp-future-icon">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="var(--ink-4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    </div>
+                    <div className="rp-future-title">Conversation</div>
+                    <div className="rp-future-sub">Chat with Claude about the review, ask questions, and discuss findings. Coming in a future phase.</div>
                   </div>
                 </div>
               </aside>

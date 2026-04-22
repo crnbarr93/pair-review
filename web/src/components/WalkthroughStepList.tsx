@@ -9,25 +9,21 @@ interface WalkthroughStepListProps {
 function StepIcon({ step, isActive }: { step: WalkthroughStep; isActive: boolean }) {
   if (step.status === 'visited') {
     return (
-      <svg className="wsl-icon" viewBox="0 0 20 20" fill="none">
-        <rect width="20" height="20" rx="5" fill="var(--claude)" />
-        <path d="M6 10.5l2.5 2.5L14 7.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      <span className="wsl-icon wsl-icon--done">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path d="M2 5l2 2 4-4.5" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
     );
   }
   if (isActive) {
     return (
-      <svg className="wsl-icon" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="9" stroke="var(--ink)" strokeWidth="2" />
-        <circle cx="10" cy="10" r="5" fill="var(--ink)" />
-      </svg>
+      <span className="wsl-icon wsl-icon--active">
+        <span className="wsl-icon-dot" />
+      </span>
     );
   }
-  return (
-    <svg className="wsl-icon" viewBox="0 0 20 20" fill="none">
-      <circle cx="10" cy="10" r="9" stroke="var(--ink-4)" strokeWidth="1.5" />
-    </svg>
-  );
+  return <span className="wsl-icon wsl-icon--pending" />;
 }
 
 function statusLabel(step: WalkthroughStep, isActive: boolean) {
@@ -44,29 +40,27 @@ export function WalkthroughStepList({ walkthrough, onStepClick, onShowAllToggle 
   return (
     <div className="wsl">
       <div className="wsl-header">
-        <span className="wsl-title">Walkthrough</span>
+        <span className="wsl-title">Review plan</span>
         <span className="wsl-counter">{doneCount}/{steps.length}</span>
       </div>
 
       <div className="wsl-steps" role="list" aria-label="Walkthrough steps">
         {steps.map((step, i) => {
           const isActive = i === cursor;
-          const isDone = step.status === 'visited';
           const isPending = step.status === 'pending' && !isActive;
           return (
             <div
               key={step.hunkId}
               role="listitem"
-              className={`wsl-step${isActive ? ' wsl-step--active' : ''}`}
+              className="wsl-step"
               onClick={() => onStepClick(i)}
             >
               <StepIcon step={step} isActive={isActive} />
               <span className={`wsl-step-text${isActive ? ' wsl-step-text--active' : ''}${isPending ? ' wsl-step-text--pending' : ''}`}>
-                {step.commentary.length > 40 ? step.commentary.slice(0, 40) + '...' : step.commentary}
+                {step.commentary.length > 45 ? step.commentary.slice(0, 45) + '...' : step.commentary}
               </span>
-              <span className={`wsl-step-status${isDone ? ' wsl-step-status--done' : ''}`}>
-                {statusLabel(step, isActive)}
-              </span>
+              <div style={{ flex: 1 }} />
+              <span className="wsl-step-status">{statusLabel(step, isActive)}</span>
             </div>
           );
         })}
