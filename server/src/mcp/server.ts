@@ -6,6 +6,10 @@ import { registerListFiles } from './tools/list-files.js';
 import { registerGetHunk } from './tools/get-hunk.js';
 import { registerSetPrSummary } from './tools/set-pr-summary.js';
 import { registerRunSelfReview } from './tools/run-self-review.js';
+import { registerSetWalkthrough } from './tools/set-walkthrough.js';
+import { registerReplyInThread } from './tools/reply-in-thread.js';
+import { registerDraftComment } from './tools/draft-comment.js';
+import { registerResolveThread } from './tools/resolve-thread.js';
 
 export function registerAllTools(mcp: McpServer, manager: SessionManager): void {
   registerStartReview(mcp, manager);
@@ -13,6 +17,10 @@ export function registerAllTools(mcp: McpServer, manager: SessionManager): void 
   registerGetHunk(mcp, manager);
   registerSetPrSummary(mcp, manager);
   registerRunSelfReview(mcp, manager);
+  registerSetWalkthrough(mcp, manager);
+  registerReplyInThread(mcp, manager);
+  registerDraftComment(mcp, manager);
+  registerResolveThread(mcp, manager);
 }
 
 export async function startMcp(manager: SessionManager): Promise<McpServer> {

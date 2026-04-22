@@ -33,10 +33,30 @@ const expandToggleSchema = z
   })
   .strict();
 
+const stepAdvancedSchema = z
+  .object({
+    type: z.literal('walkthrough.stepAdvanced'),
+    cursor: z.number().int().min(0),
+  })
+  .strict();
+
+const showAllToggledSchema = z
+  .object({
+    type: z.literal('walkthrough.showAllToggled'),
+    showAll: z.boolean(),
+  })
+  .strict();
+
 // Only USER-TRIGGERED variants are accepted. Server-generated variants and
 // resume-choice variants are deliberately omitted — a client posting one of
 // those types fails zod validation (400).
-const userEventSchema = z.discriminatedUnion('type', [reviewStatusSchema, expandToggleSchema]);
+// thread.* events and walkthrough.set are server-only MCP tool events — intentionally excluded.
+const userEventSchema = z.discriminatedUnion('type', [
+  reviewStatusSchema,
+  expandToggleSchema,
+  stepAdvancedSchema,
+  showAllToggledSchema,
+]);
 
 const bodySchema = z
   .object({
