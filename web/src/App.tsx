@@ -10,7 +10,7 @@
 // onUpdate. Before the first snapshot arrives, state.prKey === '' (INITIAL sentinel) and
 // every postSessionEvent call site below early-returns on falsy (T-3-13 mitigation).
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { DiffModel, DiffFile, FileReviewStatus, Thread } from '@shared/types';
+import type { DiffModel, DiffFile, Hunk, FileReviewStatus, Thread } from '@shared/types';
 import { useAppStore, actions } from './store';
 import { postSessionEvent } from './api';
 import { TopBar, StageStepper } from './components/TopBar';
@@ -73,20 +73,26 @@ export default function App() {
   const filteredDiff = useMemo((): DiffModel | undefined => {
     if (!diff) return undefined;
     const wt = state.walkthrough;
-    // No walkthrough active or show-all mode: render everything
     if (!wt || wt.showAll) return diff;
-    // Curated mode: only hunks whose id appears in walkthrough.steps
-    const curatedHunkIds = new Set(wt.steps.map(s => s.hunkId));
-    const filtered: DiffFile[] = [];
-    for (const file of diff.files) {
-      // Always skip generated files (excluded from walkthrough narrative)
-      if (file.generated) continue;
-      const kept = file.hunks.filter(h => curatedHunkIds.has(h.id));
-      if (kept.length > 0) {
-        filtered.push({ ...file, hunks: kept });
+    // Curated mode: order files/hunks by walkthrough step sequence
+    const fileIndex = new Map(diff.files.map(f => [f.id, f]));
+    const orderedFiles: DiffFile[] = [];
+    const seen = new Set<string>();
+    for (const step of wt.steps) {
+      const fileId = step.hunkId.split(':')[0];
+      if (seen.has(fileId)) continue;
+      seen.add(fileId);
+      const file = fileIndex.get(fileId);
+      if (!file || file.generated) continue;
+      const curatedHunks = wt.steps
+        .filter(s => s.hunkId.startsWith(fileId + ':'))
+        .map(s => file.hunks.find(h => h.id === s.hunkId))
+        .filter((h): h is Hunk => h != null);
+      if (curatedHunks.length > 0) {
+        orderedFiles.push({ ...file, hunks: curatedHunks });
       }
     }
-    return { files: filtered, totalHunks: filtered.reduce((n, f) => n + f.hunks.length, 0) };
+    return { files: orderedFiles, totalHunks: orderedFiles.reduce((n, f) => n + f.hunks.length, 0) };
   }, [diff, state.walkthrough]);
 
   const showToast = useCallback((msg: string) => {
