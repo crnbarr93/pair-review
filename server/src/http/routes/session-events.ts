@@ -48,15 +48,23 @@ const showAllToggledSchema = z
   })
   .strict();
 
+// Phase 6: browser can resolve pending review after adopt/clear choice in PendingReviewModal
+const pendingReviewResolvedSchema = z
+  .object({ type: z.literal('pendingReview.resolved') })
+  .strict();
+
 // Only USER-TRIGGERED variants are accepted. Server-generated variants and
 // resume-choice variants are deliberately omitted — a client posting one of
 // those types fails zod validation (400).
 // thread.* events and walkthrough.set are server-only MCP tool events — intentionally excluded.
+// submission.* events are server-only (posted via MCP tool + confirm-submit handler).
+// Phase 6: pendingReview.resolved — browser resolves pending review after adopt/clear choice
 const userEventSchema = z.discriminatedUnion('type', [
   reviewStatusSchema,
   expandToggleSchema,
   stepAdvancedSchema,
   showAllToggledSchema,
+  pendingReviewResolvedSchema,
 ]);
 
 const bodySchema = z

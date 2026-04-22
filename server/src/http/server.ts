@@ -8,6 +8,7 @@ import { mountSessionResume } from './routes/session-resume.js';
 import { mountSessionEvents } from './routes/session-events.js';
 import { mountEvents } from './routes/events.js';
 import { mountStatic } from './routes/static.js';
+import { mountConfirmSubmit } from './routes/confirm-submit.js';
 
 export function buildHttpApp(manager: SessionManager): Hono {
   const app = new Hono();
@@ -22,6 +23,7 @@ export function buildHttpApp(manager: SessionManager): Hono {
   mountSessionResume(app, manager);
   mountSessionEvents(app, manager);
   mountEvents(app, manager);
+  mountConfirmSubmit(app, manager);
   mountStatic(app, manager);
   return app;
 }

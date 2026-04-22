@@ -3,6 +3,8 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { SessionManager, SourceArg } from '../../session/manager.js';
 import { logger } from '../../logger.js';
 import type { ReviewSession } from '@shared/types';
+import { getOctokit } from '../../submit/octokit-submit.js';
+import { detectPendingReview } from '../../submit/pending-review.js';
 
 // Zod v4 disallows duplicate discriminator values in discriminatedUnion.
 // Use z.union with an inner union for the two github variants.
@@ -27,6 +29,33 @@ export function registerStartReview(mcp: McpServer, manager: SessionManager): vo
     async ({ source }) => {
       try {
         const session = await manager.startReview(source as SourceArg);
+
+        // D-08: Pending-review detection at session start (GitHub-only).
+        // Runs post-startReview so the session is already in memory and on disk.
+        // Failure must NOT block session start — fail open with logger.warn (T-6-03-05).
+        if ((source as SourceArg).kind === 'github' && session.pr?.owner && session.pr?.repo && typeof session.pr?.number === 'number') {
+          try {
+            const octokit = await getOctokit();
+            const pending = await detectPendingReview(
+              octokit,
+              session.pr.owner,
+              session.pr.repo,
+              session.pr.number,
+            );
+            if (pending) {
+              await manager.applyEvent(session.prKey, {
+                type: 'pendingReview.detected',
+                reviewId: pending.id,
+                createdAt: pending.createdAt,
+                commentCount: pending.commentCount,
+              });
+            }
+          } catch (err) {
+            // Detection failure is non-fatal — the user can proceed without adopt/clear
+            logger.warn('pending-review detection failed (non-fatal):', err instanceof Error ? err.message : String(err));
+          }
+        }
+
         // Use the per-session URL (base + &session=<prKey>). manager.getLaunchUrl()
         // is missing the session param the web bootstrap needs; clicking that bare
         // URL from chat dropped users into a "Session expired" page with no diff.

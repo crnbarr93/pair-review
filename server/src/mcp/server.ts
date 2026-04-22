@@ -10,6 +10,7 @@ import { registerSetWalkthrough } from './tools/set-walkthrough.js';
 import { registerReplyInThread } from './tools/reply-in-thread.js';
 import { registerDraftComment } from './tools/draft-comment.js';
 import { registerResolveThread } from './tools/resolve-thread.js';
+import { registerSubmitReview } from './tools/submit-review.js';
 
 export function registerAllTools(mcp: McpServer, manager: SessionManager): void {
   registerStartReview(mcp, manager);
@@ -21,6 +22,7 @@ export function registerAllTools(mcp: McpServer, manager: SessionManager): void 
   registerReplyInThread(mcp, manager);
   registerDraftComment(mcp, manager);
   registerResolveThread(mcp, manager);
+  registerSubmitReview(mcp, manager);
 }
 
 export async function startMcp(manager: SessionManager): Promise<McpServer> {
