@@ -163,6 +163,20 @@ button {
   background: var(--paper);
   padding: 0 16px;
   gap: 0;
+  position: relative;
+}
+.stages > .walkthrough-step-list {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 20;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  min-width: 320px;
+  max-width: 420px;
 }
 .stage {
   flex: 1;
@@ -1458,7 +1472,6 @@ button {
   padding: 8px 16px;
   background: #FFFDF7;
   border-left: 3px solid var(--claude);
-  margin-bottom: 4px;
 }
 .walkthrough-banner-body {
   word-wrap: break-word;
