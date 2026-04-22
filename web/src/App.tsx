@@ -318,7 +318,7 @@ export default function App() {
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [advanceHunk, markCurrentFileReviewed, showToast]);
+  }, [advanceHunk, markCurrentFileReviewed, showToast, focusedHunkId, state.threads]);
 
   // IntersectionObserver for auto-in-progress (D-11).
   // 50% visibility threshold + 500ms debounce. Fires once per file per viewport entry.
