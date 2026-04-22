@@ -245,7 +245,7 @@ describe('App keyboard shortcuts (PLUG-04)', () => {
   it('c/v/s render toasts; no postSessionEvent', () => {
     render(<App />);
     keyDown('c');
-    expect(screen.queryByRole('status')?.textContent ?? '').toMatch(/phase 5/i);
+    expect(screen.queryByRole('status')?.textContent ?? '').toMatch(/thread/i);
 
     keyDown('v');
     expect(screen.queryByRole('status')?.textContent ?? '').toMatch(/phase 6/i);
