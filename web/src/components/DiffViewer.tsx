@@ -273,28 +273,30 @@ function FileSection({
                     onNext={onNextStep ?? (() => {})}
                   />
                 )}
-                <div className="hunk-head">{hunk.header}</div>
-                {view === 'unified' ? (
-                  <UnifiedHunk
-                    fileId={file.id}
-                    hunk={hunk}
-                    hunkIdx={hunkIdx}
-                    fileTokens={fileTokens}
-                    readOnlyComments={readOnlyComments}
-                    threads={threads}
-                    onDraftChange={onDraftChange}
-                  />
-                ) : (
-                  <SplitHunk
-                    fileId={file.id}
-                    hunk={hunk}
-                    hunkIdx={hunkIdx}
-                    fileTokens={fileTokens}
-                    readOnlyComments={readOnlyComments}
-                    threads={threads}
-                    onDraftChange={onDraftChange}
-                  />
-                )}
+                <div className="hunk-code">
+                  <div className="hunk-head">{hunk.header}</div>
+                  {view === 'unified' ? (
+                    <UnifiedHunk
+                      fileId={file.id}
+                      hunk={hunk}
+                      hunkIdx={hunkIdx}
+                      fileTokens={fileTokens}
+                      readOnlyComments={readOnlyComments}
+                      threads={threads}
+                      onDraftChange={onDraftChange}
+                    />
+                  ) : (
+                    <SplitHunk
+                      fileId={file.id}
+                      hunk={hunk}
+                      hunkIdx={hunkIdx}
+                      fileTokens={fileTokens}
+                      readOnlyComments={readOnlyComments}
+                      threads={threads}
+                      onDraftChange={onDraftChange}
+                    />
+                  )}
+                </div>
               </div>
             );
           })}

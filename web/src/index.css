@@ -465,6 +465,8 @@ button {
 
 .hunk {
   border-top: 1px solid var(--line);
+  min-width: 0;
+  overflow: hidden;
 }
 .hunk:first-child { border-top: 0; }
 .hunk-head {
@@ -1457,6 +1459,13 @@ button {
   background: #FFFDF7;
   border-left: 3px solid var(--claude);
   margin-bottom: 4px;
+}
+.walkthrough-banner-body {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.hunk-code {
+  overflow-x: auto;
 }
 .walkthrough-banner--collapsed {
   height: 32px;

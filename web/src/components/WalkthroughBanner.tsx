@@ -32,9 +32,9 @@ export function WalkthroughBanner({ step, stepNum, totalSteps, isActive, onSkip,
       {isActive ? (
         <>
           {/* SECURITY: commentary is LLM-authored — render as React text node, NEVER innerHTML */}
-          <div className="walkthrough-banner-body" style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--ink-2)', marginTop: 4 }}>
+          <p style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--ink-2)', margin: '4px 0 0', whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
             {step.commentary}
-          </div>
+          </p>
           <div className="walkthrough-banner-controls" style={{ display: 'flex', gap: 8, marginTop: 8 }}>
             <button type="button" className="btn-sm" onClick={onSkip} style={{ fontSize: 12 }}>
               Skip step
