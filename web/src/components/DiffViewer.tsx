@@ -5,7 +5,8 @@
 //   - dangerouslySetInnerHTML is used ONLY for tokenToHtml() output (server-produced Shiki tokens). Token content
 //     is HTML-escaped via escapeHtml() and color is validated against HEX_COLOR before style interpolation (T-3-01/T-3-01a).
 //   - ReadOnlyComment.body renders exclusively through React text nodes — never innerHTML (T-3-03).
-import { useState } from 'react';
+//   - Phase 5: ThreadCard message text renders exclusively through React text nodes — never innerHTML (T-5-05-01).
+import { Fragment, useState } from 'react';
 import type {
   DiffModel,
   DiffFile,
@@ -15,7 +16,11 @@ import type {
   ShikiToken,
   ReadOnlyComment,
   FileReviewStatus,
+  Thread,
+  Walkthrough,
 } from '@shared/types';
+import { ThreadCard } from './ThreadCard';
+import { WalkthroughBanner } from './WalkthroughBanner';
 
 export type DiffView = 'unified' | 'split';
 
@@ -30,6 +35,12 @@ interface DiffViewerProps {
   readOnlyComments: ReadOnlyComment[];
   onMarkReviewed: (fileId: string) => void;
   onExpandGenerated: (fileId: string, expanded: boolean) => void;
+  // Phase 5 additions
+  walkthrough?: Walkthrough | null;
+  threads?: Record<string, Thread>;
+  onDraftChange?: (threadId: string, body: string) => void;
+  onSkipStep?: () => void;
+  onNextStep?: () => void;
 }
 
 // ──────────── Shiki token rendering — the single innerHTML path ────────────
@@ -114,6 +125,11 @@ export function DiffViewer(props: DiffViewerProps) {
     readOnlyComments,
     onMarkReviewed,
     onExpandGenerated,
+    walkthrough,
+    threads,
+    onDraftChange,
+    onSkipStep,
+    onNextStep,
   } = props;
 
   return (
@@ -131,6 +147,11 @@ export function DiffViewer(props: DiffViewerProps) {
           readOnlyComments={readOnlyComments}
           onMarkReviewed={() => onMarkReviewed(file.id)}
           onExpand={(exp: boolean) => onExpandGenerated(file.id, exp)}
+          walkthrough={walkthrough}
+          threads={threads}
+          onDraftChange={onDraftChange}
+          onSkipStep={onSkipStep}
+          onNextStep={onNextStep}
         />
       ))}
     </div>
@@ -150,6 +171,12 @@ interface FileSectionProps {
   readOnlyComments: ReadOnlyComment[];
   onMarkReviewed: () => void;
   onExpand: (expanded: boolean) => void;
+  // Phase 5 additions
+  walkthrough?: Walkthrough | null;
+  threads?: Record<string, Thread>;
+  onDraftChange?: (threadId: string, body: string) => void;
+  onSkipStep?: () => void;
+  onNextStep?: () => void;
 }
 
 function FileSection({
@@ -163,6 +190,11 @@ function FileSection({
   readOnlyComments,
   onMarkReviewed,
   onExpand,
+  walkthrough,
+  threads,
+  onDraftChange,
+  onSkipStep,
+  onNextStep,
 }: FileSectionProps) {
   const collapse = file.generated && !expanded;
   const [dirname, basename] = splitPath(file.path);
@@ -218,32 +250,54 @@ function FileSection({
               Generated file — expanded
             </div>
           )}
-          {file.hunks.map((hunk, hunkIdx) => (
-            <div
-              key={hunk.id}
-              id={hunk.id}
-              className={focusedHunkId === hunk.id ? 'hunk focused' : 'hunk'}
-            >
-              <div className="hunk-head">{hunk.header}</div>
-              {view === 'unified' ? (
-                <UnifiedHunk
-                  fileId={file.id}
-                  hunk={hunk}
-                  hunkIdx={hunkIdx}
-                  fileTokens={fileTokens}
-                  readOnlyComments={readOnlyComments}
-                />
-              ) : (
-                <SplitHunk
-                  fileId={file.id}
-                  hunk={hunk}
-                  hunkIdx={hunkIdx}
-                  fileTokens={fileTokens}
-                  readOnlyComments={readOnlyComments}
-                />
-              )}
-            </div>
-          ))}
+          {file.hunks.map((hunk, hunkIdx) => {
+            const stepIndex = walkthrough?.steps.findIndex(s => s.hunkId === hunk.id) ?? -1;
+            const walkthroughStepForHunk = stepIndex >= 0 ? walkthrough!.steps[stepIndex] : undefined;
+            return (
+              <div
+                key={hunk.id}
+                id={hunk.id}
+                className={[
+                  'hunk',
+                  focusedHunkId === hunk.id ? 'focused' : '',
+                  walkthroughStepForHunk ? 'hunk--curated' : '',
+                ].filter(Boolean).join(' ')}
+              >
+                {walkthroughStepForHunk && (
+                  <WalkthroughBanner
+                    step={walkthroughStepForHunk}
+                    stepNum={walkthroughStepForHunk.stepNum}
+                    totalSteps={walkthrough?.steps.length ?? 0}
+                    isActive={walkthrough?.cursor === stepIndex}
+                    onSkip={onSkipStep ?? (() => {})}
+                    onNext={onNextStep ?? (() => {})}
+                  />
+                )}
+                <div className="hunk-head">{hunk.header}</div>
+                {view === 'unified' ? (
+                  <UnifiedHunk
+                    fileId={file.id}
+                    hunk={hunk}
+                    hunkIdx={hunkIdx}
+                    fileTokens={fileTokens}
+                    readOnlyComments={readOnlyComments}
+                    threads={threads}
+                    onDraftChange={onDraftChange}
+                  />
+                ) : (
+                  <SplitHunk
+                    fileId={file.id}
+                    hunk={hunk}
+                    hunkIdx={hunkIdx}
+                    fileTokens={fileTokens}
+                    readOnlyComments={readOnlyComments}
+                    threads={threads}
+                    onDraftChange={onDraftChange}
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -258,9 +312,11 @@ interface HunkProps {
   hunkIdx: number;
   fileTokens: ShikiFileTokens | undefined;
   readOnlyComments: ReadOnlyComment[];
+  threads?: Record<string, Thread>;
+  onDraftChange?: (threadId: string, body: string) => void;
 }
 
-function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments }: HunkProps) {
+function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDraftChange }: HunkProps) {
   return (
     <table className="diff-table">
       <tbody>
@@ -271,32 +327,46 @@ function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments }: HunkProps)
             line.kind === 'add' || line.kind === 'context' ? String(line.fileLine) : '';
           const tokens = fileTokens?.[hunkIdx]?.[lineIdx] ?? [{ content: line.text }];
           const markers = readOnlyComments.filter((c) => c.lineId === line.id);
+          const lineThreads = Object.values(threads ?? {}).filter(t => t.lineId === line.id);
           return (
-            <tr key={line.id} id={line.id} className={rowClassName(line.kind)}>
-              <td className="gutter">
-                <span
-                  style={{
-                    display: 'inline-block',
-                    width: 16,
-                    textAlign: 'right',
-                    marginRight: 4,
-                  }}
-                >
-                  {leftLine}
-                </span>
-                <span style={{ display: 'inline-block', width: 16, textAlign: 'right' }}>
-                  {rightLine}
-                </span>
-                {markers.map((c) => (
-                  <ReadOnlyMarker key={c.id} comment={c} />
-                ))}
-              </td>
-              <td
-                className="content"
-                // eslint-disable-next-line react/no-danger -- T-3-01: tokens are server-produced + escaped via tokenToHtml
-                dangerouslySetInnerHTML={{ __html: tokenToHtml(tokens) }}
-              />
-            </tr>
+            <Fragment key={line.id}>
+              <tr id={line.id} className={rowClassName(line.kind)}>
+                <td className="gutter">
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      width: 16,
+                      textAlign: 'right',
+                      marginRight: 4,
+                    }}
+                  >
+                    {leftLine}
+                  </span>
+                  <span style={{ display: 'inline-block', width: 16, textAlign: 'right' }}>
+                    {rightLine}
+                  </span>
+                  {markers.map((c) => (
+                    <ReadOnlyMarker key={c.id} comment={c} />
+                  ))}
+                </td>
+                <td
+                  className="content"
+                  // eslint-disable-next-line react/no-danger -- T-3-01: tokens are server-produced + escaped via tokenToHtml
+                  dangerouslySetInnerHTML={{ __html: tokenToHtml(tokens) }}
+                />
+              </tr>
+              {lineThreads.map(thread => (
+                <tr key={thread.threadId} className="thread-row">
+                  <td colSpan={2} style={{ padding: 0 }}>
+                    <ThreadCard
+                      thread={thread}
+                      onDraftChange={onDraftChange ?? (() => {})}
+                      onCollapse={() => {/* collapse handled by parent state */}}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </Fragment>
           );
         })}
       </tbody>
@@ -371,7 +441,7 @@ function pairSplitLines(hunk: Hunk): Array<{ left: SplitCell; right: SplitCell }
   return out;
 }
 
-function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments }: HunkProps) {
+function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDraftChange }: HunkProps) {
   const pairs = pairSplitLines(hunk);
   return (
     <table className="diff-table split" data-view="split">
@@ -398,41 +468,60 @@ function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments }: HunkProps) {
           const leftKindClass = pair.left.line ? rowClassName(pair.left.line.kind) : 'empty';
           const rightKindClass = pair.right.line ? rowClassName(pair.right.line.kind) : 'empty';
 
+          // Collect threads for the representative line (prefer right/add side, fallback to left)
+          const representativeLineId = pair.right.line?.id ?? pair.left.line?.id;
+          const rowThreads = representativeLineId
+            ? Object.values(threads ?? {}).filter(t => t.lineId === representativeLineId)
+            : [];
+
           return (
-            <tr key={idx} id={pair.left.line?.id ?? pair.right.line?.id} className="diff-row-split">
-              {/* Left side: old line number + content */}
-              <td className={`gutter ${leftKindClass}`}>
-                {pair.left.line
-                  ? String(pair.left.line.fileLine ?? '')
-                  : ''}
-                {leftMarkers.map((c) => (
-                  <ReadOnlyMarker key={c.id} comment={c} />
-                ))}
-              </td>
-              <td
-                className={`content ${leftKindClass}`}
-                // eslint-disable-next-line react/no-danger -- T-3-01: tokens are server-produced + escaped
-                dangerouslySetInnerHTML={{
-                  __html: leftTokens ? tokenToHtml(leftTokens) : '',
-                }}
-              />
-              {/* Right side: new line number + content */}
-              <td className={`gutter ${rightKindClass}`}>
-                {pair.right.line
-                  ? String(pair.right.line.fileLine ?? '')
-                  : ''}
-                {rightMarkers.map((c) => (
-                  <ReadOnlyMarker key={c.id} comment={c} />
-                ))}
-              </td>
-              <td
-                className={`content ${rightKindClass}`}
-                // eslint-disable-next-line react/no-danger -- T-3-01: tokens are server-produced + escaped
-                dangerouslySetInnerHTML={{
-                  __html: rightTokens ? tokenToHtml(rightTokens) : '',
-                }}
-              />
-            </tr>
+            <Fragment key={idx}>
+              <tr id={pair.left.line?.id ?? pair.right.line?.id} className="diff-row-split">
+                {/* Left side: old line number + content */}
+                <td className={`gutter ${leftKindClass}`}>
+                  {pair.left.line
+                    ? String(pair.left.line.fileLine ?? '')
+                    : ''}
+                  {leftMarkers.map((c) => (
+                    <ReadOnlyMarker key={c.id} comment={c} />
+                  ))}
+                </td>
+                <td
+                  className={`content ${leftKindClass}`}
+                  // eslint-disable-next-line react/no-danger -- T-3-01: tokens are server-produced + escaped
+                  dangerouslySetInnerHTML={{
+                    __html: leftTokens ? tokenToHtml(leftTokens) : '',
+                  }}
+                />
+                {/* Right side: new line number + content */}
+                <td className={`gutter ${rightKindClass}`}>
+                  {pair.right.line
+                    ? String(pair.right.line.fileLine ?? '')
+                    : ''}
+                  {rightMarkers.map((c) => (
+                    <ReadOnlyMarker key={c.id} comment={c} />
+                  ))}
+                </td>
+                <td
+                  className={`content ${rightKindClass}`}
+                  // eslint-disable-next-line react/no-danger -- T-3-01: tokens are server-produced + escaped
+                  dangerouslySetInnerHTML={{
+                    __html: rightTokens ? tokenToHtml(rightTokens) : '',
+                  }}
+                />
+              </tr>
+              {rowThreads.map(thread => (
+                <tr key={thread.threadId} className="thread-row">
+                  <td colSpan={4} style={{ padding: 0 }}>
+                    <ThreadCard
+                      thread={thread}
+                      onDraftChange={onDraftChange ?? (() => {})}
+                      onCollapse={() => {/* collapse handled by parent state */}}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </Fragment>
           );
         })}
       </tbody>

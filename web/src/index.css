@@ -1495,3 +1495,19 @@ button {
   width: 16px;
   height: 16px;
 }
+
+/* Phase 5 Plan 05: ThreadCard push-down styles */
+.thread-row td {
+  padding: 0 !important;
+}
+.thread-panel--resolved {
+  border-left-color: var(--ok) !important;
+  background: var(--ok-bg);
+}
+.thread-draft-input:focus {
+  outline: 2px solid var(--claude);
+  outline-offset: -1px;
+}
+.thread-older-expander:hover {
+  text-decoration: underline;
+}
