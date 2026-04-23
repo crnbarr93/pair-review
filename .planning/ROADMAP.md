@@ -164,6 +164,20 @@ Plans:
 
 ---
 
+### Phase 06.1: Bidirectional LLM Collaboration + Auto-Generation (INSERTED)
+
+**Goal:** Flip the interaction model so the browser UI drives the LLM. Three capabilities: (1) auto-generation of PR summary + walkthrough on startup so the user never has to prompt Claude manually, (2) reverse communication channel via long-poll MCP tool (`await_user_request`) so the browser can send requests to the Claude Code session, (3) chat panel + user-initiated inline comments with @claude tagging for line-level collaboration.
+**Requirements**: D-01 through D-21 (CONTEXT.md locked decisions)
+**Depends on:** Phase 06
+**Plans:** 5 plans in 5 waves
+
+Plans:
+- [ ] 06.1-01-PLAN.md — Phase 06.1 types + reducer branches + RequestQueue module + unit tests (Wave 1)
+- [ ] 06.1-02-PLAN.md — await_user_request + respond_chat MCP tools + POST /api/user-request route + server wiring (Wave 2)
+- [ ] 06.1-03-PLAN.md — Store extensions + SSE routing + ChatPanel component + App.tsx 3-column layout (Wave 3)
+- [ ] 06.1-04-PLAN.md — InlineComposer + DiffViewer gutter + icon + @claude tagging (Wave 4)
+- [ ] 06.1-05-PLAN.md — Slash command rewrite (auto-generation + listen loop + --dry) + human-verify checkpoint (Wave 5)
+
 ### Phase 7: Polish + Concurrency
 **Goal**: v1 shake-out. Close the "looks done but isn't" checklist from PITFALLS.md, address daily-use papercuts surfaced during Phases 1–6 shipping, and land the one v1 requirement (concurrent sessions) that isn't blocker-class: users can run multiple concurrent review sessions in separate browser tabs and switch between them via a session-switcher UI.
 **Depends on**: Phase 6
@@ -180,7 +194,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 06.1 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -190,6 +204,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 4. LLM Summary + Checklist + Self-Review | 0/TBD | Not started | - |
 | 5. Walkthrough + Inline Threaded Comments | 0/6 | Planning | - |
 | 6. Review Submission + Verdict UI | 0/TBD | Not started | - |
+| 06.1. Bidirectional LLM Collaboration | 0/5 | Planning | - |
 | 7. Polish + Concurrency | 0/TBD | Not started | - |
 
 ---
