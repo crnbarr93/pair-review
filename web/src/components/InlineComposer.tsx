@@ -19,19 +19,21 @@ export function InlineComposer({ lineId, lineNumber, prKey, onClose }: InlineCom
   // @claude detection — determines submission path
   const isClaudeTagged = value.includes('@claude');
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!value.trim() || !prKey) return;
-    postUserRequest(prKey, {
-      type: 'inline_comment',
-      payload: {
-        lineId,
-        message: value.trim(),
-        isClaudeTagged,
-      },
-    }).catch(() => {
-      // Error handled by toast in App.tsx via the global error boundary
-    });
-    onClose();
+    try {
+      await postUserRequest(prKey, {
+        type: 'inline_comment',
+        payload: {
+          lineId,
+          message: value.trim(),
+          isClaudeTagged,
+        },
+      });
+      onClose();
+    } catch {
+      // Keep composer open so user can retry — request failed
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
