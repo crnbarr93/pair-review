@@ -2269,3 +2269,36 @@ button {
   color: var(--block);
   border-color: var(--block);
 }
+
+/* ── Phase 06.1: InlineComposer ─────────────────────────────────────────── */
+
+.thread-reply-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.claude-chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: var(--claude-2);
+  color: var(--claude);
+  font-weight: 500;
+}
+
+.gutter-add-comment {
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+tr:hover .gutter-add-comment {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gutter-add-comment {
+    transition: none;
+  }
+}

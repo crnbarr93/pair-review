@@ -6,6 +6,7 @@
 //     is HTML-escaped via escapeHtml() and color is validated against HEX_COLOR before style interpolation (T-3-01/T-3-01a).
 //   - ReadOnlyComment.body renders exclusively through React text nodes — never innerHTML (T-3-03).
 //   - Phase 5: ThreadCard message text renders exclusively through React text nodes — never innerHTML (T-5-05-01).
+//   - Phase 06.1: InlineComposer user input is plain text submitted via postUserRequest — no innerHTML.
 import { Fragment, useState } from 'react';
 import type {
   DiffModel,
@@ -21,6 +22,7 @@ import type {
 } from '@shared/types';
 import { ThreadCard } from './ThreadCard';
 import { WalkthroughBanner } from './WalkthroughBanner';
+import { InlineComposer } from './InlineComposer';
 
 export type DiffView = 'unified' | 'split';
 
@@ -41,6 +43,8 @@ interface DiffViewerProps {
   onDraftChange?: (threadId: string, body: string) => void;
   onSkipStep?: () => void;
   onNextStep?: () => void;
+  // Phase 06.1 additions
+  prKey: string;
 }
 
 // ──────────── Shiki token rendering — the single innerHTML path ────────────
@@ -130,6 +134,7 @@ export function DiffViewer(props: DiffViewerProps) {
     onDraftChange,
     onSkipStep,
     onNextStep,
+    prKey,
   } = props;
 
   return (
@@ -152,6 +157,7 @@ export function DiffViewer(props: DiffViewerProps) {
           onDraftChange={onDraftChange}
           onSkipStep={onSkipStep}
           onNextStep={onNextStep}
+          prKey={prKey}
         />
       ))}
     </div>
@@ -177,6 +183,8 @@ interface FileSectionProps {
   onDraftChange?: (threadId: string, body: string) => void;
   onSkipStep?: () => void;
   onNextStep?: () => void;
+  // Phase 06.1 additions
+  prKey: string;
 }
 
 function FileSection({
@@ -195,6 +203,7 @@ function FileSection({
   onDraftChange,
   onSkipStep,
   onNextStep,
+  prKey,
 }: FileSectionProps) {
   const collapse = file.generated && !expanded;
   const [dirname, basename] = splitPath(file.path);
@@ -284,6 +293,7 @@ function FileSection({
                       readOnlyComments={readOnlyComments}
                       threads={threads}
                       onDraftChange={onDraftChange}
+                      prKey={prKey}
                     />
                   ) : (
                     <SplitHunk
@@ -294,6 +304,7 @@ function FileSection({
                       readOnlyComments={readOnlyComments}
                       threads={threads}
                       onDraftChange={onDraftChange}
+                      prKey={prKey}
                     />
                   )}
                 </div>
@@ -316,9 +327,14 @@ interface HunkProps {
   readOnlyComments: ReadOnlyComment[];
   threads?: Record<string, Thread>;
   onDraftChange?: (threadId: string, body: string) => void;
+  // Phase 06.1 additions
+  prKey: string;
 }
 
-function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDraftChange }: HunkProps) {
+function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDraftChange, prKey }: HunkProps) {
+  const [hoveredLineId, setHoveredLineId] = useState<string | null>(null);
+  const [composerLineId, setComposerLineId] = useState<string | null>(null);
+
   return (
     <table className="diff-table">
       <tbody>
@@ -332,7 +348,12 @@ function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onD
           const lineThreads = Object.values(threads ?? {}).filter(t => t.lineId === line.id);
           return (
             <Fragment key={line.id}>
-              <tr id={line.id} className={rowClassName(line.kind)}>
+              <tr
+                id={line.id}
+                className={rowClassName(line.kind)}
+                onMouseEnter={() => setHoveredLineId(line.id)}
+                onMouseLeave={() => setHoveredLineId(null)}
+              >
                 <td className="gutter">
                   <span
                     style={{
@@ -350,6 +371,30 @@ function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onD
                   {markers.map((c) => (
                     <ReadOnlyMarker key={c.id} comment={c} />
                   ))}
+                  {hoveredLineId === line.id && lineThreads.length === 0 && composerLineId !== line.id && (
+                    <button
+                      type="button"
+                      className="gutter-add-comment"
+                      aria-label={`Start comment on line ${line.fileLine}`}
+                      onClick={() => setComposerLineId(line.id)}
+                      style={{
+                        display: 'inline-flex',
+                        width: 16,
+                        height: 16,
+                        borderRadius: '50%',
+                        background: 'var(--claude-2)',
+                        color: 'var(--claude)',
+                        cursor: 'pointer',
+                        border: 'none',
+                        fontSize: 12,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginLeft: 4,
+                      }}
+                    >
+                      +
+                    </button>
+                  )}
                 </td>
                 <td
                   className="content"
@@ -357,6 +402,18 @@ function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onD
                   dangerouslySetInnerHTML={{ __html: tokenToHtml(tokens) }}
                 />
               </tr>
+              {composerLineId === line.id && (
+                <tr className="thread-row">
+                  <td colSpan={2} style={{ padding: 0 }}>
+                    <InlineComposer
+                      lineId={line.id}
+                      lineNumber={line.fileLine}
+                      prKey={prKey}
+                      onClose={() => setComposerLineId(null)}
+                    />
+                  </td>
+                </tr>
+              )}
               {lineThreads.map(thread => (
                 <tr key={thread.threadId} className="thread-row">
                   <td colSpan={2} style={{ padding: 0 }}>
@@ -443,7 +500,10 @@ function pairSplitLines(hunk: Hunk): Array<{ left: SplitCell; right: SplitCell }
   return out;
 }
 
-function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDraftChange }: HunkProps) {
+function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDraftChange, prKey }: HunkProps) {
+  const [hoveredLineId, setHoveredLineId] = useState<string | null>(null);
+  const [composerLineId, setComposerLineId] = useState<string | null>(null);
+
   const pairs = pairSplitLines(hunk);
   return (
     <table className="diff-table split" data-view="split">
@@ -476,9 +536,17 @@ function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDra
             ? Object.values(threads ?? {}).filter(t => t.lineId === representativeLineId)
             : [];
 
+          // For the composer: use the representative line id and number
+          const composerLine = pair.right.line ?? pair.left.line;
+
           return (
             <Fragment key={idx}>
-              <tr id={pair.left.line?.id ?? pair.right.line?.id} className="diff-row-split">
+              <tr
+                id={pair.left.line?.id ?? pair.right.line?.id}
+                className="diff-row-split"
+                onMouseEnter={() => representativeLineId && setHoveredLineId(representativeLineId)}
+                onMouseLeave={() => setHoveredLineId(null)}
+              >
                 {/* Left side: old line number + content */}
                 <td className={`gutter ${leftKindClass}`}>
                   {pair.left.line
@@ -487,6 +555,30 @@ function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDra
                   {leftMarkers.map((c) => (
                     <ReadOnlyMarker key={c.id} comment={c} />
                   ))}
+                  {hoveredLineId === representativeLineId && rowThreads.length === 0 && composerLineId !== representativeLineId && composerLine && (
+                    <button
+                      type="button"
+                      className="gutter-add-comment"
+                      aria-label={`Start comment on line ${composerLine.fileLine}`}
+                      onClick={() => representativeLineId && setComposerLineId(representativeLineId)}
+                      style={{
+                        display: 'inline-flex',
+                        width: 16,
+                        height: 16,
+                        borderRadius: '50%',
+                        background: 'var(--claude-2)',
+                        color: 'var(--claude)',
+                        cursor: 'pointer',
+                        border: 'none',
+                        fontSize: 12,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginLeft: 4,
+                      }}
+                    >
+                      +
+                    </button>
+                  )}
                 </td>
                 <td
                   className={`content ${leftKindClass}`}
@@ -512,6 +604,18 @@ function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDra
                   }}
                 />
               </tr>
+              {composerLineId === representativeLineId && composerLine && (
+                <tr className="thread-row">
+                  <td colSpan={4} style={{ padding: 0 }}>
+                    <InlineComposer
+                      lineId={composerLine.id}
+                      lineNumber={composerLine.fileLine}
+                      prKey={prKey}
+                      onClose={() => setComposerLineId(null)}
+                    />
+                  </td>
+                </tr>
+              )}
               {rowThreads.map(thread => (
                 <tr key={thread.threadId} className="thread-row">
                   <td colSpan={4} style={{ padding: 0 }}>
