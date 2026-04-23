@@ -504,6 +504,7 @@ export default function App() {
               onDraftChange={handleDraftChange}
               onSkipStep={handleSkipStep}
               onNextStep={handleNextStep}
+              prKey={state.prKey}
             />
             <FindingsSidebar
               selfReview={state.selfReview}
