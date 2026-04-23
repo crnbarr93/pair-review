@@ -1,5 +1,5 @@
 import { Fragment, useState } from 'react';
-import type { ChecklistCategory, CIStatus, PrSummary, PullRequestMeta, SelfReview, Walkthrough } from '@shared/types';
+import type { ChecklistCategory, CIStatus, PrSummary, PullRequestMeta, SelfReview, SubmissionState, Verdict, Walkthrough } from '@shared/types';
 import { Ic } from './icons';
 
 function cn(...parts: Array<string | false | undefined | null>): string {
@@ -27,8 +27,9 @@ interface TopBarProps {
   onCategoryClick: (cat: ChecklistCategory | null) => void;
   onToggleFindingsSidebar: () => void;
   onSettingsClick: () => void;
-  onRequestChanges: () => void;
-  onApprove: () => void;
+  onSubmitReview: () => void;
+  submissionState: SubmissionState | null;
+  pendingSubmission: { verdict: Verdict; body: string } | null;
 }
 
 export function TopBar({
@@ -43,8 +44,8 @@ export function TopBar({
   onCategoryClick,
   onToggleFindingsSidebar,
   onSettingsClick,
-  onRequestChanges,
-  onApprove,
+  onSubmitReview,
+  submissionState,
 }: TopBarProps) {
   const hasGhCoords =
     pr.source === 'github' &&
@@ -82,12 +83,15 @@ export function TopBar({
       <button type="button" className="topbtn" onClick={onSettingsClick}>
         <Ic.settings /> Settings
       </button>
-      <button type="button" className="topbtn" onClick={onRequestChanges}>
-        Request changes
-      </button>
-      <button type="button" className="primary" onClick={onApprove}>
-        Approve &amp; merge
-      </button>
+      {submissionState?.status === 'submitted' ? (
+        <span className="topbtn" style={{ color: 'var(--ok)', fontWeight: 600 }}>
+          Review posted ✓
+        </span>
+      ) : (
+        <button type="button" className="primary" onClick={onSubmitReview}>
+          Submit review
+        </button>
+      )}
     </div>
   );
 }
@@ -187,21 +191,25 @@ export function StageStepper({
   selfReview,
   activeCategory,
   walkthrough,
+  submissionState,
   onSummaryStep,
   onSelfReviewStep,
   onCategoryClick,
   onWalkthroughStepClick,
   onShowAllToggle,
+  onSubmitStep,
 }: {
   summary?: PrSummary | null;
   selfReview?: SelfReview | null;
   activeCategory: ChecklistCategory | null;
   walkthrough?: Walkthrough | null;
+  submissionState?: SubmissionState | null;
   onSummaryStep: () => void;
   onSelfReviewStep: () => void;
   onCategoryClick: (cat: ChecklistCategory | null) => void;
   onWalkthroughStepClick?: (cursor: number) => void;
   onShowAllToggle?: (showAll: boolean) => void;
+  onSubmitStep?: () => void;
 }) {
   const steps = [
     {
@@ -234,11 +242,20 @@ export function StageStepper({
     },
     {
       label: 'Submit',
-      sub: 'Phase 6',
-      status: 'default',
-      onClick: undefined,
-      disabled: true,
-      tooltip: 'Submit available in Phase 6',
+      sub: submissionState?.status === 'submitted'
+        ? 'Review posted'
+        : submissionState?.status === 'submitting'
+          ? 'Posting…'
+          : selfReview
+            ? 'Ready to submit'
+            : 'Not submitted',
+      status: submissionState?.status === 'submitted'
+        ? 'done'
+        : selfReview
+          ? 'active'
+          : 'default',
+      onClick: onSubmitStep,
+      disabled: false,
     },
   ];
 
