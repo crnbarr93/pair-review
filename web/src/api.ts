@@ -1,4 +1,4 @@
-import type { SessionEvent, SnapshotMessage, UpdateMessage } from '@shared/types';
+import type { SessionEvent, SnapshotMessage, UpdateMessage, Verdict } from '@shared/types';
 
 /**
  * Choice triad for the Phase 2 stale-diff modal. Mirrors the server's zod
@@ -130,6 +130,40 @@ export async function chooseResume(params: {
  * Resolves { ok: true } on 200; throws on missing token, network error, or
  * any non-OK HTTP status. Fails fast on missing token per T-3-05.
  */
+/**
+ * POST the user's confirmed submit choice to the server. The server validates
+ * the token, dispatches to GitHub (gh: prKey) or local export (local: prKey),
+ * and applies the full submission state machine events.
+ *
+ * The SSE stream will deliver submission.completed / submission.failed which
+ * closes the modal or shows an error. The caller only needs to handle network
+ * errors; HTTP-level errors are surfaced as thrown Error objects.
+ */
+export async function confirmSubmit(params: {
+  prKey: string;
+  verdict: Verdict;
+  body: string;
+  exportPath?: string;
+}): Promise<{ ok: boolean; url?: string; path?: string; error?: string }> {
+  if (!reviewToken) {
+    throw new Error('confirmSubmit: review token not set — call setReviewToken first');
+  }
+  const res = await fetch('/api/confirm-submit', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Review-Token': reviewToken,
+    },
+    body: JSON.stringify(params),
+    credentials: 'same-origin',
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`confirmSubmit failed: HTTP ${res.status} ${text}`);
+  }
+  return res.json();
+}
+
 export async function postSessionEvent(
   prKey: string,
   event: SessionEvent

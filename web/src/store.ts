@@ -5,14 +5,17 @@ import type {
   CIStatus,
   DiffModel,
   FileReviewStatus,
+  PendingReview,
   PrSummary,
   PullRequestMeta,
   ReadOnlyComment,
   SelfReview,
   ShikiFileTokens,
   SnapshotMessage,
+  SubmissionState,
   Thread,
   UpdateMessage,
+  Verdict,
   Walkthrough,
 } from '@shared/types';
 import type { ChooseResumeSource } from './api';
@@ -56,6 +59,11 @@ export interface AppState {
   threads: Record<string, Thread>;
   /** Track threadIds where user has locally edited draftBody (Pitfall 3 protection) */
   locallyEditedDrafts: Set<string>;
+  // Phase 6 additions
+  submissionState: SubmissionState | null;
+  pendingSubmission: { verdict: Verdict; body: string } | null;
+  pendingReview: PendingReview | null;
+  submitModalOpen: boolean;
 }
 
 const INITIAL: AppState = {
@@ -76,6 +84,10 @@ const INITIAL: AppState = {
   walkthrough: null,
   threads: {},
   locallyEditedDrafts: new Set<string>(),
+  submissionState: null,
+  pendingSubmission: null,
+  pendingReview: null,
+  submitModalOpen: false,
 };
 
 let state: AppState = { ...INITIAL };
@@ -182,6 +194,9 @@ export const actions = {
       selfReview: s.selfReview ?? null,
       walkthrough: s.walkthrough ?? null,
       threads: mergeThreadsFromServer(s.threads ?? {}, state.threads, state.locallyEditedDrafts),
+      submissionState: s.submissionState ?? null,
+      pendingSubmission: s.pendingSubmission ?? null,
+      pendingReview: s.pendingReview ?? null,
     };
     emit();
   },
@@ -203,6 +218,58 @@ export const actions = {
 
   onWalkthroughSet(msg: UpdateMessage) {
     state = { ...state, walkthrough: msg.state.walkthrough ?? null };
+    emit();
+  },
+
+  onSubmissionProposed(msg: UpdateMessage) {
+    state = {
+      ...state,
+      pendingSubmission: msg.state.pendingSubmission ?? null,
+      submissionState: msg.state.submissionState ?? null,
+      submitModalOpen: true,
+    };
+    emit();
+  },
+
+  onSubmissionConfirmed(msg: UpdateMessage) {
+    state = {
+      ...state,
+      submissionState: msg.state.submissionState ?? null,
+    };
+    emit();
+  },
+
+  onSubmissionCompleted(msg: UpdateMessage) {
+    state = {
+      ...state,
+      submissionState: msg.state.submissionState ?? null,
+      pendingSubmission: null,
+      submitModalOpen: false,
+    };
+    emit();
+  },
+
+  onSubmissionFailed(msg: UpdateMessage) {
+    state = {
+      ...state,
+      submissionState: msg.state.submissionState ?? null,
+    };
+    emit();
+  },
+
+  onPendingReviewDetected(msg: UpdateMessage) {
+    state = {
+      ...state,
+      pendingReview: msg.state.pendingReview ?? null,
+    };
+    emit();
+  },
+
+  onPendingReviewResolved() {
+    state = {
+      ...state,
+      pendingReview: null,
+    };
     emit();
   },
 
@@ -256,6 +323,11 @@ export const actions = {
 
   setSource(source: ChooseResumeSource) {
     state = { ...state, source };
+    emit();
+  },
+
+  setSubmitModalOpen(open: boolean) {
+    state = { ...state, submitModalOpen: open };
     emit();
   },
 

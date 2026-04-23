@@ -17,6 +17,8 @@ import { TopBar, StageStepper } from './components/TopBar';
 import { FileExplorer } from './components/FileExplorer';
 import { DiffViewer, type DiffView } from './components/DiffViewer';
 import { StaleDiffModal } from './components/StaleDiffModal';
+import { SubmitModal } from './components/SubmitModal';
+import { PendingReviewModal } from './components/PendingReviewModal';
 import { FindingsSidebar } from './components/FindingsSidebar';
 import { WalkthroughStepList } from './components/WalkthroughStepList';
 import { SummaryDrawer } from './components/SummaryDrawer';
@@ -325,17 +327,19 @@ export default function App() {
           break;
         case 'v':
           e.preventDefault();
-          showToast('Verdict picker available in Phase 6');
+          actions.setSubmitModalOpen(true);
           break;
         case 's':
           e.preventDefault();
-          showToast('Submit available in Phase 6');
+          if (state.submissionState?.status !== 'submitted') {
+            actions.setSubmitModalOpen(true);
+          }
           break;
       }
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [advanceHunk, markCurrentFileReviewed, showToast, focusedHunkId, state.threads]);
+  }, [advanceHunk, markCurrentFileReviewed, showToast, focusedHunkId, state.threads, state.submissionState]);
 
   // IntersectionObserver for auto-in-progress (D-11).
   // 50% visibility threshold + 500ms debounce. Fires once per file per viewport entry.
@@ -417,8 +421,9 @@ export default function App() {
           onCategoryClick={(cat) => actions.setActiveCategory(cat)}
           onToggleFindingsSidebar={() => actions.toggleFindingsSidebar()}
           onSettingsClick={() => handleCTAStub('Settings coming in Phase 7')}
-          onRequestChanges={() => handleCTAStub('Verdict picker available in Phase 6')}
-          onApprove={() => handleCTAStub('Submit available in Phase 6')}
+          onSubmitReview={() => actions.setSubmitModalOpen(true)}
+          submissionState={state.submissionState}
+          pendingSubmission={state.pendingSubmission}
         />
       )}
       <StageStepper
@@ -426,11 +431,13 @@ export default function App() {
         selfReview={state.selfReview}
         activeCategory={state.activeCategory}
         walkthrough={state.walkthrough}
+        submissionState={state.submissionState}
         onSummaryStep={() => setSummaryDrawerOpen((o) => !o)}
         onSelfReviewStep={() => actions.toggleFindingsSidebar()}
         onCategoryClick={(cat) => actions.setActiveCategory(cat)}
         onWalkthroughStepClick={handleWalkthroughStepClick}
         onShowAllToggle={handleShowAllToggle}
+        onSubmitStep={() => actions.setSubmitModalOpen(true)}
       />
       {state.summary && summaryDrawerOpen && (
         <SummaryDrawer
@@ -515,6 +522,8 @@ export default function App() {
         )}
       </main>
       <StaleDiffModal />
+      <SubmitModal />
+      <PendingReviewModal />
       {toast && (
         <div className="toast" role="status" aria-live="polite">
           {toast}
