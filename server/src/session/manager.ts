@@ -36,6 +36,7 @@ export class SessionManager {
   private launchUrl = '';
   private sessions = new Map<string, ReviewSession>();
   private launched = new Set<string>(); // prKeys whose browser was already launched (D-21)
+  private activePrKey: string | null = null;
   private queues = new Map<string, Promise<unknown>>();
   public readonly bus = new SessionBus();
 
@@ -65,6 +66,10 @@ export class SessionManager {
 
   getTokenLast4(): string {
     return this.sessionToken.slice(-4);
+  }
+
+  getActivePrKey(): string | null {
+    return this.activePrKey;
   }
 
   get(prKey: string): ReviewSession | undefined {
@@ -116,6 +121,7 @@ export class SessionManager {
         error: headShaError,
       };
       this.sessions.set(prKey, session);
+      this.activePrKey = prKey;
       if (!this.launched.has(prKey)) {
         this.launched.add(prKey);
         await launchBrowser(this.sessionLaunchUrl(prKey));
@@ -195,6 +201,7 @@ export class SessionManager {
       lastEventId: 0,
     };
     this.sessions.set(prKey, session);
+    this.activePrKey = prKey;
 
     // Persist initial snapshot once (D-06 write-once)
     try {
