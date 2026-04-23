@@ -606,7 +606,7 @@ button {
    Chat panel (right)
    ============================================ */
 .chat {
-  background: var(--paper);
+  background: var(--paper-2);
   display: flex;
   flex-direction: column;
   border-left: 1px solid var(--line);
@@ -870,13 +870,13 @@ button {
 }
 .chat-input .tool:hover { background: var(--paper-2); color: var(--ink-2); }
 .chat-input .send {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--claude);
+  color: #fff;
   padding: 5px 12px;
   border-radius: 5px;
   font-weight: 500;
 }
-.chat-input .send:hover { background: #000; }
+.chat-input .send:hover { background: #256b62; }
 
 /* Thread inline panel */
 .thread-panel {

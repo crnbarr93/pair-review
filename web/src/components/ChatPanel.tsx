@@ -206,13 +206,14 @@ export function ChatPanel({
         <div className="box">
           <textarea
             aria-label="Message Claude"
-            placeholder="Ask a question..."
+            placeholder="Ask Claude anything, or say 'next' to move on..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             rows={1}
           />
           <div className="toolrow">
+            <span style={{ fontSize: 11, color: 'var(--ink-4)' }}>⌘K for commands</span>
             <span className="spacer" />
             <button
               type="button"
@@ -221,7 +222,9 @@ export function ChatPanel({
               disabled={!input.trim()}
               aria-label="Send message"
             >
-              Send
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M2 14l12-6-12-6v5l8 1-8 1z" fill="currentColor" />
+              </svg>
             </button>
           </div>
         </div>
