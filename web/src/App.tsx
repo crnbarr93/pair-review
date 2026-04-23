@@ -20,8 +20,8 @@ import { StaleDiffModal } from './components/StaleDiffModal';
 import { SubmitModal } from './components/SubmitModal';
 import { PendingReviewModal } from './components/PendingReviewModal';
 import { FindingsSidebar } from './components/FindingsSidebar';
-import { WalkthroughStepList } from './components/WalkthroughStepList';
 import { SummaryDrawer } from './components/SummaryDrawer';
+import { ChatPanel } from './components/ChatPanel';
 
 function cn(...parts: Array<string | false | undefined | null>): string {
   return parts.filter(Boolean).join(' ');
@@ -475,7 +475,7 @@ export default function App() {
           onClose={() => setSummaryDrawerOpen(false)}
         />
       )}
-      <main className={cn('main', state.findingsSidebarOpen && 'main--findings-open', state.walkthrough && 'main--panel-open')}>
+      <main className={cn('main', state.findingsSidebarOpen && 'main--findings-open', (state.walkthrough || state.chatPanelOpen) && 'main--panel-open')}>
         {diff && (
           <>
             <FileExplorer
@@ -517,37 +517,13 @@ export default function App() {
                 el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
               }}
             />
-            {state.walkthrough && (
-              <aside className="review-panel">
-                <div className="rp-head">
-                  <div className="rp-avatar">C</div>
-                  <div className="rp-meta">
-                    <div className="rp-name">Claude</div>
-                    <div className="rp-status"><span className="rp-live" /> Reviewing</div>
-                  </div>
-                  <div className="wsl-toggle">
-                    <button type="button" className={!state.walkthrough.showAll ? 'wsl-toggle-btn wsl-toggle-btn--on' : 'wsl-toggle-btn'} onClick={() => handleShowAllToggle(false)}>Curated</button>
-                    <button type="button" className={state.walkthrough.showAll ? 'wsl-toggle-btn wsl-toggle-btn--on' : 'wsl-toggle-btn'} onClick={() => handleShowAllToggle(true)}>All hunks</button>
-                  </div>
-                </div>
-                <WalkthroughStepList
-                  walkthrough={state.walkthrough}
-                  onStepClick={handleWalkthroughStepClick}
-                  onStepComplete={handleWalkthroughStepComplete}
-                  onStepToggle={handleWalkthroughStepToggle}
-                  onShowAllToggle={handleShowAllToggle}
-                />
-                <div className="rp-conversation">
-                  <div className="rp-future">
-                    <div className="rp-future-icon">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="var(--ink-4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    </div>
-                    <div className="rp-future-title">Conversation</div>
-                    <div className="rp-future-sub">Chat with Claude about the review, ask questions, and discuss findings. Coming in a future phase.</div>
-                  </div>
-                </div>
-              </aside>
-            )}
+            <ChatPanel
+              messages={state.chatMessages}
+              requestQueuePending={state.requestQueue.pending}
+              prKey={state.prKey}
+              open={state.chatPanelOpen}
+              onToggle={() => actions.setChatPanelOpen(!state.chatPanelOpen)}
+            />
           </>
         )}
       </main>
