@@ -164,6 +164,34 @@ export async function confirmSubmit(params: {
   return res.json();
 }
 
+export interface UserRequest {
+  type: 'chat' | 'inline_comment' | 'run_self_review' | 'regenerate_summary' | 'regenerate_walkthrough';
+  payload?: Record<string, unknown>;
+}
+
+export async function postUserRequest(
+  prKey: string,
+  req: UserRequest,
+): Promise<{ ok: boolean; queued: boolean }> {
+  if (!reviewToken) {
+    throw new Error('postUserRequest: review token not set — call setReviewToken first');
+  }
+  const res = await fetch('/api/user-request', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Review-Token': reviewToken,
+    },
+    body: JSON.stringify({ prKey, ...req }),
+    credentials: 'same-origin',
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`postUserRequest failed: HTTP ${res.status} ${text}`);
+  }
+  return res.json();
+}
+
 export async function postSessionEvent(
   prKey: string,
   event: SessionEvent

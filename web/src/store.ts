@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type {
   AppStatePhase,
+  ChatMessage,
   ChecklistCategory,
   CIStatus,
   DiffModel,
@@ -64,6 +65,10 @@ export interface AppState {
   pendingSubmission: { verdict: Verdict; body: string } | null;
   pendingReview: PendingReview | null;
   submitModalOpen: boolean;
+  // Phase 06.1 additions
+  chatMessages: ChatMessage[];
+  requestQueue: { pending: number };
+  chatPanelOpen: boolean;
 }
 
 const INITIAL: AppState = {
@@ -88,6 +93,9 @@ const INITIAL: AppState = {
   pendingSubmission: null,
   pendingReview: null,
   submitModalOpen: false,
+  chatMessages: [],
+  requestQueue: { pending: 0 },
+  chatPanelOpen: true,  // open by default per D-07
 };
 
 let state: AppState = { ...INITIAL };
@@ -170,6 +178,8 @@ export const actions = {
       selfReview: s.selfReview ?? null,
       walkthrough: s.walkthrough ?? null,
       threads: mergeThreadsFromServer(s.threads ?? {}, state.threads, state.locallyEditedDrafts),
+      chatMessages: s.chatMessages ?? [],
+      requestQueue: s.requestQueue ?? { pending: 0 },
     };
     emit();
   },
@@ -197,6 +207,8 @@ export const actions = {
       submissionState: s.submissionState ?? null,
       pendingSubmission: s.pendingSubmission ?? null,
       pendingReview: s.pendingReview ?? null,
+      chatMessages: s.chatMessages ?? state.chatMessages,
+      requestQueue: s.requestQueue ?? state.requestQueue,
     };
     emit();
   },
@@ -270,6 +282,43 @@ export const actions = {
       ...state,
       pendingReview: null,
     };
+    emit();
+  },
+
+  onChatUserMessage(msg: UpdateMessage) {
+    const s = msg.state;
+    state = { ...state, chatMessages: s.chatMessages ?? state.chatMessages };
+    emit();
+  },
+
+  onChatLlmMessage(msg: UpdateMessage) {
+    const s = msg.state;
+    state = { ...state, chatMessages: s.chatMessages ?? state.chatMessages };
+    emit();
+  },
+
+  onRequestQueued(msg: UpdateMessage) {
+    const s = msg.state;
+    state = { ...state, requestQueue: s.requestQueue ?? state.requestQueue };
+    emit();
+  },
+
+  onRequestProcessing(msg: UpdateMessage) {
+    const s = msg.state;
+    state = { ...state, requestQueue: s.requestQueue ?? state.requestQueue };
+    emit();
+  },
+
+  onThreadUserStarted(msg: UpdateMessage) {
+    state = {
+      ...state,
+      threads: mergeThreadsFromServer(msg.state.threads ?? {}, state.threads, state.locallyEditedDrafts),
+    };
+    emit();
+  },
+
+  setChatPanelOpen(open: boolean) {
+    state = { ...state, chatPanelOpen: open };
     emit();
   },
 

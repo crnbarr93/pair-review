@@ -84,6 +84,16 @@ export async function bootstrap(): Promise<void> {
         actions.onPendingReviewDetected(msg);
       } else if (msg.event?.type === 'pendingReview.resolved') {
         actions.onPendingReviewResolved();
+      } else if (msg.event?.type === 'chat.userMessage') {
+        actions.onChatUserMessage(msg);
+      } else if (msg.event?.type === 'chat.llmMessage') {
+        actions.onChatLlmMessage(msg);
+      } else if (msg.event?.type === 'request.queued') {
+        actions.onRequestQueued(msg);
+      } else if (msg.event?.type === 'request.processing') {
+        actions.onRequestProcessing(msg);
+      } else if (msg.event?.type === 'thread.userStarted') {
+        actions.onThreadUserStarted(msg);
       } else {
         actions.onUpdate(msg);
       }
