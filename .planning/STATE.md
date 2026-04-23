@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready_to_plan
-stopped_at: Phase 6 complete, ready to plan Phase 7
-last_updated: "2026-04-23T09:00:00.000Z"
-last_activity: 2026-04-23 -- Phase 06 completed, transitioned to Phase 7
+status: planning
+stopped_at: Phase 06.1 context gathered
+last_updated: "2026-04-23T09:29:44.945Z"
+last_activity: 2026-04-23
 progress:
-  total_phases: 7
+  total_phases: 8
   completed_phases: 6
   total_plans: 35
-  completed_plans: 31
-  percent: 86
+  completed_plans: 35
+  percent: 100
 ---
 
 # Project State
@@ -99,6 +99,10 @@ Recent decisions affecting current work:
 - [Phase 04]: Nit cap (≤3) enforced handler-side — MCP SDK drops zod .refine() refinements from Input.shape
 - [Phase 04]: lineId resolution maps opaque anchors to (path, line, side) server-side before emitting selfReview.set — Phase 5 reuses this pattern for draft_comment
 
+### Roadmap Evolution
+
+- Phase 06.1 inserted after Phase 06: Bidirectional LLM Collaboration + Auto-Generation (URGENT)
+
 ### Pending Todos
 
 None yet.
@@ -122,6 +126,6 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-04-23
-Stopped at: Phase 6 complete, ready to plan Phase 7
-Resume file: None
+Last session: --stopped-at
+Stopped at: Phase 06.1 context gathered
+Resume file: --resume-file
