@@ -102,6 +102,9 @@ export interface ReviewSession {
   submissionState?: SubmissionState;
   pendingSubmission?: { verdict: Verdict; body: string };
   pendingReview?: PendingReview;
+  // Phase 06.1 additions (D-21) — all optional for backward compat:
+  chatMessages?: ChatMessage[];
+  requestQueue?: { pending: number };
 }
 
 // Phase 2 event union — Phase 4/5/6 variants will extend this.
@@ -137,7 +140,13 @@ export type SessionEvent =
   | { type: 'submission.completed'; reviewId?: number; url?: string; submissionId: string; exportPath?: string }
   | { type: 'submission.failed'; error: string }
   | { type: 'pendingReview.detected'; reviewId: number; createdAt: string; commentCount: number }
-  | { type: 'pendingReview.resolved' };
+  | { type: 'pendingReview.resolved' }
+  // Phase 06.1 additions (D-20):
+  | { type: 'chat.userMessage'; message: string; timestamp: string }
+  | { type: 'chat.llmMessage'; message: string; timestamp: string }
+  | { type: 'thread.userStarted'; lineId: string; path: string; line: number; side: LineSide; threadId: string; message: string; isClaudeTagged: boolean; timestamp: string }
+  | { type: 'request.queued'; requestType: string; position: number }
+  | { type: 'request.processing' };
 
 // SSE message envelope (server → browser)
 export interface SnapshotMessage {
@@ -346,6 +355,8 @@ export interface Thread {
   line: number;
   side: LineSide;
   preExisting: boolean;
+  /** Phase 06.1 D-16: 'llm' for walkthrough/self-review threads, 'user' for gutter-initiated. Optional for backward compat. */
+  initiator?: 'llm' | 'user';
   turns: ThreadTurn[];
   /** SECURITY: render via React text nodes, NEVER innerHTML. */
   draftBody?: string;
@@ -373,4 +384,21 @@ export interface PendingReview {
   reviewId: number;
   createdAt: string;
   commentCount: number;
+}
+
+// -------------------------------------------------------------------------
+// Phase 06.1 additions — Bidirectional LLM Collaboration + Auto-Generation
+// D-20: 5 new SessionEvent variants (chat.userMessage, chat.llmMessage,
+//       thread.userStarted, request.queued, request.processing).
+// D-21: ReviewSession gains chatMessages and requestQueue optional fields.
+// D-16: Thread gains optional initiator field (supersedes Phase 5 D-08).
+// -------------------------------------------------------------------------
+
+export type ChatMessageAuthor = 'user' | 'llm';
+
+export interface ChatMessage {
+  author: ChatMessageAuthor;
+  /** SECURITY: render via React text nodes, NEVER innerHTML. LLM-authored. */
+  message: string;
+  timestamp: string;  // ISO string
 }
