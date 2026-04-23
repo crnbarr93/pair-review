@@ -62,6 +62,7 @@ function escapeHtml(s: string): string {
 const HEX_COLOR = /^#[0-9a-fA-F]{3,8}$/;
 
 function darkenIfTooLight(hex: string): string {
+  if (hex.length !== 7) return hex; // only handle #RRGGBB (6-digit hex)
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
