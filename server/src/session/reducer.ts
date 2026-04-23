@@ -1,4 +1,4 @@
-import type { ReviewSession, SessionEvent } from '@shared/types';
+import type { ReviewSession, SessionEvent, Thread } from '@shared/types';
 
 /**
  * Phase 2 reducer. Pure function — no I/O, no async, no timestamp reads on the critical path.
@@ -137,6 +137,54 @@ export function applyEvent(s: ReviewSession, e: SessionEvent): ReviewSession {
       };
     case 'pendingReview.resolved':
       return { ...s, pendingReview: undefined };
+    // Phase 06.1 additions (D-20) — chat, user-initiated threads, request queue:
+    case 'chat.userMessage':
+      return {
+        ...s,
+        chatMessages: [
+          ...(s.chatMessages ?? []),
+          { author: 'user' as const, message: e.message, timestamp: e.timestamp },
+        ],
+      };
+    case 'chat.llmMessage':
+      return {
+        ...s,
+        chatMessages: [
+          ...(s.chatMessages ?? []),
+          { author: 'llm' as const, message: e.message, timestamp: e.timestamp },
+        ],
+      };
+    case 'thread.userStarted': {
+      const newThread: Thread = {
+        threadId: e.threadId,
+        lineId: e.lineId,
+        path: e.path,
+        line: e.line,
+        side: e.side,
+        preExisting: false,
+        initiator: 'user' as const,
+        turns: [{ author: 'user' as const, message: e.message, createdAt: e.timestamp }],
+        // D-14: non-@claude comments auto-populate draft body for GitHub review submission.
+        // @claude-tagged threads need LLM synthesis via draft_comment — leave draftBody undefined.
+        draftBody: e.isClaudeTagged ? undefined : e.message,
+        resolved: false,
+        createdAt: e.timestamp,
+      };
+      return {
+        ...s,
+        threads: { ...(s.threads ?? {}), [e.threadId]: newThread },
+      };
+    }
+    case 'request.queued':
+      return {
+        ...s,
+        requestQueue: { pending: (s.requestQueue?.pending ?? 0) + 1 },
+      };
+    case 'request.processing':
+      return {
+        ...s,
+        requestQueue: { pending: Math.max(0, (s.requestQueue?.pending ?? 0) - 1) },
+      };
     default: {
       // Exhaustiveness guard — adding an event variant without handling it is a compile error.
       const _never: never = e;
