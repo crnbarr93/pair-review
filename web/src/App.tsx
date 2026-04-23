@@ -203,6 +203,31 @@ export default function App() {
     [prKey, state.walkthrough, diff, showToast]
   );
 
+  const handleWalkthroughStepComplete = useCallback(
+    (index: number) => {
+      if (!prKey || !state.walkthrough) return;
+      const step = state.walkthrough.steps[index];
+      if (!step || step.status === 'visited') return;
+      postSessionEvent(prKey, {
+        type: 'walkthrough.stepAdvanced',
+        cursor: index + 1,
+      }).catch(() => showToast('Could not complete step. Retry.'));
+    },
+    [prKey, state.walkthrough, showToast]
+  );
+
+  const handleWalkthroughStepToggle = useCallback(
+    (index: number, status: 'visited' | 'pending') => {
+      if (!prKey || !state.walkthrough) return;
+      postSessionEvent(prKey, {
+        type: 'walkthrough.stepToggled',
+        index,
+        status,
+      }).catch(() => showToast('Could not toggle step. Retry.'));
+    },
+    [prKey, state.walkthrough, showToast]
+  );
+
   const handleShowAllToggle = useCallback(
     (showAll: boolean) => {
       if (!prKey) return;
@@ -245,12 +270,11 @@ export default function App() {
 
   const handleNextStep = useCallback(() => {
     if (!prKey || !state.walkthrough) return;
-    const nextCursor = Math.min(state.walkthrough.cursor + 1, state.walkthrough.steps.length - 1);
+    const nextCursor = state.walkthrough.cursor + 1;
     postSessionEvent(prKey, {
       type: 'walkthrough.stepAdvanced',
       cursor: nextCursor,
     }).catch(() => showToast('Could not advance step. Retry.'));
-    // Scroll to next step
     const nextStep = state.walkthrough.steps[nextCursor];
     if (nextStep) {
       setTimeout(() => {
@@ -297,7 +321,11 @@ export default function App() {
       switch (e.key) {
         case 'n':
           e.preventDefault();
-          advanceHunk(+1);
+          if (state.walkthrough && !state.walkthrough.showAll) {
+            handleNextStep();
+          } else {
+            advanceHunk(+1);
+          }
           break;
         case 'p':
           e.preventDefault();
@@ -339,7 +367,7 @@ export default function App() {
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [advanceHunk, markCurrentFileReviewed, showToast, focusedHunkId, state.threads, state.submissionState]);
+  }, [advanceHunk, markCurrentFileReviewed, showToast, focusedHunkId, state.threads, state.submissionState, state.walkthrough, handleNextStep]);
 
   // IntersectionObserver for auto-in-progress (D-11).
   // 50% visibility threshold + 500ms debounce. Fires once per file per viewport entry.
@@ -505,6 +533,8 @@ export default function App() {
                 <WalkthroughStepList
                   walkthrough={state.walkthrough}
                   onStepClick={handleWalkthroughStepClick}
+                  onStepComplete={handleWalkthroughStepComplete}
+                  onStepToggle={handleWalkthroughStepToggle}
                   onShowAllToggle={handleShowAllToggle}
                 />
                 <div className="rp-conversation">

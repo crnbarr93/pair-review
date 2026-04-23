@@ -126,6 +126,7 @@ export type SessionEvent =
   // Phase 5 additions (D-18):
   | { type: 'walkthrough.set'; walkthrough: Walkthrough }
   | { type: 'walkthrough.stepAdvanced'; cursor: number; skippedIndex?: number }
+  | { type: 'walkthrough.stepToggled'; index: number; status: 'visited' | 'pending' }
   | { type: 'walkthrough.showAllToggled'; showAll: boolean }
   | { type: 'thread.replyAdded'; threadId: string; thread: Thread }
   | { type: 'thread.draftSet'; threadId: string; body: string }

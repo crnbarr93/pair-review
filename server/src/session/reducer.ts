@@ -70,6 +70,18 @@ export function applyEvent(s: ReviewSession, e: SessionEvent): ReviewSession {
             }
           : s.walkthrough,
       };
+    case 'walkthrough.stepToggled':
+      return {
+        ...s,
+        walkthrough: s.walkthrough
+          ? {
+              ...s.walkthrough,
+              steps: s.walkthrough.steps.map((step, i) =>
+                i === e.index ? { ...step, status: e.status } : step
+              ),
+            }
+          : s.walkthrough,
+      };
     case 'walkthrough.showAllToggled':
       return {
         ...s,

@@ -9,6 +9,12 @@ const VERDICT_WORDS: Record<Verdict, string> = {
   comment: 'comment',
 };
 
+const VERDICT_SUBMIT_LABELS: Record<Verdict, string> = {
+  approve: 'Approve & submit',
+  request_changes: 'Request changes & submit',
+  comment: 'Comment & submit',
+};
+
 /**
  * Phase 6 submit modal.
  *
@@ -16,8 +22,8 @@ const VERDICT_WORDS: Record<Verdict, string> = {
  * Not dismissible via Escape or backdrop click when walkthrough is incomplete (D-03 gate).
  *
  * Flow:
- * 1. LLM calls submit_review → server fires submission.proposed → submitModalOpen becomes true
- * 2. User edits verdict/body, clicks "Post review" → confirmSubmit POST → submission.completed
+ * 1. LLM calls submit_review -> server fires submission.proposed -> submitModalOpen becomes true
+ * 2. User edits verdict/body, clicks "Post review" -> confirmSubmit POST -> submission.completed
  * 3. Modal closes automatically when submission.completed event arrives
  */
 export function SubmitModal() {
@@ -44,17 +50,16 @@ export function SubmitModal() {
     }
   }, [state.pendingSubmission]);
 
-  // Focus first verdict card when modal opens
   useEffect(() => {
     if (state.submitModalOpen) {
-      firstCardRef.current?.focus();
+      // no-op: don't autofocus any element
     }
   }, [state.submitModalOpen]);
 
-  // Escape to close only when walkthrough is complete
+  // Escape always closes the modal (D-03 gate only blocks submitting, not dismissing)
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && walkthroughComplete) {
+      if (e.key === 'Escape') {
         actions.setSubmitModalOpen(false);
       }
     }
@@ -95,9 +100,15 @@ export function SubmitModal() {
     (t) => t.draftBody && !t.resolved
   );
 
+  // --- Thread counts by resolution ---
+  const allThreads = Object.values(state.threads);
+  const openThreadCount = allThreads.filter((t) => !t.resolved).length;
+  const resolvedThreadCount = allThreads.filter((t) => t.resolved).length;
+
   // --- Helpers ---
   const isLocalMode = state.prKey?.startsWith('local:');
   const isSubmitted = state.submissionState?.status === 'submitted';
+  const prNumber = state.pr?.number;
 
   async function handleSubmit() {
     if (!canSubmit || pending) return;
@@ -113,11 +124,17 @@ export function SubmitModal() {
   }
 
   function getSubmitLabel() {
-    if (pending) return 'Posting review…';
+    if (pending) return 'Posting review...';
     if (error) return 'Try again';
     if (isLocalMode) return 'Export to file';
     if (isNitHeavy && walkthroughComplete) return 'Post anyway';
-    return 'Post review';
+    return VERDICT_SUBMIT_LABELS[verdict];
+  }
+
+  function getSubmitColorClass() {
+    if (verdict === 'approve') return 'sm-btn--approve';
+    if (verdict === 'request_changes') return 'sm-btn--request';
+    return 'sm-btn--comment';
   }
 
   return (
@@ -129,148 +146,212 @@ export function SubmitModal() {
     >
       <div className="submit-modal-card">
         {/* Header */}
-        <div className="submit-modal-header">
-          <h2 id="submit-modal-title">Post review</h2>
-          {walkthroughComplete && (
-            <button
-              type="button"
-              aria-label="Close submit modal"
-              style={{ padding: '4px 8px', borderRadius: '4px', color: 'var(--ink-4)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}
-              onClick={() => actions.setSubmitModalOpen(false)}
-            >
-              ×
-            </button>
-          )}
+        <div className="sm-header">
+          <div className="sm-header-text">
+            <span className="sm-header-label">REVIEW COMPLETE</span>
+            <h2 id="submit-modal-title" className="sm-header-title">
+              Submit review{prNumber ? ` for #${prNumber}` : ''}
+            </h2>
+          </div>
+          <button
+            type="button"
+            className="sm-close-btn"
+            aria-label="Close submit modal"
+            onClick={() => actions.setSubmitModalOpen(false)}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
         </div>
 
-        {/* Stats strip */}
+        {/* Stats row */}
         <div
-          className={`submit-modal-stats${isNitHeavy ? ' submit-modal-stats--warn' : ''}`}
+          className={`sm-stats-row${isNitHeavy ? ' sm-stats-row--warn' : ''}`}
           role={isNitHeavy ? 'alert' : undefined}
         >
-          <span className="stat-pill">{counts.blocker} blocker</span>
-          <span className="stat-pill">{counts.major} major</span>
-          <span className="stat-pill">{counts.minor} minor</span>
-          <span className={`stat-pill${isNitHeavy ? ' nit-heavy' : ''}`}>{counts.nit} nit</span>
           {totalSteps > 0 && (
-            <span className="stat-pill">Walkthrough: {visited}/{totalSteps} steps</span>
+            <div className="sm-stat-box">
+              <span className="sm-stat-value">{visited}/{totalSteps}</span>
+              <span className="sm-stat-label">STAGES</span>
+            </div>
           )}
+          <div className="sm-stat-box">
+            <span className="sm-stat-value sm-stat-value--blocker">{counts.blocker}</span>
+            <span className="sm-stat-label">BLOCKERS</span>
+          </div>
+          <div className="sm-stat-box">
+            <span className="sm-stat-value sm-stat-value--warn">{counts.major}</span>
+            <span className="sm-stat-label">WARNINGS</span>
+          </div>
+          <div className="sm-stat-box">
+            <span className="sm-stat-value">{openThreadCount}</span>
+            <span className="sm-stat-label">OPEN</span>
+          </div>
+          <div className="sm-stat-box">
+            <span className="sm-stat-value sm-stat-value--ok">{resolvedThreadCount}</span>
+            <span className="sm-stat-label">RESOLVED</span>
+          </div>
           {isNitHeavy && (
-            <span className="warn-label">Nit-heavy review — consider consolidating minor feedback</span>
+            <div className="sm-nit-warn">
+              Nit-heavy review -- consider consolidating minor feedback
+            </div>
           )}
         </div>
 
         {/* Submitted success state */}
         {isSubmitted ? (
-          <div style={{ padding: '24px 16px', textAlign: 'center' }}>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ok)', marginBottom: '8px' }}>
-              Review posted
+          <div className="sm-submitted">
+            <div className="sm-submitted-icon">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="16" fill="var(--ok-bg)" />
+                <path d="M10 16L14.5 20.5L22 11" stroke="var(--ok)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
+            <div className="sm-submitted-title">Review posted</div>
             {state.submissionState?.url && (
               <a
                 href={state.submissionState.url}
                 target="_blank"
                 rel="noreferrer"
-                style={{ fontSize: '13px', color: 'var(--claude)' }}
+                className="sm-submitted-link"
               >
-                View on GitHub ↗
+                View on GitHub
               </a>
             )}
-            <div style={{ marginTop: '16px' }}>
-              <button
-                type="button"
-                className="btn-sm"
-                onClick={() => actions.setSubmitModalOpen(false)}
-              >
-                Close
-              </button>
-            </div>
+            <button
+              type="button"
+              className="btn-sm"
+              style={{ marginTop: '16px' }}
+              onClick={() => actions.setSubmitModalOpen(false)}
+            >
+              Close
+            </button>
           </div>
         ) : (
           <>
             {/* Verdict cards */}
-            <div className="submit-modal-verdicts">
-              <div className="section-label">Verdict</div>
-              <div role="radiogroup" aria-label="Verdict">
+            <div className="sm-section">
+              <div className="sm-section-label">YOUR VERDICT</div>
+              <div className="sm-verdict-row" role="radiogroup" aria-label="Verdict">
                 <div
                   ref={firstCardRef}
                   tabIndex={0}
                   role="radio"
                   aria-checked={verdict === 'approve'}
-                  className={`verdict-card verdict-card--approve${verdict === 'approve' ? ' verdict-card--selected' : ''}`}
+                  className={`sm-verdict-card sm-verdict-card--approve${verdict === 'approve' ? ' sm-verdict-card--selected' : ''}`}
                   onClick={() => setVerdict('approve')}
                   onKeyDown={(e) => e.key === 'Enter' || e.key === ' ' ? setVerdict('approve') : undefined}
                 >
-                  <div className="verdict-radio" />
-                  <span className="verdict-label">Approve</span>
+                  <div className="sm-verdict-icon sm-verdict-icon--approve">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M3 8L6.5 11.5L13 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <div className="sm-verdict-text">
+                    <div className="sm-verdict-title">Approve</div>
+                    <div className="sm-verdict-sub">Looks good to merge</div>
+                  </div>
                 </div>
                 <div
                   tabIndex={0}
                   role="radio"
                   aria-checked={verdict === 'request_changes'}
-                  className={`verdict-card verdict-card--request${verdict === 'request_changes' ? ' verdict-card--selected' : ''}`}
+                  className={`sm-verdict-card sm-verdict-card--request${verdict === 'request_changes' ? ' sm-verdict-card--selected' : ''}`}
                   onClick={() => setVerdict('request_changes')}
                   onKeyDown={(e) => e.key === 'Enter' || e.key === ' ' ? setVerdict('request_changes') : undefined}
                 >
-                  <div className="verdict-radio" />
-                  <span className="verdict-label">Request changes</span>
-                  {counts.blocker > 0 && (
-                    <span className="verdict-badge">{counts.blocker} blocker{counts.blocker !== 1 ? 's' : ''}</span>
-                  )}
+                  <div className="sm-verdict-icon sm-verdict-icon--request">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M8 3V9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      <circle cx="8" cy="12" r="1.2" fill="currentColor" />
+                    </svg>
+                  </div>
+                  <div className="sm-verdict-text">
+                    <div className="sm-verdict-title">
+                      Request changes
+                      {counts.blocker > 0 && (
+                        <span className="sm-verdict-badge sm-verdict-badge--blocker">
+                          {counts.blocker} blocker{counts.blocker !== 1 ? 's' : ''}
+                        </span>
+                      )}
+                    </div>
+                    <div className="sm-verdict-sub">Needs work before merge</div>
+                  </div>
                 </div>
                 <div
                   tabIndex={0}
                   role="radio"
                   aria-checked={verdict === 'comment'}
-                  className={`verdict-card verdict-card--comment${verdict === 'comment' ? ' verdict-card--selected' : ''}`}
+                  className={`sm-verdict-card sm-verdict-card--comment${verdict === 'comment' ? ' sm-verdict-card--selected' : ''}`}
                   onClick={() => setVerdict('comment')}
                   onKeyDown={(e) => e.key === 'Enter' || e.key === ' ' ? setVerdict('comment') : undefined}
                 >
-                  <div className="verdict-radio" />
-                  <span className="verdict-label">Comment only</span>
+                  <div className="sm-verdict-icon sm-verdict-icon--comment">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.5" />
+                    </svg>
+                  </div>
+                  <div className="sm-verdict-text">
+                    <div className="sm-verdict-title">Comment only</div>
+                    <div className="sm-verdict-sub">Thoughts without approval</div>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Review body textarea */}
-            <div className="submit-modal-body">
-              <div className="section-label">Review summary</div>
+            <div className="sm-section">
+              <div className="sm-section-label">REVIEW SUMMARY</div>
               <textarea
+                className="sm-textarea"
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 aria-label="Review summary"
+                placeholder="Write your review summary..."
               />
+              <div className="sm-textarea-meta">
+                <span>Markdown supported &middot; {body.length} chars</span>
+              </div>
             </div>
 
             {/* Threads list */}
-            <div className="submit-modal-threads">
-              <div className="section-label">Inline comments ({postableThreads.length})</div>
+            <div className="sm-section sm-threads-section">
+              <div className="sm-section-label">
+                THREADS TO POST ({postableThreads.length})
+              </div>
               {postableThreads.length === 0 ? (
-                <div className="empty-state">
-                  No inline comments drafted — the review will post summary only.
+                <div className="sm-empty-threads">
+                  No inline comments drafted -- the review will post summary only.
                 </div>
               ) : (
-                postableThreads.map((t) => {
-                  // Find severity from self-review findings if available
-                  const finding = findings.find((f) => f.lineId === t.lineId);
-                  const sev = finding?.severity;
-                  const firstLine = (t.draftBody ?? '').split('\n')[0];
-                  return (
-                    <div key={t.threadId} className="thread-row-summary">
-                      {sev && (
-                        <span className={`severity-pill severity-pill--${sev}`}>{sev}</span>
-                      )}
-                      <span className="thread-path">{t.path}:{t.line}</span>
-                      <span className="thread-body-preview">{firstLine}</span>
-                    </div>
-                  );
-                })
+                <div className="sm-thread-list">
+                  {postableThreads.map((t) => {
+                    const finding = findings.find((f) => f.lineId === t.lineId);
+                    const sev = finding?.severity;
+                    const firstLine = (t.draftBody ?? '').split('\n')[0];
+                    return (
+                      <div key={t.threadId} className="sm-thread-row">
+                        <div className={`sm-thread-dot${sev ? ` sm-thread-dot--${sev}` : ''}`} />
+                        <div className="sm-thread-info">
+                          <div className="sm-thread-preview">{firstLine}</div>
+                          <div className="sm-thread-path">{t.path}:{t.line}</div>
+                        </div>
+                        {sev && (
+                          <span className={`sm-thread-sev sm-thread-sev--${sev}`}>
+                            {sev.toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
 
             {/* Incomplete walkthrough warning + retype gate (D-03) */}
             {!walkthroughComplete && (
-              <div className="submit-modal-warn">
+              <div className="sm-warn-strip">
                 <span>
                   Walkthrough incomplete ({visited}/{totalSteps} steps visited). Type your verdict to confirm early submit:
                 </span>
@@ -287,32 +368,39 @@ export function SubmitModal() {
 
             {/* Error display */}
             {error && (
-              <div style={{ padding: '8px 16px', color: 'var(--block)', fontSize: '12px', borderTop: '1px solid var(--line)' }}>
-                Post failed — {error}. Check your network and try again.
+              <div className="sm-error">
+                Post failed -- {error}. Check your network and try again.
               </div>
             )}
 
             {/* Footer */}
-            <div className="submit-modal-footer">
-              {walkthroughComplete && (
+            <div className="sm-footer">
+              <div className="sm-footer-credit">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
+                  <rect width="14" height="14" rx="4" fill="var(--ink-4)" fillOpacity="0.15" />
+                  <text x="7" y="10.5" textAnchor="middle" fontSize="8" fontWeight="600" fontFamily="var(--mono)" fill="var(--ink-4)">C</text>
+                </svg>
+                <span>Co-reviewed with Claude</span>
+              </div>
+              <div className="sm-footer-actions">
                 <button
                   type="button"
-                  className="btn-sm"
+                  className="sm-btn-cancel"
                   onClick={() => actions.setSubmitModalOpen(false)}
                   disabled={pending}
                 >
                   Cancel
                 </button>
-              )}
-              <button
-                type="button"
-                className="btn-sm primary"
-                onClick={handleSubmit}
-                aria-disabled={!canSubmit}
-                style={!canSubmit ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
-              >
-                {getSubmitLabel()}
-              </button>
+                <button
+                  type="button"
+                  className={`sm-btn-submit ${getSubmitColorClass()}`}
+                  onClick={handleSubmit}
+                  aria-disabled={!canSubmit}
+                  style={!canSubmit ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+                >
+                  {getSubmitLabel()}
+                </button>
+              </div>
             </div>
           </>
         )}

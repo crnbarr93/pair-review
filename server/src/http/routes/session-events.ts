@@ -41,6 +41,14 @@ const stepAdvancedSchema = z
   })
   .strict();
 
+const stepToggledSchema = z
+  .object({
+    type: z.literal('walkthrough.stepToggled'),
+    index: z.number().int().min(0),
+    status: z.enum(['visited', 'pending']),
+  })
+  .strict();
+
 const showAllToggledSchema = z
   .object({
     type: z.literal('walkthrough.showAllToggled'),
@@ -63,6 +71,7 @@ const userEventSchema = z.discriminatedUnion('type', [
   reviewStatusSchema,
   expandToggleSchema,
   stepAdvancedSchema,
+  stepToggledSchema,
   showAllToggledSchema,
   pendingReviewResolvedSchema,
 ]);
