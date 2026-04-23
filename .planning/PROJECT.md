@@ -18,20 +18,21 @@ A Claude Code plugin that pairs the user with an LLM to review pull requests thr
 - [x] LLM generates a PR summary (intent, key changes, risk areas) visible in the GUI (Phase 4: set_pr_summary MCP tool + SummaryDrawer with intent chip, paraphrase, key changes)
 - [x] LLM self-review runs against a criticality-ranked checklist with code references linking back to diff locations (Phase 4: run_self_review MCP tool + FindingsSidebar with click-to-scroll, lineId resolution to path/line/side)
 - [x] Built-in default checklist ships with the plugin (correctness, security, tests, performance, style) (Phase 4: 24-item checklist across 5 categories, criticality-ranked 1-3)
+- [x] Claude Code plugin launches a local web GUI for a given PR (Phase 1: /pair-review slash command, MCP+HTTP single-process, default browser auto-launch)
+- [x] Plugin exposes MCP tools that let the LLM drive the web UI (Phases 4-6: 10 tools total — start_review, list_files, get_hunk, set_pr_summary, run_self_review, set_walkthrough, draft_comment, reply_in_thread, resolve_thread, submit_review)
+- [x] Step-by-step walkthrough orders changes as an LLM-chosen narrative over curated "core changes" (Phase 5: set_walkthrough MCP tool + WalkthroughStepList with reorder affordance)
+- [x] "Show all" escape in the walkthrough expands beyond curated core to walk the remaining hunks (Phase 5: Curated/All hunks toggle, filter-not-reset preserves progress)
+- [x] Inline conversational comments anchored to file+line, supporting a GitHub-style threaded dialogue between user and LLM during the walkthrough (Phase 5: draft_comment + reply_in_thread + resolve_thread, opaque server-resolved IDs)
+- [x] Final "Post review" action submits a full GitHub review (verdict + body + inline comments) in a single API call (Phase 6: submit_review MCP tool → confirm-submit HTTP endpoint → Octokit pulls.createReview)
+- [x] GitHub PR ingestion (fetch diff, metadata, existing comments) via `gh` CLI and/or Octokit (Phase 1/3: gh pr diff + gh pr view + existing-comments fetch)
+- [x] Local branch diff mode — diff between two refs with no host integration, review output stays local (Phase 1: git diff ingest; Phase 6: markdown export on submit)
+- [x] Per-PR review state persists on disk so closing the browser and reopening resumes the walkthrough, drafted comments, and checklist progress (Phase 2: event-sourced reducer + atomic JSON persistence + stale-diff detection)
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] Claude Code plugin launches a local web GUI for a given PR (GitHub URL or local branch diff)
-- [ ] Plugin exposes MCP tools that let the LLM drive the web UI (navigate hunks, run self-review, post comments, submit review)
-- [ ] Step-by-step walkthrough orders changes as an LLM-chosen narrative over curated "core changes"
-- [ ] "Show all" escape in the walkthrough expands beyond curated core to walk the remaining hunks
-- [ ] Inline conversational comments anchored to file+line, supporting a GitHub-style threaded dialogue between user and LLM during the walkthrough
-- [ ] Final "Post review" action submits a full GitHub review (verdict: Approve / Request changes / Comment) with summary body and all inline comments in a single API call
-- [ ] GitHub PR ingestion (fetch diff, metadata, existing comments) via `gh` CLI and/or Octokit
-- [ ] Local branch diff mode — diff between two refs with no host integration, review output stays local
-- [ ] Per-PR review state persists on disk so closing the browser and reopening resumes the walkthrough, drafted comments, and checklist progress
+(All v1 functional requirements validated. Phase 7 addresses polish and concurrency.)
 
 ### Out of Scope
 
@@ -86,6 +87,11 @@ A Claude Code plugin that pairs the user with an LLM to review pull requests thr
 | **D-12 (Phase 4)** FindingsSidebar auto-opens on first selfReview.set | Immediate visibility of findings without requiring user action; stays open on regenerate. | Resolved (Phase 4) |
 | **D-16 (Phase 4)** Generated-file filtering at list_files level only | get_hunk does NOT filter generated files — LLM may still inspect them if it knows the fileId. Enumeration-level filter is sufficient to steer LLM attention. | Resolved (Phase 4) |
 | **Nit cap (Phase 4)** Zod `.refine()` not propagated by MCP SDK — handler-side validation | MCP SDK constructs its own validator from `Input.shape` and drops `.refine()` refinements. Nit cap (≤3) enforced in handler with `isError: true` response. | Resolved (Phase 4) |
+| **D-09 (Phase 6)** Anchor adapter: line+side only, never position | Octokit `position` field is deprecated and unreliable (Pitfall A/F). BOTH side maps to RIGHT (context lines anchor on post-image). | Resolved (Phase 6) |
+| **D-05 (Phase 6)** Two-step submit: LLM proposes → user confirms in browser | submit_review MCP tool applies `submission.proposed`; actual Octokit call happens in `/api/confirm-submit` after user clicks. Prevents accidental submissions. | Resolved (Phase 6) |
+| **D-10 (Phase 6)** submissionId embedded as HTML comment for idempotency | `<!-- submission_id: abc123 -->` in review body enables duplicate detection. Server returns 409 on re-submit. | Resolved (Phase 6) |
+| **D-08 (Phase 6)** Pending-review detection at session start (fail-open) | Paginated listing filters by PENDING+authenticated login. Detection failure logs warn, never blocks session. | Resolved (Phase 6) |
+| **D-03 (Phase 6)** Retype gate for incomplete-walkthrough submissions | When walkthrough is not 8/8, user must type exact verdict word to confirm early submission. Prevents accidental premature reviews. | Resolved (Phase 6) |
 
 ## Evolution
 
@@ -105,4 +111,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-21 after Phase 4 completion (LLM summary + self-review + checklist + eval harness shipped; 3 requirements moved to Validated)*
+*Last updated: 2026-04-23 after Phase 6 completion (review submission + verdict UI shipped; all v1 functional requirements validated; Phase 7 is polish only)*

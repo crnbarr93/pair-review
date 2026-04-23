@@ -2,41 +2,41 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 6 UI-SPEC approved
-last_updated: "2026-04-22T13:48:26.283Z"
-last_activity: 2026-04-22 -- Phase --phase execution started
+status: ready_to_plan
+stopped_at: Phase 6 complete, ready to plan Phase 7
+last_updated: "2026-04-23T09:00:00.000Z"
+last_activity: 2026-04-23 -- Phase 06 completed, transitioned to Phase 7
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 35
   completed_plans: 31
-  percent: 89
+  percent: 86
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-21)
+See: .planning/PROJECT.md (updated 2026-04-23)
 
 **Core value:** A pair-review workflow that produces a posted GitHub review of real reviewer quality, faster and with better coverage than reviewing alone or chatting with an LLM in a generic UI.
-**Current focus:** Phase --phase — 06
+**Current focus:** Phase 7 — Polish + Concurrency
 
 ## Current Position
 
-Phase: --phase (06) — EXECUTING
-Plan: 1 of --name
-Status: Executing Phase --phase
-Last activity: 2026-04-22 -- Phase --phase execution started
+Phase: 7
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-04-23
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [####################] 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 31
+- Total plans completed: 35
 - Average duration: —
 - Total execution time: —
 
@@ -50,6 +50,7 @@ Progress: [░░░░░░░░░░] 0%
 | 03 | 6 | - | - |
 | 04 | 8 | - | - |
 | 05 | 6 | - | - |
+| 06 | 4 | - | - |
 
 **Recent Trend:**
 
@@ -104,8 +105,8 @@ None yet.
 
 ### Blockers/Concerns
 
-- **Pitfall 1** (GitHub `position` vs `line`/`side` confusion) — addressed in Phase 6, but the internal `Anchor` type should be designed with `line`+`side` from the start of Phase 5.
-- **Pitfall 2** (LLM hallucinated line numbers) — Phase 4 proved the opaque-ID + server-side resolution pattern (lineId regex gate + resolveLineId). Phase 5 must extend this to draft_comment/reply_in_thread — never expose freeform path/line strings in MCP tool schemas.
+- **Pitfall 1** (GitHub `position` vs `line`/`side` confusion) — RESOLVED in Phase 6: anchor adapter uses line+side only (D-09), position always undefined.
+- **Pitfall 2** (LLM hallucinated line numbers) — RESOLVED in Phase 5: opaque-ID pattern extended to draft_comment/reply_in_thread/resolve_thread. All MCP tools use server-resolved IDs.
 
 ## Deferred Items
 
@@ -121,8 +122,6 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: --stopped-at
-Stopped at: Phase 6 UI-SPEC approved
-Resume file: --resume-file
-
-**Planned Phase:** 06 (review-submission-verdict-ui) — 4 plans — 2026-04-22T13:47:34.039Z
+Last session: 2026-04-23
+Stopped at: Phase 6 complete, ready to plan Phase 7
+Resume file: None
