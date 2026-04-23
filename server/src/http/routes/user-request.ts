@@ -32,11 +32,18 @@ export function mountUserRequest(
     const session = manager.get(prKey);
     if (!session) return c.text('Unknown session', 404);
 
-    // chat type: fire chat.userMessage immediately for instant UI feedback
-    if (type === 'chat' && payload?.message) {
+    // chat type: validate message, fire chat.userMessage immediately for instant UI feedback
+    if (type === 'chat') {
+      const message = payload?.message;
+      if (typeof message !== 'string' || message.trim().length === 0) {
+        return c.text('Chat message must be a non-empty string', 400);
+      }
+      if (message.length > 8000) {
+        return c.text('Chat message too long (max 8000 chars)', 400);
+      }
       await manager.applyEvent(prKey, {
         type: 'chat.userMessage',
-        message: payload.message as string,
+        message,
         timestamp: new Date().toISOString(),
       });
     }
@@ -67,10 +74,20 @@ export function mountUserRequest(
 
       if (isClaudeTagged) {
         // @claude tagged — forward to LLM via the queue
-        queueManager.getQueue(prKey).enqueue({
+        const queue = queueManager.getQueue(prKey);
+        const pending = queue.pendingCount;
+        if (pending > 0) {
+          await manager.applyEvent(prKey, {
+            type: 'request.queued',
+            requestType: 'inline_comment',
+            position: pending,
+          });
+        }
+        queue.enqueue({
           type: 'inline_comment',
           payload: { lineId, message, threadId, isClaudeTagged },
         });
+        return c.json({ ok: true, queued: queue.pendingCount > 0 });
       }
       // Non-@claude: thread created above is sufficient — no queue needed
       return c.json({ ok: true, queued: false });
