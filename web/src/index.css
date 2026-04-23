@@ -1303,6 +1303,8 @@ button {
   border-bottom: 1px solid var(--line);
   padding: 24px 16px 16px;
   min-height: 180px;
+  max-height: 50vh;
+  overflow-y: auto;
 }
 .intent-chip {
   display: inline-block;
