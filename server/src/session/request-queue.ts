@@ -53,9 +53,11 @@ export class SessionRequestQueue {
     return new Promise((resolve) => {
       this.resolver = resolve;
       this.timeout = setTimeout(() => {
-        this.resolver = null;
-        this.timeout = null;
-        resolve(null);  // null → tool handler returns { type: 'no_request' }
+        if (this.resolver === resolve) {
+          this.resolver = null;
+          this.timeout = null;
+          resolve(null);  // null → tool handler returns { type: 'no_request' }
+        }
       }, ms);
     });
   }
