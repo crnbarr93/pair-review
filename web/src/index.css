@@ -231,7 +231,7 @@ button {
   min-height: 0;
 }
 .main--panel-open {
-  grid-template-columns: 240px 1fr 340px;
+  grid-template-columns: 240px 1fr 320px;
 }
 .main > * {
   min-height: 0;
