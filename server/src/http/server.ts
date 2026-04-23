@@ -9,8 +9,10 @@ import { mountSessionEvents } from './routes/session-events.js';
 import { mountEvents } from './routes/events.js';
 import { mountStatic } from './routes/static.js';
 import { mountConfirmSubmit } from './routes/confirm-submit.js';
+import { mountUserRequest } from './routes/user-request.js';
+import type { RequestQueueManager } from '../session/request-queue.js';
 
-export function buildHttpApp(manager: SessionManager): Hono {
+export function buildHttpApp(manager: SessionManager, queueManager: RequestQueueManager): Hono {
   const app = new Hono();
   // 1. Host allowlist FIRST — defeats DNS rebinding before any routing (T-01-01)
   app.use('*', hostValidate(manager));
@@ -24,6 +26,7 @@ export function buildHttpApp(manager: SessionManager): Hono {
   mountSessionEvents(app, manager);
   mountEvents(app, manager);
   mountConfirmSubmit(app, manager);
+  mountUserRequest(app, manager, queueManager);
   mountStatic(app, manager);
   return app;
 }

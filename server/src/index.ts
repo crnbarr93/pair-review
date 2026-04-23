@@ -3,6 +3,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import path from 'node:path';
 import { serve } from '@hono/node-server';
 import { SessionManager } from './session/manager.js';
+import { RequestQueueManager } from './session/request-queue.js';
 import { buildHttpApp } from './http/server.js';
 import { startMcp } from './mcp/server.js';
 import { logger } from './logger.js';
@@ -27,8 +28,9 @@ function spawnViteDev(apiPort: number): ChildProcess {
 async function main() {
   const sessionToken = crypto.randomBytes(32).toString('base64url');
   const manager = new SessionManager({ sessionToken });
+  const queueManager = new RequestQueueManager();
 
-  const app = buildHttpApp(manager);
+  const app = buildHttpApp(manager, queueManager);
   let viteChild: ChildProcess | null = null;
 
   const httpServer = serve(
@@ -50,7 +52,7 @@ async function main() {
     }
   );
 
-  await startMcp(manager);
+  await startMcp(manager, queueManager);
   logger.info('MCP server ready on stdio');
 
   const shutdown = (signal: string) => {
