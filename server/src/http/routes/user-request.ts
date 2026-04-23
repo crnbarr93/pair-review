@@ -15,7 +15,7 @@ const bodySchema = z
       'regenerate_summary',
       'regenerate_walkthrough',
     ]),
-    payload: z.record(z.unknown()).optional(),
+    payload: z.record(z.string(), z.unknown()).optional(),
   })
   .strict();
 
