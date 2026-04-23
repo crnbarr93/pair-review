@@ -72,6 +72,18 @@ export async function bootstrap(): Promise<void> {
         actions.onSelfReviewSet(msg);
       } else if (msg.event?.type === 'summary.set') {
         actions.onSummarySet(msg);
+      } else if (msg.event?.type === 'submission.proposed') {
+        actions.onSubmissionProposed(msg);
+      } else if (msg.event?.type === 'submission.confirmed') {
+        actions.onSubmissionConfirmed(msg);
+      } else if (msg.event?.type === 'submission.completed') {
+        actions.onSubmissionCompleted(msg);
+      } else if (msg.event?.type === 'submission.failed') {
+        actions.onSubmissionFailed(msg);
+      } else if (msg.event?.type === 'pendingReview.detected') {
+        actions.onPendingReviewDetected(msg);
+      } else if (msg.event?.type === 'pendingReview.resolved') {
+        actions.onPendingReviewResolved();
       } else {
         actions.onUpdate(msg);
       }
