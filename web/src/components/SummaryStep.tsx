@@ -59,7 +59,7 @@ export function SummaryStep({ summary, authorDescription, pr, prKey }: SummarySt
             className={`summary-toggle-btn${activeTab === 'author' ? ' active' : ''}`}
             onClick={() => setActiveTab('author')}
           >
-            <span className="toggle-avatar">m</span>
+            <span className="toggle-avatar">{(pr?.author ?? 'U')[0].toUpperCase()}</span>
             Author&apos;s description
             <span className="toggle-badge toggle-badge--original">original</span>
           </button>
