@@ -86,8 +86,8 @@ button {
 .app {
   height: 100vh;
   display: grid;
-  /* Phase 4: TopBar (44px) + StageStepper (52px) + main (1fr). */
-  grid-template-rows: 44px 52px 1fr;
+  /* Phase 06.2: two-row TopBar (88px) + main (1fr) + contextual footer (44px) */
+  grid-template-rows: auto 1fr 44px;
   background: var(--paper);
 }
 
@@ -152,6 +152,11 @@ button {
   font-weight: 500;
 }
 .topbar .primary:hover { background: #000; }
+
+.topbar-shell {
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
 
 /* ============================================
    Stage stepper
@@ -220,24 +225,224 @@ button {
 }
 
 /* ============================================
-   Main 2-col layout (Phase 3 D-02)
-   FileExplorer (280px) · DiffViewer (1fr).
-   ChatPanel (380px) deferred to Phase 5.
+   Main step-based layout (Phase 06.2)
    ============================================ */
 .main {
   display: grid;
-  grid-template-columns: 280px 1fr;
   overflow: hidden;
   min-height: 0;
 }
-.main--panel-open {
-  grid-template-columns: 240px 1fr 320px;
+/* Summary step: no file explorer, summary card fills left, right panel on right */
+.main--summary {
+  grid-template-columns: 1fr 360px;
+}
+/* Walkthrough/Review/Submission steps: file explorer + diff + right panel */
+.main--diff {
+  grid-template-columns: 240px 1fr 360px;
 }
 .main > * {
   min-height: 0;
   min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+/* ============================================
+   Right panel — step-specific content + chat
+   ============================================ */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--line);
+  background: var(--paper);
+  overflow: hidden;
+}
+.right-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+.right-panel-chat {
+  border-top: 1px solid var(--line);
+  flex-shrink: 0;
+  max-height: 50%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================
+   Step footer — contextual per step
+   ============================================ */
+.step-footer {
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+  gap: 12px;
+}
+.footer-secondary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.footer-secondary button {
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--ink-2);
+  background: var(--paper);
+}
+.footer-secondary button:hover {
+  background: var(--paper-2);
+}
+.footer-spacer {
+  flex: 1;
+}
+.footer-cta {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 6px 14px;
+  border-radius: 5px;
+  font-weight: 500;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.footer-cta:hover {
+  background: #000;
+}
+
+/* ============================================
+   Summary step — full-page view
+   ============================================ */
+.summary-step {
+  padding: 32px;
+  overflow-y: auto;
+  background: var(--paper);
+}
+.summary-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.summary-stat-card {
+  padding: 14px 16px;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.summary-stat-card .stat-value {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.summary-stat-card .stat-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  margin-top: 4px;
+}
+.summary-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 20px;
+}
+.summary-tab {
+  padding: 8px 16px;
+  border-bottom: 2px solid transparent;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: -1px;
+  cursor: pointer;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+.summary-tab.active {
+  border-bottom-color: var(--ink);
+  color: var(--ink);
+}
+.summary-tab .tab-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 6px;
+}
+.summary-tab .tab-badge--auto {
+  background: var(--claude-2);
+  color: var(--claude);
+}
+.summary-tab .tab-badge--original {
+  background: var(--paper-3);
+  color: var(--ink-4);
+}
+.summary-section {
+  margin-bottom: 20px;
+}
+.summary-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.summary-section-header h4 {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--ink-2);
+}
+.summary-ask-btn {
+  font-size: 11px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--claude);
+  background: var(--paper);
+  cursor: pointer;
+}
+.summary-ask-btn:hover {
+  background: var(--claude-2);
+}
+.summary-author-block {
+  padding: 12px 16px;
+  background: var(--paper-2);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--ink-3);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* ============================================
+   Chat context badge
+   ============================================ */
+.chat-context-badge {
+  display: inline-flex;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--claude);
+  background: var(--claude-2);
+  border-radius: 3px;
+  margin-bottom: 6px;
 }
 
 /* ============================================
@@ -1152,19 +1357,7 @@ button {
   max-width: 80vw;
 }
 
-/* Keyboard-shortcut hint at bottom-right. Live keys in ink-3, stubs in ink-4. */
-.footer-hint {
-  position: fixed;
-  bottom: 8px;
-  right: 340px;
-  font-family: var(--mono);
-  font-size: 10.5px;
-  z-index: 10;
-  pointer-events: none;
-}
-@media (max-width: 768px) {
-  .footer-hint { display: none; }
-}
+/* .footer-hint removed per Phase 06.2 D-11 — keyboard hint bar dropped */
 
 /* Focused-hunk highlight (n/p navigation). Teal left border + brief flash
    on focus change; respects prefers-reduced-motion per D-17. */
@@ -1185,11 +1378,7 @@ button {
    All colors use existing :root tokens. No new --vars.
    ============================================ */
 
-@media (min-width: 1280px) {
-  .main--findings-open {
-    grid-template-columns: 280px 1fr 280px;
-  }
-}
+/* .main--findings-open removed per Phase 06.2 — findings are now inline in right panel */
 
 .topbtn--active {
   background: var(--claude-2);
@@ -1199,7 +1388,7 @@ button {
 .findings-sidebar {
   background: var(--paper);
   border-left: 1px solid var(--line);
-  height: 100%;
+  flex: 1;
   overflow-y: auto;
 }
 .findings-sidebar-header {
@@ -1364,17 +1553,7 @@ button {
   padding: 0;
 }
 
-@media (max-width: 1279px) {
-  .findings-sidebar {
-    position: fixed;
-    top: 96px;
-    right: 0;
-    bottom: 0;
-    width: 280px;
-    z-index: 30;
-    box-shadow: -4px 0 12px rgba(0,0,0,0.06);
-  }
-}
+/* .findings-sidebar fixed-position media query removed per Phase 06.2 — findings are now inline in right panel */
 
 @media (prefers-reduced-motion: reduce) {
   .findings-sidebar, .summary-drawer {
