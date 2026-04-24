@@ -16,29 +16,36 @@ const defaultProps = {
   messages: [] as ChatMessage[],
   requestQueuePending: 0,
   prKey: 'test/repo#1',
-  open: true,
   hasSelfReview: false,
-  onToggle: vi.fn(),
 };
 
 describe('ChatPanel', () => {
-  // D-07: open by default
-  it('renders empty state heading when open with no messages', () => {
+  // Always-open: renders empty state heading without open/onToggle props
+  it('renders empty state heading with no messages', () => {
     render(<ChatPanel {...defaultProps} />);
     expect(screen.getByText('Ask Claude anything')).toBeTruthy();
     const body = document.querySelector('[role="log"]');
     expect(body).toBeTruthy();
   });
 
-  // D-07: collapsed state
-  it('renders expand button and hides chat body when closed', () => {
-    render(<ChatPanel {...defaultProps} open={false} />);
-    // Chat body should not be present
-    const body = document.querySelector('[role="log"]');
-    expect(body).toBeNull();
-    // Expand button should be visible
-    const expandBtn = screen.getByLabelText('Expand chat');
-    expect(expandBtn).toBeTruthy();
+  // Context badge renders when contextBadge prop is provided
+  it('renders context badge when contextBadge prop is provided', () => {
+    render(<ChatPanel {...defaultProps} contextBadge="WALKTHROUGH" />);
+    expect(screen.getByText('WALKTHROUGH')).toBeTruthy();
+  });
+
+  // Context badge absent when not provided
+  it('does not render context badge when contextBadge prop is omitted', () => {
+    render(<ChatPanel {...defaultProps} />);
+    const badge = document.querySelector('.chat-context-badge');
+    expect(badge).toBeNull();
+  });
+
+  // Custom suggestion chips replace defaults
+  it('renders custom suggestion chips when suggestionChips prop is provided', () => {
+    const chips = [{ label: 'Custom chip', message: 'Custom message' }];
+    render(<ChatPanel {...defaultProps} suggestionChips={chips} />);
+    expect(screen.getByText('Custom chip')).toBeTruthy();
   });
 
   // D-08: message rendering
