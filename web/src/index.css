@@ -1126,7 +1126,7 @@ button {
 .footer-hint {
   position: fixed;
   bottom: 8px;
-  right: 16px;
+  right: 340px;
   font-family: var(--mono);
   font-size: 10.5px;
   z-index: 10;
