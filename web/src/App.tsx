@@ -604,6 +604,7 @@ export default function App() {
               onSkipStep={handleSkipStep}
               onNextStep={handleNextStep}
               prKey={state.prKey}
+              findings={activeStep === 'review' ? state.selfReview?.findings : undefined}
             />
             <RightPanel chatSlot={chatPanelSlot}>
               {/* Step-specific right panel content */}

@@ -2811,3 +2811,63 @@ tr:hover .gutter-add-comment {
     transition: none;
   }
 }
+
+/* Finding inline annotations (Phase 06.2) */
+.finding-annotation {
+  margin: 4px 16px 8px;
+  padding: 12px 16px;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--warn);
+}
+.finding-annotation-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.finding-annotation-severity {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+.finding-annotation-meta {
+  font-size: 11px;
+  color: var(--ink-4);
+}
+.finding-annotation-author {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.finding-annotation-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--claude);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+}
+.finding-annotation-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.finding-annotation-time {
+  font-size: 11px;
+  color: var(--ink-4);
+}
+.finding-annotation-body {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}

@@ -19,6 +19,7 @@ import type {
   FileReviewStatus,
   Thread,
   Walkthrough,
+  ResolvedFinding,
 } from '@shared/types';
 import { ThreadCard } from './ThreadCard';
 import { InlineComposer } from './InlineComposer';
@@ -44,6 +45,8 @@ interface DiffViewerProps {
   onNextStep?: () => void;
   // Phase 06.1 additions
   prKey: string;
+  // Phase 06.2 additions
+  findings?: ResolvedFinding[];
 }
 
 // ──────────── Shiki token rendering — the single innerHTML path ────────────
@@ -135,6 +138,7 @@ export function DiffViewer(props: DiffViewerProps) {
     onSkipStep,
     onNextStep,
     prKey,
+    findings,
   } = props;
 
   return (
@@ -158,6 +162,7 @@ export function DiffViewer(props: DiffViewerProps) {
           onSkipStep={onSkipStep}
           onNextStep={onNextStep}
           prKey={prKey}
+          findings={findings?.filter(f => f.path === file.path)}
         />
       ))}
     </div>
@@ -185,6 +190,8 @@ interface FileSectionProps {
   onNextStep?: () => void;
   // Phase 06.1 additions
   prKey: string;
+  // Phase 06.2 additions
+  findings?: ResolvedFinding[];
 }
 
 function FileSection({
@@ -204,6 +211,7 @@ function FileSection({
   onSkipStep,
   onNextStep,
   prKey,
+  findings,
 }: FileSectionProps) {
   const collapse = file.generated && !expanded;
   const [dirname, basename] = splitPath(file.path);
@@ -284,6 +292,7 @@ function FileSection({
                       threads={threads}
                       onDraftChange={onDraftChange}
                       prKey={prKey}
+                      findings={findings}
                     />
                   ) : (
                     <SplitHunk
@@ -295,6 +304,7 @@ function FileSection({
                       threads={threads}
                       onDraftChange={onDraftChange}
                       prKey={prKey}
+                      findings={findings}
                     />
                   )}
                 </div>
@@ -319,9 +329,40 @@ interface HunkProps {
   onDraftChange?: (threadId: string, body: string) => void;
   // Phase 06.1 additions
   prKey: string;
+  // Phase 06.2 additions
+  findings?: ResolvedFinding[];
 }
 
-function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDraftChange, prKey }: HunkProps) {
+const SEVERITY_COLORS: Record<string, { bg: string; fg: string }> = {
+  blocker: { bg: 'var(--block-bg)', fg: 'var(--block)' },
+  major: { bg: 'var(--warn-bg)', fg: 'var(--warn)' },
+  minor: { bg: 'var(--warn-bg)', fg: 'var(--warn)' },
+  nit: { bg: 'var(--paper-3)', fg: 'var(--ink-3)' },
+};
+
+function FindingAnnotation({ finding }: { finding: ResolvedFinding }) {
+  const colors = SEVERITY_COLORS[finding.severity] ?? SEVERITY_COLORS.nit;
+  return (
+    <div className="finding-annotation">
+      <div className="finding-annotation-header">
+        <span className="finding-annotation-severity" style={{ background: colors.bg, color: colors.fg }}>
+          {finding.severity === 'nit' ? 'NIT' : finding.severity === 'blocker' ? 'BLOCKER' : 'WARNING'}
+        </span>
+        <span className="finding-annotation-meta">
+          Line {finding.line} · {finding.category}
+        </span>
+      </div>
+      <div className="finding-annotation-author">
+        <span className="finding-annotation-avatar">C</span>
+        <span className="finding-annotation-name">Claude</span>
+        <span className="finding-annotation-time">just now</span>
+      </div>
+      <div className="finding-annotation-body">{finding.rationale}</div>
+    </div>
+  );
+}
+
+function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDraftChange, prKey, findings }: HunkProps) {
   const [hoveredLineId, setHoveredLineId] = useState<string | null>(null);
   const [composerLineId, setComposerLineId] = useState<string | null>(null);
 
@@ -401,6 +442,13 @@ function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onD
                   </td>
                 </tr>
               ))}
+              {(findings ?? []).filter(f => f.lineId === line.id).map(f => (
+                <tr key={`finding-${f.id}`} className="thread-row">
+                  <td colSpan={2} style={{ padding: 0 }}>
+                    <FindingAnnotation finding={f} />
+                  </td>
+                </tr>
+              ))}
             </Fragment>
           );
         })}
@@ -476,7 +524,7 @@ function pairSplitLines(hunk: Hunk): Array<{ left: SplitCell; right: SplitCell }
   return out;
 }
 
-function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDraftChange, prKey }: HunkProps) {
+function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDraftChange, prKey, findings }: HunkProps) {
   const [hoveredLineId, setHoveredLineId] = useState<string | null>(null);
   const [composerLineId, setComposerLineId] = useState<string | null>(null);
 
@@ -586,6 +634,13 @@ function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDra
                       onDraftChange={onDraftChange ?? (() => {})}
                       onCollapse={() => {/* collapse handled by parent state */}}
                     />
+                  </td>
+                </tr>
+              ))}
+              {(findings ?? []).filter(f => f.lineId === representativeLineId).map(f => (
+                <tr key={`finding-${f.id}`} className="thread-row">
+                  <td colSpan={4} style={{ padding: 0 }}>
+                    <FindingAnnotation finding={f} />
                   </td>
                 </tr>
               ))}
