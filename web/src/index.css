@@ -2017,7 +2017,7 @@ button {
   color: var(--ink-4);
 }
 .wsl-steps {
-  padding: 0 12px 12px;
+  padding: 12px 12px 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
