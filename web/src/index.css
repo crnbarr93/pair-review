@@ -378,7 +378,7 @@ button {
   gap: 0;
   flex-shrink: 0;
   background: var(--paper-2);
-  border-radius: 28px;
+  border-radius: 10px;
   border: 1px solid var(--line);
   padding: 3px;
 }
@@ -387,7 +387,7 @@ button {
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  border-radius: 24px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
