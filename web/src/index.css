@@ -414,8 +414,8 @@ button {
   line-height: 1;
 }
 .summary-toggle-btn.active .toggle-avatar {
-  background: var(--claude);
-  color: #fff;
+  background: #fff;
+  color: var(--claude);
 }
 .toggle-badge {
   font-size: 9px;
