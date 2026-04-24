@@ -1523,6 +1523,15 @@ button {
   padding: 0 8px;
 }
 
+/* Coverage strip inside FindingsSidebar (inline right panel) */
+.findings-coverage-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
 .summary-drawer {
   background: #FFFDF7;
   border-bottom: 1px solid var(--line);

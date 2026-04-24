@@ -17,8 +17,6 @@ const CAT_LABELS: Record<ChecklistCategory, string> = {
 
 interface FindingsSidebarProps {
   selfReview: SelfReview | null | undefined;
-  open: boolean;
-  onClose: () => void;
   activeCategory: ChecklistCategory | null;
   onCategoryClick: (cat: ChecklistCategory | null) => void;
   onFindingClick: (lineId: string) => void;
@@ -26,29 +24,24 @@ interface FindingsSidebarProps {
 
 export function FindingsSidebar({
   selfReview,
-  open,
-  onClose,
   activeCategory,
   onCategoryClick,
   onFindingClick,
 }: FindingsSidebarProps) {
-  if (!open) return null;
-
   const [expandedFindings, setExpandedFindings] = useState<Set<string>>(new Set());
   const [activeFindingId, setActiveFindingId] = useState<string | null>(null);
 
   if (!selfReview) {
     return (
-      <aside className="findings-sidebar" role="complementary" aria-label="Code review findings">
+      <div className="findings-sidebar" role="complementary" aria-label="Code review findings">
         <div className="findings-sidebar-header">
           <h3>Findings</h3>
-          <button type="button" className="topbtn" onClick={onClose} aria-label="Close findings">×</button>
         </div>
         <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--ink-4)' }}>
           <p style={{ fontWeight: 500, marginBottom: 8 }}>Self-review not run yet</p>
           <p style={{ fontSize: 12 }}>Ask Claude to run_self_review to see findings here.</p>
         </div>
-      </aside>
+      </div>
     );
   }
 
@@ -70,7 +63,7 @@ export function FindingsSidebar({
   };
 
   return (
-    <aside className="findings-sidebar" role="complementary" aria-label="Code review findings">
+    <div className="findings-sidebar" role="complementary" aria-label="Code review findings">
       <div className="findings-sidebar-header">
         <h3>
           Findings ({selfReview.findings.length})
@@ -85,8 +78,29 @@ export function FindingsSidebar({
             </button>
           )}
         </h3>
-        <button type="button" className="topbtn" onClick={onClose} aria-label="Close findings">×</button>
       </div>
+
+      {/* Category coverage chips — moved from StageStepper per D-09 */}
+      {selfReview && (
+        <div className="findings-coverage-strip" role="group" aria-label="Category coverage">
+          {CATEGORIES.map((cat) => {
+            const count = selfReview.findings.filter((f) => f.category === cat).length;
+            const coverageStatus = selfReview.coverage[cat];
+            const isActive = activeCategory === cat;
+            return (
+              <button
+                key={cat}
+                type="button"
+                className={cn('coverage-chip', `coverage-chip--${coverageStatus}`, isActive && 'active')}
+                onClick={() => onCategoryClick(isActive ? null : cat)}
+                aria-label={`${cat}: ${coverageStatus}`}
+              >
+                {CAT_LABELS[cat]} ({count})
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {visibleCategories.map((cat) => {
         const findings = selfReview.findings
@@ -141,6 +155,6 @@ export function FindingsSidebar({
           </div>
         );
       })}
-    </aside>
+    </div>
   );
 }

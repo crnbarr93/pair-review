@@ -6,12 +6,12 @@ interface ChatPanelProps {
   messages: ChatMessage[];
   requestQueuePending: number;
   prKey: string;
-  open: boolean;
   hasSelfReview: boolean;
-  onToggle: () => void;
+  contextBadge?: string;  // e.g. 'SUMMARY', 'WALKTHROUGH . auth.ts', 'REVIEW . auth.ts . L42'
+  suggestionChips?: Array<{ label: string; message: string }>;
 }
 
-const SUGGESTION_CHIPS = [
+const DEFAULT_SUGGESTION_CHIPS = [
   { label: 'Explain this change', message: 'Can you explain what this change does?' },
   { label: 'What are the risks?', message: 'What are the main risks with this change?' },
   { label: 'Regenerate walkthrough', message: 'Please regenerate the walkthrough for this PR.' },
@@ -21,9 +21,9 @@ export function ChatPanel({
   messages,
   requestQueuePending,
   prKey,
-  open,
   hasSelfReview,
-  onToggle,
+  contextBadge,
+  suggestionChips,
 }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const [sendError, setSendError] = useState<string | null>(null);
@@ -58,35 +58,7 @@ export function ChatPanel({
     }
   }, [messages, isThinking]);
 
-  if (!open) {
-    return (
-      <div className="chat chat--collapsed" style={{ width: 48 }}>
-        <button
-          type="button"
-          className="chat-expand-btn"
-          onClick={onToggle}
-          aria-label="Expand chat"
-          aria-expanded={false}
-          aria-controls="chat-panel"
-          style={{
-            width: '100%',
-            height: 44,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: 'var(--ink-4)',
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
-    );
-  }
+  const chips = suggestionChips ?? DEFAULT_SUGGESTION_CHIPS;
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
@@ -120,7 +92,7 @@ export function ChatPanel({
   }
 
   return (
-    <aside className="chat" id="chat-panel">
+    <div className="chat">
       {/* Header */}
       <div className="chat-head">
         <div className="avatar" style={{ background: 'var(--claude)', color: '#fff', width: 26, height: 26, borderRadius: 7, display: 'grid', placeItems: 'center', fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 600, flexShrink: 0 }}>
@@ -160,19 +132,14 @@ export function ChatPanel({
         >
           {hasSelfReview ? 'Re-review' : 'Request review'}
         </button>
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-label="Collapse chat"
-          aria-expanded={true}
-          aria-controls="chat-panel"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-4)', padding: '4px 6px', borderRadius: 4, display: 'flex', alignItems: 'center' }}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M10 4l-4 4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
       </div>
+
+      {/* Context badge */}
+      {contextBadge && (
+        <div style={{ padding: '6px 12px 0' }}>
+          <div className="chat-context-badge">{contextBadge}</div>
+        </div>
+      )}
 
       {/* Message body */}
       <div
@@ -189,7 +156,7 @@ export function ChatPanel({
               Review questions, code explanations, or ask Claude to focus on a specific area.
             </p>
             <div className="chip-row" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginTop: 8 }}>
-              {SUGGESTION_CHIPS.map((chip) => (
+              {chips.map((chip) => (
                 <button
                   key={chip.label}
                   type="button"
@@ -263,6 +230,6 @@ export function ChatPanel({
           </div>
         </div>
       </div>
-    </aside>
+    </div>
   );
 }
