@@ -50,7 +50,7 @@ export function SummaryStep({ summary, authorDescription, pr, prKey }: SummarySt
             className={`summary-toggle-btn${activeTab === 'claude' ? ' active' : ''}`}
             onClick={() => setActiveTab('claude')}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
             Claude&apos;s summary
             <span className="toggle-badge toggle-badge--auto">auto</span>
           </button>
