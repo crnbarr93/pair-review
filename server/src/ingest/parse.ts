@@ -53,7 +53,7 @@ function lineFromChange(ch: Change, id: string, diffPosition: number): DiffLine 
     side,
     fileLine,
     diffPosition,
-    text: ch.content,
+    text: ch.content.length > 0 ? ch.content.slice(1) : ch.content,
   };
 }
 

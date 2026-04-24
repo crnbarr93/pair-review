@@ -378,20 +378,6 @@ function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onD
                       className="gutter-add-comment"
                       aria-label={`Start comment on line ${line.fileLine}`}
                       onClick={() => setComposerLineId(line.id)}
-                      style={{
-                        display: 'inline-flex',
-                        width: 16,
-                        height: 16,
-                        borderRadius: '50%',
-                        background: 'var(--claude-2)',
-                        color: 'var(--claude)',
-                        cursor: 'pointer',
-                        border: 'none',
-                        fontSize: 12,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginLeft: 4,
-                      }}
                     >
                       +
                     </button>
@@ -562,20 +548,6 @@ function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDra
                       className="gutter-add-comment"
                       aria-label={`Start comment on line ${composerLine.fileLine}`}
                       onClick={() => representativeLineId && setComposerLineId(representativeLineId)}
-                      style={{
-                        display: 'inline-flex',
-                        width: 16,
-                        height: 16,
-                        borderRadius: '50%',
-                        background: 'var(--claude-2)',
-                        color: 'var(--claude)',
-                        cursor: 'pointer',
-                        border: 'none',
-                        fontSize: 12,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginLeft: 4,
-                      }}
                     >
                       +
                     </button>
