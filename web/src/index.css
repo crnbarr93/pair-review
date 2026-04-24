@@ -350,19 +350,22 @@ button {
   font-size: 26px;
   font-weight: 700;
   color: var(--ink);
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   line-height: 1.2;
+  white-space: nowrap;
 }
 .summary-subtitle {
   font-size: 13px;
   color: var(--ink-4);
   margin: 0;
+  white-space: nowrap;
 }
 .summary-header-row {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 28px;
+  gap: 24px;
+  margin-bottom: 32px;
 }
 .summary-toggle {
   display: flex;
@@ -516,7 +519,11 @@ button {
   color: #fff;
   background: var(--claude);
   cursor: pointer;
+  opacity: 0;
   transition: opacity 0.15s;
+}
+.summary-section:hover .summary-ask-btn {
+  opacity: 1;
 }
 .summary-ask-btn:hover {
   opacity: 0.85;
