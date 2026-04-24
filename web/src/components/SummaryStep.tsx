@@ -166,7 +166,7 @@ export function SummaryStep({ summary, authorDescription, pr, prKey }: SummarySt
             {/* Author info header */}
             <div className="summary-author-header">
               <div className="summary-author-identity">
-                <span className="summary-author-avatar">{(pr?.author ?? 'u')[0]}</span>
+                <span className="summary-author-avatar">{(pr?.author ?? 'U')[0].toUpperCase()}</span>
                 <div>
                   <div className="summary-author-name">{pr?.author ?? 'Unknown'}</div>
                   <div className="summary-author-meta">

@@ -573,6 +573,8 @@ button {
   font-size: 14px;
   font-weight: 600;
   flex-shrink: 0;
+  line-height: 1;
+  text-transform: uppercase;
 }
 .summary-author-name {
   font-size: 14px;
