@@ -115,14 +115,17 @@ export function renderSummaryForTest(s: ReviewSession, url: string): string {
 
 function renderSummary(s: ReviewSession, url: string): string {
   const { pr } = s;
-  return [
+  const lines = [
     `**${pr.title}** by @${pr.author}`,
     `${pr.baseBranch} → ${pr.headBranch}  (+${pr.additions}/-${pr.deletions}, ${pr.filesChanged} files)`,
     '',
     paraphrase(pr.description),
     '',
     `Review open at: ${url}`,
-  ].join('\n');
+  ];
+  if (s.summary) lines.push('', 'has_summary: true');
+  if (s.walkthrough) lines.push('has_walkthrough: true');
+  return lines.join('\n');
 }
 
 function renderFriendlyError(err: unknown): string {

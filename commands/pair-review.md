@@ -16,11 +16,11 @@ Parse $ARGUMENTS to determine the review source. Strip "--dry" from $ARGUMENTS b
 
 **Step 1:** Check whether $ARGUMENTS contains `--dry`. If it does, set a dry-run flag and skip Steps 3 and 4.
 
-**Step 2:** Call `start_review` with the source argument built above. Share its `summary` field with the user verbatim — it contains the PR title, source descriptor, paraphrased description, and the local review URL. Do NOT add your own analysis of the diff.
+**Step 2:** Call `start_review` with the source argument built above. Share its `summary` field with the user verbatim — it contains the PR title, source descriptor, paraphrased description, and the local review URL. Do NOT add your own analysis of the diff. Check the returned text for `has_summary: true` and `has_walkthrough: true` flags — these indicate the session was resumed from a previous run and already has these artifacts.
 
-**Step 3 (skip if --dry):** Call `set_pr_summary` to generate the PR intent, key changes, and risk areas. This auto-generates the summary panel in the browser.
+**Step 3 (skip if --dry OR if start_review returned `has_summary: true`):** Call `set_pr_summary` to generate the PR intent, key changes, and risk areas. This auto-generates the summary panel in the browser.
 
-**Step 4 (skip if --dry):** Call `set_walkthrough` to build the step-by-step walkthrough narrative. This auto-generates the walkthrough banner in the browser.
+**Step 4 (skip if --dry OR if start_review returned `has_walkthrough: true`):** Call `set_walkthrough` to build the step-by-step walkthrough narrative. This auto-generates the walkthrough banner in the browser.
 
 **Step 5:** Enter the LISTEN LOOP immediately after startup completes (after Step 4, or after Step 2 if --dry).
 
