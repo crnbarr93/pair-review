@@ -69,6 +69,8 @@ export interface AppState {
   chatMessages: ChatMessage[];
   requestQueue: { pending: number };
   chatPanelOpen: boolean;
+  // Phase 06.2 — client-only step routing (NOT in server session model)
+  activeStep: 'summary' | 'walkthrough' | 'review' | 'submission';
 }
 
 const INITIAL: AppState = {
@@ -96,6 +98,7 @@ const INITIAL: AppState = {
   chatMessages: [],
   requestQueue: { pending: 0 },
   chatPanelOpen: true,  // open by default per D-07
+  activeStep: 'summary',
 };
 
 let state: AppState = { ...INITIAL };
@@ -319,6 +322,11 @@ export const actions = {
 
   setChatPanelOpen(open: boolean) {
     state = { ...state, chatPanelOpen: open };
+    emit();
+  },
+
+  setActiveStep(step: 'summary' | 'walkthrough' | 'review' | 'submission') {
+    state = { ...state, activeStep: step };
     emit();
   },
 
