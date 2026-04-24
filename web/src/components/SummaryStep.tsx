@@ -2,14 +2,6 @@ import { useState } from 'react';
 import type { PrSummary, SummaryIntent, PullRequestMeta } from '@shared/types';
 import { postUserRequest } from '../api';
 
-const INTENT_CLASS: Record<SummaryIntent, string> = {
-  'bug-fix': 'intent-chip--bug-fix',
-  feature: 'intent-chip--feature',
-  refactor: 'intent-chip--refactor',
-  chore: 'intent-chip--chore',
-  other: 'intent-chip--other',
-};
-
 interface SummaryStepProps {
   summary: PrSummary;
   authorDescription?: string;
@@ -32,144 +24,147 @@ export function SummaryStep({ summary, authorDescription, pr, prKey }: SummarySt
   const filesChanged = pr?.filesChanged ?? 0;
   const additions = pr?.additions ?? 0;
   const deletions = pr?.deletions ?? 0;
+  const commits = 0;
 
   return (
     <div className="summary-step">
-      {/* Stats grid */}
-      <div className="summary-stats-grid">
-        <div className="summary-stat-card">
-          <div className="stat-value">{filesChanged}</div>
-          <div className="stat-label">Files changed</div>
+      <div className="summary-content">
+        {/* Stage header */}
+        <div className="summary-stage-label">Stage 1 · Summary</div>
+        <h2 className="summary-heading">What this PR does</h2>
+        <div className="summary-subtitle">
+          Claude read the diff and wrote this · last run 2m ago
         </div>
-        <div className="summary-stat-card">
-          <div className="stat-value">+{additions}</div>
-          <div className="stat-label">Lines added</div>
-        </div>
-        <div className="summary-stat-card">
-          <div className="stat-value">-{deletions}</div>
-          <div className="stat-label">Lines removed</div>
-        </div>
-        <div className="summary-stat-card">
-          <div className="stat-value">PR</div>
-          <div className="stat-label">Commits</div>
-        </div>
-      </div>
 
-      {/* Tab bar */}
-      <div className="summary-tabs">
-        <button
-          type="button"
-          className={`summary-tab${activeTab === 'claude' ? ' active' : ''}`}
-          onClick={() => setActiveTab('claude')}
-        >
-          Claude&apos;s summary
-          <span className="tab-badge tab-badge--auto">AUTO</span>
-        </button>
-        <button
-          type="button"
-          className={`summary-tab${activeTab === 'author' ? ' active' : ''}`}
-          onClick={() => setActiveTab('author')}
-        >
-          Author&apos;s description
-          <span className="tab-badge tab-badge--original">ORIGINAL</span>
-        </button>
-      </div>
+        {/* Tab toggle */}
+        <div className="summary-toggle">
+          <button
+            type="button"
+            className={`summary-toggle-btn${activeTab === 'claude' ? ' active' : ''}`}
+            onClick={() => setActiveTab('claude')}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            Claude&apos;s summary
+            <span className="toggle-badge toggle-badge--auto">auto</span>
+          </button>
+          <button
+            type="button"
+            className={`summary-toggle-btn${activeTab === 'author' ? ' active' : ''}`}
+            onClick={() => setActiveTab('author')}
+          >
+            <span className="toggle-avatar">m</span>
+            Author&apos;s description
+            <span className="toggle-badge toggle-badge--original">original</span>
+          </button>
+        </div>
 
-      {/* Tab content */}
-      {activeTab === 'claude' && (
-        <>
-          {/* Intent + confidence */}
-          <div className="summary-section">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <span className={`intent-chip ${INTENT_CLASS[summary.intent]}`}>
-                {summary.intent}
-              </span>
-              <span style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--ink-4)' }}>
-                {Math.round(summary.intentConfidence * 100)}% confidence
-              </span>
+        {/* Tab content */}
+        {activeTab === 'claude' && (
+          <>
+            {/* TL;DR card */}
+            <div className="summary-tldr">
+              <div className="summary-tldr-label">TL;DR</div>
+              <p className="summary-tldr-text">{summary.paraphrase}</p>
             </div>
-          </div>
 
-          {/* Paraphrase */}
-          <div className="summary-section">
-            <div className="summary-section-header">
-              <h4>Summary</h4>
-              <button
-                type="button"
-                className="summary-ask-btn"
-                onClick={() => handleAsk('Can you explain the purpose of this PR in more detail?')}
-              >
-                Ask
-              </button>
+            {/* Stats grid */}
+            <div className="summary-stats-grid">
+              <div className="summary-stat-card">
+                <div className="stat-value">{filesChanged}</div>
+                <div className="stat-label">files</div>
+              </div>
+              <div className="summary-stat-card">
+                <div className="stat-value stat-value--add">+{additions}</div>
+                <div className="stat-label">added</div>
+              </div>
+              <div className="summary-stat-card">
+                <div className="stat-value stat-value--rem">&minus;{deletions}</div>
+                <div className="stat-label">removed</div>
+              </div>
+              <div className="summary-stat-card">
+                <div className="stat-value">{commits || '—'}</div>
+                <div className="stat-label">commits</div>
+              </div>
             </div>
-            <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6 }}>
-              {summary.paraphrase}
-            </p>
-          </div>
 
-          {/* Key changes */}
-          {summary.keyChanges.length > 0 && (
+            {/* Why */}
             <div className="summary-section">
               <div className="summary-section-header">
-                <h4>What changed</h4>
+                <h3>Why</h3>
                 <button
                   type="button"
                   className="summary-ask-btn"
-                  onClick={() => handleAsk('Can you walk me through the key changes in this PR?')}
+                  onClick={() => handleAsk('Can you explain the purpose of this PR in more detail?')}
                 >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                   Ask
                 </button>
               </div>
-              <ul style={{ margin: 0, paddingLeft: 16 }}>
-                {summary.keyChanges.map((kc, i) => (
-                  <li key={i} style={{ fontSize: 13, color: 'var(--ink-2)', marginBottom: 4 }}>
-                    {kc}
-                  </li>
-                ))}
-              </ul>
+              <p className="summary-body-text">{summary.paraphrase}</p>
             </div>
-          )}
 
-          {/* Risk areas */}
-          <div className="summary-section">
-            <div className="summary-section-header">
-              <h4>Risk areas</h4>
-              <button
-                type="button"
-                className="summary-ask-btn"
-                onClick={() => handleAsk('What are the main risks I should focus on when reviewing this PR?')}
-              >
-                Ask
-              </button>
+            {/* What changed */}
+            {summary.keyChanges.length > 0 && (
+              <div className="summary-section">
+                <div className="summary-section-header">
+                  <h3>What changed</h3>
+                  <button
+                    type="button"
+                    className="summary-ask-btn"
+                    onClick={() => handleAsk('Can you walk me through the key changes in this PR?')}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Ask
+                  </button>
+                </div>
+                <div className="summary-changes-list">
+                  {summary.keyChanges.map((kc, i) => (
+                    <p key={i} className="summary-body-text">{kc}</p>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Risk & rollout */}
+            <div className="summary-section">
+              <div className="summary-section-header">
+                <h3>Risk &amp; rollout</h3>
+                <button
+                  type="button"
+                  className="summary-ask-btn"
+                  onClick={() => handleAsk('What are the main risks I should focus on when reviewing this PR?')}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  Ask
+                </button>
+              </div>
+              {summary.riskAreas.length > 0 ? (
+                <div className="summary-changes-list">
+                  {summary.riskAreas.map((ra, i) => (
+                    <p key={i} className="summary-body-text">{ra}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="summary-body-text" style={{ fontStyle: 'italic', color: 'var(--ink-4)' }}>
+                  No specific risk areas flagged.
+                </p>
+              )}
             </div>
-            {summary.riskAreas.length > 0 ? (
-              <ul style={{ margin: 0, paddingLeft: 16 }}>
-                {summary.riskAreas.map((ra, i) => (
-                  <li key={i} style={{ fontSize: 13, color: 'var(--ink-2)', marginBottom: 4 }}>
-                    {ra}
-                  </li>
-                ))}
-              </ul>
+          </>
+        )}
+
+        {activeTab === 'author' && (
+          <div className="summary-section">
+            {authorDescription ? (
+              <div className="summary-author-block">{authorDescription}</div>
             ) : (
-              <p style={{ fontStyle: 'italic', color: 'var(--ink-4)', fontSize: 12, margin: 0 }}>
-                No specific risk areas flagged.
-              </p>
+              <div className="summary-author-block" style={{ fontStyle: 'italic', color: 'var(--ink-4)' }}>
+                No description provided.
+              </div>
             )}
           </div>
-        </>
-      )}
-
-      {activeTab === 'author' && (
-        <div className="summary-section">
-          {authorDescription ? (
-            <div className="summary-author-block">{authorDescription}</div>
-          ) : (
-            <div className="summary-author-block" style={{ fontStyle: 'italic', color: 'var(--ink-4)' }}>
-              No description provided.
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
