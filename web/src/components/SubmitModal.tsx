@@ -401,13 +401,85 @@ function SubmissionContent({ onClose }: { onClose?: () => void }) {
 }
 
 // ============================================================
-// SubmissionPanel — inline right-panel variant (no modal backdrop)
-// Renders whenever mounted; visibility controlled by App.tsx step routing.
+// SubmissionPanel — redesigned per Phase 06.2 design:
+// Checklist recap + Claude verdict suggestion + CTA to open submit dialog.
 // ============================================================
 export function SubmissionPanel() {
+  const state = useAppStore();
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const walkthrough = state.walkthrough;
+  const selfReview = state.selfReview;
+  const stepsVisited = walkthrough?.steps.filter(s => s.status === 'visited').length ?? 0;
+  const stepsTotal = walkthrough?.steps.length ?? 0;
+  const blockerCount = selfReview?.findings.filter(f => f.severity === 'blocker').length ?? 0;
+  const openCount = selfReview?.findings.length ?? 0;
+  const verdict = selfReview?.verdict;
+
   return (
     <div className="submission-panel">
-      <SubmissionContent />
+      {/* Header */}
+      <div className="subp-header">
+        <div className="subp-stage-label">Stage 4 · Submission</div>
+        <div className="subp-title">Ready to submit?</div>
+        <div className="subp-subtitle">Review the recap, then choose a verdict.</div>
+      </div>
+
+      {/* Checklist table */}
+      <div className="subp-checklist">
+        <div className="subp-row">
+          <span className="subp-row-label">Stages completed</span>
+          <span className="subp-row-value">3 of 3 · Summary, Walkthrough, Review</span>
+        </div>
+        <div className="subp-row">
+          <span className="subp-row-label">Findings</span>
+          <span className="subp-row-value">
+            {blockerCount > 0 && <span className="subp-badge subp-badge--blocker">{blockerCount} blocker{blockerCount !== 1 ? 's' : ''}</span>}
+            <span className="subp-badge subp-badge--open">{openCount} open</span>
+          </span>
+        </div>
+        <div className="subp-row">
+          <span className="subp-row-label">Walkthrough</span>
+          <span className="subp-row-value">{stepsVisited} of {stepsTotal} steps visited</span>
+        </div>
+      </div>
+
+      {/* Claude suggestion */}
+      {verdict && (
+        <div className="subp-suggestion">
+          <div className="subp-suggestion-header">
+            <span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+              {' '}Claude suggests: <strong>{VERDICT_WORDS[verdict] ?? verdict}</strong>
+            </span>
+          </div>
+          {blockerCount > 0 && (
+            <p className="subp-suggestion-body">
+              There{blockerCount === 1 ? "'s" : ' are'} {blockerCount} unresolved blocker{blockerCount !== 1 ? 's' : ''}.
+              Everything else is warnings or nits that can ship as follow-ups.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* CTA */}
+      <button
+        type="button"
+        className="subp-cta"
+        onClick={() => setModalOpen(true)}
+      >
+        <span className="subp-cta-title">Open submission dialog</span>
+        <span className="subp-cta-sub">Choose approve / comment / request changes</span>
+      </button>
+
+      {/* Reuse existing SubmitModal when opened */}
+      {modalOpen && (
+        <div className="sm-overlay" onClick={() => setModalOpen(false)}>
+          <div className="sm-card" onClick={e => e.stopPropagation()}>
+            <SubmissionContent />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

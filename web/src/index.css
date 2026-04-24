@@ -2725,44 +2725,124 @@ button {
   }
 }
 
-/* SubmissionPanel — inline right-panel variant (no modal wrapper) */
+/* SubmissionPanel — redesigned per Phase 06.2 design */
 .submission-panel {
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0;
+  background: var(--paper);
 }
-.submission-panel .sm-stats-row {
-  padding: 10px 12px;
+.subp-header {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--line);
 }
-.submission-panel .sm-stat-box {
-  padding: 4px 4px;
+.subp-stage-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--claude);
+  margin-bottom: 4px;
 }
-.submission-panel .sm-stat-value {
+.subp-title {
   font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
 }
-.submission-panel .sm-stat-label {
-  font-size: 9px;
+.subp-subtitle {
+  font-size: 12px;
+  color: var(--ink-4);
 }
-.submission-panel .sm-section {
-  padding: 12px 14px;
+.subp-checklist {
+  margin: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
-.submission-panel .sm-verdict-row {
+.subp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.subp-row:last-child { border-bottom: none; }
+.subp-row-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.subp-row-value {
+  font-size: 13px;
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
   gap: 6px;
 }
-.submission-panel .sm-verdict-card {
-  padding: 10px;
-  gap: 8px;
-}
-.submission-panel .sm-verdict-icon {
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-}
-.submission-panel .sm-verdict-title {
-  font-size: 12px;
-}
-.submission-panel .sm-verdict-sub {
+.subp-badge {
   font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-family: var(--mono);
+}
+.subp-badge--blocker { background: var(--block-bg); color: var(--block); }
+.subp-badge--open { background: var(--warn-bg); color: var(--warn); }
+.subp-badge--pass { background: var(--ok-bg); color: var(--ok); }
+.subp-suggestion {
+  margin: 0 16px 16px;
+  padding: 14px 16px;
+  background: var(--claude-2);
+  border: 1px solid var(--claude-3);
+  border-radius: var(--radius-lg);
+}
+.subp-suggestion-header {
+  font-size: 13px;
+  color: var(--claude);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.subp-suggestion-header strong {
+  color: var(--ink);
+}
+.subp-suggestion-body {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  margin: 0;
+}
+.subp-cta {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 0 16px 16px;
+  padding: 16px 20px;
+  background: var(--ink);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  text-align: left;
+  transition: opacity 0.15s;
+}
+.subp-cta:hover { opacity: 0.9; }
+.subp-cta-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.subp-cta-sub {
+  display: block;
+  font-size: 12px;
+  opacity: 0.7;
 }
 
 /* Pending review modal — narrower variant */
