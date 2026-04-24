@@ -18,9 +18,9 @@ Parse $ARGUMENTS to determine the review source. Strip "--dry" from $ARGUMENTS b
 
 **Step 2:** Call `start_review` with the source argument built above. Share its `summary` field with the user verbatim — it contains the PR title, source descriptor, paraphrased description, and the local review URL. Do NOT add your own analysis of the diff. Check the returned text for `has_summary: true` and `has_walkthrough: true` flags — these indicate the session was resumed from a previous run and already has these artifacts.
 
-**Step 3 (skip if --dry OR if start_review returned `has_summary: true`):** Call `set_pr_summary` to generate the PR intent, key changes, and risk areas. This auto-generates the summary panel in the browser.
+**Step 3 (skip if --dry OR if start_review returned `has_summary: true`):** Call `respond_chat` with "Generating PR summary..." so the user sees activity. Then call `set_pr_summary` to generate the PR intent, key changes, and risk areas. After it completes, call `respond_chat` with a brief message like "Summary generated — click the Summary step above to view intent, key changes, and risk areas."
 
-**Step 4 (skip if --dry OR if start_review returned `has_walkthrough: true`):** Call `set_walkthrough` to build the step-by-step walkthrough narrative. This auto-generates the walkthrough banner in the browser.
+**Step 4 (skip if --dry OR if start_review returned `has_walkthrough: true`):** Call `respond_chat` with "Building walkthrough..." so the user sees activity. Then call `set_walkthrough` to build the step-by-step walkthrough narrative. After it completes, call `respond_chat` with a brief message like "Walkthrough ready — N steps covering the core changes. Click the Walkthrough step or use Next step to navigate."
 
 **Step 5:** Enter the LISTEN LOOP immediately after startup completes (after Step 4, or after Step 2 if --dry).
 
@@ -33,9 +33,9 @@ Parse $ARGUMENTS to determine the review source. Strip "--dry" from $ARGUMENTS b
 - `type: "no_request"` — The timeout fired with no user request. Call `await_user_request` again immediately. Do not pause, do not comment. Just loop.
 - `type: "chat"` — The user sent a chat message. Read `payload.message`. Formulate a relevant response (drawing on the PR diff and context). Call `respond_chat` with your answer. Then call `await_user_request` again.
 - `type: "inline_comment"` — The user started a thread on a diff line and tagged @claude. Read `payload.lineId`, `payload.message`, and `payload.threadId`. Call `reply_in_thread` with the lineId and your response. Call `draft_comment` when you have synthesized a formal comment for the review. Then call `await_user_request` again.
-- `type: "run_self_review"` — The user requested the self-review checklist. Call `run_self_review`. Then call `await_user_request` again.
-- `type: "regenerate_summary"` — The user requested a fresh PR summary. Call `set_pr_summary`. Then call `await_user_request` again.
-- `type: "regenerate_walkthrough"` — The user requested a fresh walkthrough. Call `set_walkthrough`. Then call `await_user_request` again.
+- `type: "run_self_review"` — The user requested the self-review checklist. Call `respond_chat` with "Running self-review..." first. Then call `run_self_review`. After it completes, call `respond_chat` with a summary like "Self-review complete — N findings (X blockers, Y major, Z minor). Check the Findings sidebar." Then call `await_user_request` again.
+- `type: "regenerate_summary"` — The user requested a fresh PR summary. Call `respond_chat` with "Regenerating summary..." first. Then call `set_pr_summary`. After it completes, call `respond_chat` with "Summary regenerated — click the Summary step to view." Then call `await_user_request` again.
+- `type: "regenerate_walkthrough"` — The user requested a fresh walkthrough. Call `respond_chat` with "Rebuilding walkthrough..." first. Then call `set_walkthrough`. After it completes, call `respond_chat` with "Walkthrough rebuilt — N steps. Click the Walkthrough step to navigate." Then call `await_user_request` again.
 
 **Step 8:** After processing ANY request type (except `no_request`, which already loops back in Step 7), call `await_user_request` again.
 

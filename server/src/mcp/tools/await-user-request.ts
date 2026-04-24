@@ -34,9 +34,6 @@ export function registerAwaitUserRequest(
       }
 
       try {
-        // Fire request.processing to clear any pending indicator
-        await manager.applyEvent(prKey, { type: 'request.processing' });
-
         const queue = queueManager.getQueue(prKey);
         const req = await queue.waitForRequest(TIMEOUT_MS);
 
@@ -45,6 +42,9 @@ export function registerAwaitUserRequest(
             content: [{ type: 'text' as const, text: JSON.stringify({ type: 'no_request' }) }],
           };
         }
+
+        // Fire request.processing to clear "Thinking..." indicator now that we've picked up the request
+        await manager.applyEvent(prKey, { type: 'request.processing' });
 
         return {
           content: [{ type: 'text' as const, text: JSON.stringify({ type: req.type, payload: req.payload ?? null }) }],

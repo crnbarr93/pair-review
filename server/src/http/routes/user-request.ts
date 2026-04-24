@@ -95,18 +95,15 @@ export function mountUserRequest(
 
     // For all other types: enqueue for await_user_request pickup
     const queue = queueManager.getQueue(prKey);
-    const pending = queue.pendingCount;
 
-    // If items already queued (Claude is busy), fire request.queued SSE
-    if (pending > 0) {
-      await manager.applyEvent(prKey, {
-        type: 'request.queued',
-        requestType: type,
-        position: pending,
-      });
-    }
+    // Fire request.queued SSE so browser shows "Thinking..." indicator
+    await manager.applyEvent(prKey, {
+      type: 'request.queued',
+      requestType: type,
+      position: queue.pendingCount,
+    });
 
     queue.enqueue({ type, payload });
-    return c.json({ ok: true, queued: queue.pendingCount > 1 });
+    return c.json({ ok: true, queued: true });
   });
 }

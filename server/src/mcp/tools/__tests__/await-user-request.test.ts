@@ -82,7 +82,7 @@ describe('await_user_request', () => {
     expect(res.content[0].text).toContain('No active session');
   });
 
-  it('calls applyEvent with request.processing before waiting', async () => {
+  it('fires request.processing after dequeuing a request (not on timeout)', async () => {
     const applied: { prKey: string; event: SessionEvent }[] = [];
     const manager = {
       getActivePrKey: vi.fn(() => 'gh:test/repo#1'),
@@ -91,16 +91,24 @@ describe('await_user_request', () => {
       }),
     } as unknown as SessionManager;
 
-    const { queueManager } = makeQueueManager({ waitResult: null });
-    const mcp = { registerTool: vi.fn() } as unknown as McpServer;
-    registerAwaitUserRequest(mcp, manager, queueManager);
-    const h = extractHandler(mcp);
-
-    await h({});
-
-    expect(applied.length).toBeGreaterThanOrEqual(1);
+    // With a real request: should fire request.processing
+    const { queueManager: qm1 } = makeQueueManager({ waitResult: { type: 'chat', payload: { message: 'hi' } } });
+    const mcp1 = { registerTool: vi.fn() } as unknown as McpServer;
+    registerAwaitUserRequest(mcp1, manager, qm1);
+    const h1 = extractHandler(mcp1);
+    await h1({});
+    expect(applied.length).toBe(1);
     expect(applied[0].event.type).toBe('request.processing');
     expect(applied[0].prKey).toBe('gh:test/repo#1');
+
+    // With timeout (null): should NOT fire request.processing
+    applied.length = 0;
+    const { queueManager: qm2 } = makeQueueManager({ waitResult: null });
+    const mcp2 = { registerTool: vi.fn() } as unknown as McpServer;
+    registerAwaitUserRequest(mcp2, manager, qm2);
+    const h2 = extractHandler(mcp2);
+    await h2({});
+    expect(applied.length).toBe(0);
   });
 
   it('returns { type: "no_request" } when waitForRequest returns null (timeout)', async () => {
