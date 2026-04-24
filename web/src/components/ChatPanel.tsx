@@ -192,6 +192,17 @@ export function ChatPanel({
             </div>
           ))
         )}
+        {isThinking && (
+          <div className="msg thinking-indicator">
+            <div className="av claude">C</div>
+            <div className="body">
+              <span className="who">Claude</span>
+              <div className="typing-dots">
+                <span /><span /><span />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Error toast */}
