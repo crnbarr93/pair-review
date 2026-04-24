@@ -385,10 +385,10 @@ button {
 .summary-toggle-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: 8px;
-  font-size: 13px;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 7px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   border: none;
@@ -397,19 +397,19 @@ button {
   transition: all 0.15s;
 }
 .summary-toggle-btn.active {
-  background: var(--ink);
+  background: var(--claude);
   color: #fff;
 }
 .summary-toggle-btn .toggle-avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: var(--claude);
   color: #fff;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   line-height: 1;
 }
