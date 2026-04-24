@@ -474,8 +474,8 @@ export function SubmissionPanel() {
 
       {/* Reuse existing SubmitModal when opened */}
       {modalOpen && (
-        <div className="sm-overlay" onClick={() => setModalOpen(false)}>
-          <div className="sm-card" onClick={e => e.stopPropagation()}>
+        <div className="submit-modal-backdrop" onClick={() => setModalOpen(false)}>
+          <div className="submit-modal-card" onClick={e => e.stopPropagation()}>
             <SubmissionContent />
           </div>
         </div>
