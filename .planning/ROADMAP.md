@@ -164,6 +164,19 @@ Plans:
 
 ---
 
+### Phase 06.2: UI design alignment — match review workspace to updated design.html mockups (INSERTED)
+
+**Goal:** Pixel-match the review workspace to the updated design.html mockups across all 4 steps (Summary, Walkthrough, Review, Submission). Two-row TopBar, step-based routing with right panel (step content + chat), contextual footer, and component relocations (summary to full-page, findings to inline, submit modal to step view, walkthrough steps to right panel).
+**Requirements**: D-01 through D-11 (CONTEXT.md locked decisions)
+**Depends on:** Phase 06.1
+**Plans:** 4 plans in 3 waves
+
+Plans:
+- [ ] 06.2-01-PLAN.md — Foundation: store activeStep + CSS structural overhaul + RightPanel + StepFooter + SummaryStep (Wave 1)
+- [ ] 06.2-02-PLAN.md — TopBar two-row rework with StepNav (Wave 1)
+- [ ] 06.2-03-PLAN.md — Component transformations: ChatPanel, FindingsSidebar, SubmitModal, WalkthroughStepList (Wave 2)
+- [ ] 06.2-04-PLAN.md — App.tsx step-routing rewrite + WalkthroughBanner cleanup + human-verify checkpoint (Wave 3)
+
 ### Phase 06.1: Bidirectional LLM Collaboration + Auto-Generation (INSERTED)
 
 **Goal:** Flip the interaction model so the browser UI drives the LLM. Three capabilities: (1) auto-generation of PR summary + walkthrough on startup so the user never has to prompt Claude manually, (2) reverse communication channel via long-poll MCP tool (`await_user_request`) so the browser can send requests to the Claude Code session, (3) chat panel + user-initiated inline comments with @claude tagging for line-level collaboration.
@@ -194,7 +207,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 06.1 → 7
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 06.1 → 06.2 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -205,6 +218,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 06.1 → 7
 | 5. Walkthrough + Inline Threaded Comments | 0/6 | Planning | - |
 | 6. Review Submission + Verdict UI | 0/TBD | Not started | - |
 | 06.1. Bidirectional LLM Collaboration | 0/5 | Planning | - |
+| 06.2. UI Design Alignment | 0/4 | Planning | - |
 | 7. Polish + Concurrency | 0/TBD | Not started | - |
 
 ---
