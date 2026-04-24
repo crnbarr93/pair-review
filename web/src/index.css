@@ -1944,17 +1944,6 @@ button {
   border-left: 3px solid var(--claude);
 }
 
-/* Walkthrough step list panel */
-.wsl {
-  padding: 8px 0;
-}
-.wsl-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding: 4px 14px 8px;
-  border-bottom: 1px solid var(--line);
-}
 /* Right-hand review panel */
 .review-panel {
   display: flex;
@@ -1993,10 +1982,21 @@ button {
 }
 
 /* Walkthrough step list */
+.wsl {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+  background: var(--paper);
+}
 .wsl-header {
   padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
 }
 .wsl-stage-label {
+  display: block;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -2005,22 +2005,16 @@ button {
   margin-bottom: 4px;
 }
 .wsl-title {
+  display: block;
   font-size: 18px;
   font-weight: 700;
   color: var(--ink);
   margin-bottom: 4px;
 }
 .wsl-subtitle {
+  display: block;
   font-size: 12px;
   color: var(--ink-4);
-}
-.wsl {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-  padding: 0;
-  background: var(--paper-2);
 }
 .wsl-steps {
   padding: 0 12px 12px;
