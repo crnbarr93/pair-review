@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { marked } from 'marked';
 import type { PrSummary, SummaryIntent, PullRequestMeta } from '@shared/types';
 import { postUserRequest } from '../api';
 
@@ -25,6 +26,11 @@ export function SummaryStep({ summary, authorDescription, pr, prKey }: SummarySt
   const additions = pr?.additions ?? 0;
   const deletions = pr?.deletions ?? 0;
   const commits = 0;
+
+  const renderedAuthorDescription = useMemo(() => {
+    if (!authorDescription) return '';
+    return marked.parse(authorDescription, { async: false }) as string;
+  }, [authorDescription]);
 
   return (
     <div className="summary-step">
@@ -157,8 +163,28 @@ export function SummaryStep({ summary, authorDescription, pr, prKey }: SummarySt
 
         {activeTab === 'author' && (
           <div className="summary-section">
+            {/* Author info header */}
+            <div className="summary-author-header">
+              <div className="summary-author-identity">
+                <span className="summary-author-avatar">{(pr?.author ?? 'u')[0]}</span>
+                <div>
+                  <div className="summary-author-name">{pr?.author ?? 'Unknown'}</div>
+                  <div className="summary-author-meta">
+                    opened this PR · <code>{pr?.headBranch ?? '?'}</code> → <code>{pr?.baseBranch ?? '?'}</code>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="summary-ask-description-btn"
+                onClick={() => handleAsk('Can you explain the author\'s description in more detail?')}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+                Ask about this description
+              </button>
+            </div>
             {authorDescription ? (
-              <div className="summary-author-block">{authorDescription}</div>
+              <div className="summary-author-block summary-markdown" dangerouslySetInnerHTML={{ __html: renderedAuthorDescription }} />
             ) : (
               <div className="summary-author-block" style={{ fontStyle: 'italic', color: 'var(--ink-4)' }}>
                 No description provided.
