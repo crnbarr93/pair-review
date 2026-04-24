@@ -21,7 +21,6 @@ import type {
   Walkthrough,
 } from '@shared/types';
 import { ThreadCard } from './ThreadCard';
-import { WalkthroughBanner } from './WalkthroughBanner';
 import { InlineComposer } from './InlineComposer';
 
 export type DiffView = 'unified' | 'split';
@@ -273,16 +272,6 @@ function FileSection({
                   walkthroughStepForHunk ? 'hunk--curated' : '',
                 ].filter(Boolean).join(' ')}
               >
-                {walkthroughStepForHunk && (
-                  <WalkthroughBanner
-                    step={walkthroughStepForHunk}
-                    stepNum={walkthroughStepForHunk.stepNum}
-                    totalSteps={walkthrough?.steps.length ?? 0}
-                    isActive={walkthrough?.cursor === stepIndex}
-                    onSkip={onSkipStep ?? (() => {})}
-                    onNext={onNextStep ?? (() => {})}
-                  />
-                )}
                 <div className="hunk-code">
                   <div className="hunk-head">{hunk.header}</div>
                   {view === 'unified' ? (

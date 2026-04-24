@@ -1,3 +1,5 @@
+// DEPRECATED — Phase 06.2 moved walkthrough step display to RightPanel.
+// This file is kept for reference but is no longer imported anywhere.
 import type { WalkthroughStep } from '@shared/types';
 
 function cn(...parts: Array<string | false | undefined | null>): string {
