@@ -91,6 +91,12 @@ button {
   background: var(--paper);
 }
 
+/* Top bar shell — wraps the two rows (PR info + step nav) */
+.topbar-shell {
+  display: flex;
+  flex-direction: column;
+}
+
 /* Top bar */
 .topbar {
   display: flex;
