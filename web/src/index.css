@@ -2728,7 +2728,41 @@ button {
 /* SubmissionPanel — inline right-panel variant (no modal wrapper) */
 .submission-panel {
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 0;
+}
+.submission-panel .sm-stats-row {
+  padding: 10px 12px;
+}
+.submission-panel .sm-stat-box {
+  padding: 4px 4px;
+}
+.submission-panel .sm-stat-value {
+  font-size: 18px;
+}
+.submission-panel .sm-stat-label {
+  font-size: 9px;
+}
+.submission-panel .sm-section {
+  padding: 12px 14px;
+}
+.submission-panel .sm-verdict-row {
+  gap: 6px;
+}
+.submission-panel .sm-verdict-card {
+  padding: 10px;
+  gap: 8px;
+}
+.submission-panel .sm-verdict-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.submission-panel .sm-verdict-title {
+  font-size: 12px;
+}
+.submission-panel .sm-verdict-sub {
+  font-size: 10px;
 }
 
 /* Pending review modal — narrower variant */
