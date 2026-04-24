@@ -1,9 +1,9 @@
-// App.tsx — Phase 3 final 2-column AppShell (D-02).
+// App.tsx — Phase 06.2 step-routed AppShell (D-01 through D-11).
 //
-// Layout: TopBar row (44px) over (FileExplorer 280px | DiffViewer 1fr).
-// Wires live store data into TopBar + FileExplorer + DiffViewer; mounts StaleDiffModal.
-// Owns the single global keydown listener (D-17), IntersectionObserver for auto-in-progress
-// (D-11), toast state, and footer hint (D-19).
+// Layout: TopBar (two-row header) over step-routed main content.
+// Summary step: 1fr 360px (SummaryStep + RightPanel chat only).
+// Diff steps (walkthrough/review/submission): 240px 1fr 360px (FileExplorer + DiffViewer + RightPanel).
+// StepFooter renders contextual actions below main content for all steps except submission.
 //
 // prKey sourcing: read `state.prKey` directly — NEVER reconstruct from pr.owner/repo/number.
 // Plan 03-04 Task 2 populates state.prKey from msg.session.prKey in both onSnapshot and
@@ -12,16 +12,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { DiffModel, DiffFile, Hunk, FileReviewStatus, Thread } from '@shared/types';
 import { useAppStore, actions } from './store';
-import { postSessionEvent } from './api';
-import { TopBar, StageStepper } from './components/TopBar';
+import { postSessionEvent, postUserRequest } from './api';
+import { TopBar } from './components/TopBar';
+import { RightPanel } from './components/RightPanel';
+import { StepFooter, type ReviewStep } from './components/StepFooter';
+import { SummaryStep } from './components/SummaryStep';
 import { FileExplorer } from './components/FileExplorer';
 import { DiffViewer, type DiffView } from './components/DiffViewer';
 import { StaleDiffModal } from './components/StaleDiffModal';
-import { SubmitModal } from './components/SubmitModal';
+import { SubmitModal, SubmissionPanel } from './components/SubmitModal';
 import { PendingReviewModal } from './components/PendingReviewModal';
 import { FindingsSidebar } from './components/FindingsSidebar';
-import { SummaryDrawer } from './components/SummaryDrawer';
 import { ChatPanel } from './components/ChatPanel';
+import { WalkthroughStepList } from './components/WalkthroughStepList';
 
 function cn(...parts: Array<string | false | undefined | null>): string {
   return parts.filter(Boolean).join(' ');
@@ -37,7 +40,7 @@ export default function App() {
   // silently fails for local-branch sessions — see Plan 03-05 threat T-3-13).
   const prKey = state.prKey;
 
-  const [summaryDrawerOpen, setSummaryDrawerOpen] = useState(false);
+  const activeStep = state.activeStep;
   const [view, setView] = useState<DiffView>('unified');
   const [focusedHunkId, setFocusedHunkId] = useState<string | null>(null);
   const [focusedFileId, setFocusedFileId] = useState<string | null>(null);
@@ -302,6 +305,94 @@ export default function App() {
     [showToast]
   );
 
+  // Step navigation handler
+  const handleStepClick = useCallback((step: ReviewStep) => {
+    actions.setActiveStep(step);
+  }, []);
+
+  // Continue handler for StepFooter CTAs
+  const handleContinue = useCallback(() => {
+    const stepOrder: ReviewStep[] = ['summary', 'walkthrough', 'review', 'submission'];
+    const currentIdx = stepOrder.indexOf(activeStep);
+    if (currentIdx < stepOrder.length - 1) {
+      actions.setActiveStep(stepOrder[currentIdx + 1]);
+    }
+  }, [activeStep]);
+
+  // Regenerate summary handler
+  const handleRegenerateSummary = useCallback(async () => {
+    if (!prKey) return;
+    try {
+      await postUserRequest(prKey, { type: 'regenerate_summary' });
+      showToast('Regenerating summary...');
+    } catch {
+      showToast('Could not regenerate summary. Retry.');
+    }
+  }, [prKey, showToast]);
+
+  // Mark all reviewed handler
+  const handleMarkAllReviewed = useCallback(() => {
+    if (!prKey || !diff) return;
+    for (const file of diff.files) {
+      if (file.generated) continue;
+      const current = state.fileReviewStatus?.[file.id] ?? 'untouched';
+      if (current !== 'reviewed') {
+        postSessionEvent(prKey, {
+          type: 'file.reviewStatusSet',
+          fileId: file.id,
+          status: 'reviewed',
+        }).catch(() => {});
+      }
+    }
+    showToast('All files marked reviewed');
+  }, [prKey, diff, state.fileReviewStatus, showToast]);
+
+  // Chat context badge (D-04)
+  const chatContextBadge = useMemo(() => {
+    const focusedFile = diff?.files.find(f => f.id === focusedFileId);
+    const fileName = focusedFile?.path?.split('/').pop() ?? '';
+    switch (activeStep) {
+      case 'summary': return 'SUMMARY';
+      case 'walkthrough': return fileName ? `WALKTHROUGH . ${fileName}` : 'WALKTHROUGH';
+      case 'review': {
+        if (focusedHunkId && fileName) {
+          const lineMatch = focusedHunkId.match(/:h(\d+)/);
+          const hunkNum = lineMatch ? lineMatch[1] : '';
+          return `REVIEW . ${fileName}${hunkNum ? ` . H${hunkNum}` : ''}`;
+        }
+        return fileName ? `REVIEW . ${fileName}` : 'REVIEW';
+      }
+      case 'submission': return fileName ? `SUBMISSION . ${fileName}` : 'SUBMISSION';
+      default: return '';
+    }
+  }, [activeStep, focusedFileId, focusedHunkId, diff]);
+
+  // Step-specific suggestion chips (D-04)
+  const chatSuggestionChips = useMemo(() => {
+    switch (activeStep) {
+      case 'summary': return [
+        { label: 'What does this PR do?', message: 'Can you explain the purpose of this PR?' },
+        { label: 'What are the risks?', message: 'What are the main risks with this change?' },
+        { label: 'Regenerate summary', message: 'Please regenerate the PR summary.' },
+      ];
+      case 'walkthrough': return [
+        { label: 'Explain this change', message: 'Can you explain what this change does?' },
+        { label: 'Why this approach?', message: 'Why was this approach chosen?' },
+        { label: 'Skip to review', message: 'I want to skip ahead to the review.' },
+      ];
+      case 'review': return [
+        { label: 'Explain this finding', message: 'Can you explain this finding in more detail?' },
+        { label: 'Is this a false positive?', message: 'Could this finding be a false positive?' },
+        { label: 'Regenerate review', message: 'Please regenerate the self-review.' },
+      ];
+      case 'submission': return [
+        { label: 'Review my comments', message: 'Can you review the comments I am about to post?' },
+        { label: 'Suggest verdict', message: 'What verdict do you recommend?' },
+      ];
+      default: return undefined;
+    }
+  }, [activeStep]);
+
   // Global keydown listener (D-17). One listener, lives at the AppShell root.
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -355,12 +446,12 @@ export default function App() {
           break;
         case 'v':
           e.preventDefault();
-          actions.setSubmitModalOpen(true);
+          actions.setActiveStep('submission');
           break;
         case 's':
           e.preventDefault();
           if (state.submissionState?.status !== 'submitted') {
-            actions.setSubmitModalOpen(true);
+            actions.setActiveStep('submission');
           }
           break;
       }
@@ -434,55 +525,70 @@ export default function App() {
     return s;
   }, [state.expandedGeneratedFiles]);
 
+  // Shared ChatPanel slot — reused across all step renders
+  const chatPanelSlot = (
+    <ChatPanel
+      messages={state.chatMessages}
+      requestQueuePending={state.requestQueue.pending}
+      prKey={prKey}
+      hasSelfReview={state.selfReview != null}
+      contextBadge={chatContextBadge}
+      suggestionChips={chatSuggestionChips}
+    />
+  );
+
   return (
-    <div className={cn('app', state.findingsSidebarOpen && 'app--findings-open')}>
+    <div className="app">
       {state.pr && (
         <TopBar
           pr={state.pr}
           ciStatus={state.ciStatus}
           summary={state.summary}
           selfReview={state.selfReview}
-          activeCategory={state.activeCategory}
-          findingsSidebarOpen={state.findingsSidebarOpen}
-          onSummaryStep={() => setSummaryDrawerOpen((o) => !o)}
-          onSelfReviewStep={() => actions.toggleFindingsSidebar()}
-          onCategoryClick={(cat) => actions.setActiveCategory(cat)}
-          onToggleFindingsSidebar={() => actions.toggleFindingsSidebar()}
-          onSettingsClick={() => handleCTAStub('Settings coming in Phase 7')}
-          onSubmitReview={() => actions.setSubmitModalOpen(true)}
+          walkthrough={state.walkthrough}
           submissionState={state.submissionState}
-          pendingSubmission={state.pendingSubmission}
+          activeStep={activeStep}
+          onStepClick={handleStepClick}
+          onSettingsClick={() => handleCTAStub('Settings coming in Phase 7')}
+          onSubmitReview={() => actions.setActiveStep('submission')}
         />
       )}
-      <StageStepper
-        summary={state.summary}
-        selfReview={state.selfReview}
-        activeCategory={state.activeCategory}
-        walkthrough={state.walkthrough}
-        submissionState={state.submissionState}
-        onSummaryStep={() => setSummaryDrawerOpen((o) => !o)}
-        onSelfReviewStep={() => actions.toggleFindingsSidebar()}
-        onCategoryClick={(cat) => actions.setActiveCategory(cat)}
-        onWalkthroughStepClick={handleWalkthroughStepClick}
-        onShowAllToggle={handleShowAllToggle}
-        onSubmitStep={() => actions.setSubmitModalOpen(true)}
-      />
-      {state.summary && summaryDrawerOpen && (
-        <SummaryDrawer
-          summary={state.summary}
-          authorDescription={state.pr?.description}
-          open={summaryDrawerOpen}
-          onClose={() => setSummaryDrawerOpen(false)}
-        />
-      )}
-      <main className={cn('main', state.findingsSidebarOpen && 'main--findings-open', (state.walkthrough || state.chatPanelOpen) && 'main--panel-open')}>
-        {diff && (
+
+      <main className={cn('main', activeStep === 'summary' ? 'main--summary' : 'main--diff')}>
+        {activeStep === 'summary' && state.summary && (
+          <>
+            <SummaryStep
+              summary={state.summary}
+              authorDescription={state.pr?.description}
+              pr={state.pr}
+              prKey={prKey}
+            />
+            <RightPanel chatSlot={chatPanelSlot}>
+              {/* Summary step: no step-specific content above chat */}
+              <div />
+            </RightPanel>
+          </>
+        )}
+
+        {activeStep === 'summary' && !state.summary && (
+          <>
+            <div className="summary-step" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ textAlign: 'center', color: 'var(--ink-4)' }}>
+                <p style={{ fontWeight: 500, marginBottom: 8 }}>Summary not generated yet</p>
+                <p style={{ fontSize: 12 }}>Ask Claude to generate a PR summary.</p>
+              </div>
+            </div>
+            <RightPanel chatSlot={chatPanelSlot}>
+              <div />
+            </RightPanel>
+          </>
+        )}
+
+        {activeStep !== 'summary' && diff && (
           <>
             <FileExplorer
               files={diff.files}
-              fileReviewStatus={
-                (state.fileReviewStatus ?? {}) as Record<string, FileReviewStatus>
-              }
+              fileReviewStatus={(state.fileReviewStatus ?? {}) as Record<string, FileReviewStatus>}
               activeFileId={focusedFileId}
               onPickFile={handlePickFile}
             />
@@ -491,9 +597,7 @@ export default function App() {
               shikiTokens={state.shikiTokens ?? {}}
               view={view}
               onViewChange={setView}
-              fileReviewStatus={
-                (state.fileReviewStatus ?? {}) as Record<string, FileReviewStatus>
-              }
+              fileReviewStatus={(state.fileReviewStatus ?? {}) as Record<string, FileReviewStatus>}
               expandedGenerated={expandedGeneratedSet}
               focusedHunkId={focusedHunkId}
               readOnlyComments={state.existingComments ?? []}
@@ -506,29 +610,49 @@ export default function App() {
               onNextStep={handleNextStep}
               prKey={state.prKey}
             />
-            <FindingsSidebar
-              selfReview={state.selfReview}
-              open={state.findingsSidebarOpen}
-              onClose={() => actions.toggleFindingsSidebar()}
-              activeCategory={state.activeCategory}
-              onCategoryClick={(cat) => actions.setActiveCategory(cat)}
-              onFindingClick={(lineId) => {
-                const el = document.getElementById(lineId)
-                  ?? document.getElementById(lineId.replace(/:l\d+$/, ''));
-                el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }}
-            />
-            <ChatPanel
-              messages={state.chatMessages}
-              requestQueuePending={state.requestQueue.pending}
-              prKey={state.prKey}
-              open={state.chatPanelOpen}
-              hasSelfReview={state.selfReview != null}
-              onToggle={() => actions.setChatPanelOpen(!state.chatPanelOpen)}
-            />
+            <RightPanel chatSlot={chatPanelSlot}>
+              {/* Step-specific right panel content */}
+              {activeStep === 'walkthrough' && state.walkthrough && (
+                <WalkthroughStepList
+                  walkthrough={state.walkthrough}
+                  onStepClick={handleWalkthroughStepClick}
+                  onStepComplete={handleWalkthroughStepComplete}
+                  onStepToggle={handleWalkthroughStepToggle}
+                  onShowAllToggle={handleShowAllToggle}
+                />
+              )}
+              {activeStep === 'review' && (
+                <FindingsSidebar
+                  selfReview={state.selfReview}
+                  activeCategory={state.activeCategory}
+                  onCategoryClick={(cat) => actions.setActiveCategory(cat)}
+                  onFindingClick={(lineId) => {
+                    const el = document.getElementById(lineId)
+                      ?? document.getElementById(lineId.replace(/:l\d+$/, ''));
+                    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }}
+                />
+              )}
+              {activeStep === 'submission' && (
+                <SubmissionPanel />
+              )}
+              {/* Fallback empty slot when step content is null */}
+              {activeStep === 'walkthrough' && !state.walkthrough && <div />}
+            </RightPanel>
           </>
         )}
       </main>
+
+      <StepFooter
+        step={activeStep}
+        onRegenerateSummary={handleRegenerateSummary}
+        onMarkAllReviewed={handleMarkAllReviewed}
+        onExportComments={() => handleCTAStub('Export coming in a future phase')}
+        onContinue={handleContinue}
+        walkthroughStepsVisited={state.walkthrough?.steps.filter(s => s.status === 'visited').length}
+        walkthroughStepsTotal={state.walkthrough?.steps.length}
+      />
+
       <StaleDiffModal />
       <SubmitModal />
       <PendingReviewModal />
@@ -537,11 +661,6 @@ export default function App() {
           {toast}
         </div>
       )}
-      <div className="footer-hint" aria-hidden="true">
-        <span style={{ color: 'var(--ink-3)' }}>n / p · r · c</span>
-        {' · '}
-        <span style={{ color: 'var(--ink-4)' }}>v s</span>
-      </div>
     </div>
   );
 }
