@@ -563,10 +563,7 @@ export default function App() {
               pr={state.pr}
               prKey={prKey}
             />
-            <RightPanel chatSlot={chatPanelSlot}>
-              {/* Summary step: no step-specific content above chat */}
-              <div />
-            </RightPanel>
+            <RightPanel chatSlot={chatPanelSlot} />
           </>
         )}
 
@@ -578,9 +575,7 @@ export default function App() {
                 <p style={{ fontSize: 12 }}>Ask Claude to generate a PR summary.</p>
               </div>
             </div>
-            <RightPanel chatSlot={chatPanelSlot}>
-              <div />
-            </RightPanel>
+            <RightPanel chatSlot={chatPanelSlot} />
           </>
         )}
 
