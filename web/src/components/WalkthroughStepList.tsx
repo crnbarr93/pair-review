@@ -5,7 +5,7 @@ interface WalkthroughStepListProps {
   onStepClick: (cursor: number) => void;
   onStepComplete: (index: number) => void;
   onStepToggle: (index: number, status: 'visited' | 'pending') => void;
-  onShowAllToggle: (showAll: boolean) => void;
+  onShowAllToggle?: (showAll: boolean) => void;  // optional — may not be rendered in right panel
 }
 
 function StepIcon({ step, isActive, onToggle }: { step: WalkthroughStep; isActive: boolean; onToggle: () => void }) {

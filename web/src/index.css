@@ -2462,6 +2462,12 @@ button {
   }
 }
 
+/* SubmissionPanel — inline right-panel variant (no modal wrapper) */
+.submission-panel {
+  overflow-y: auto;
+  padding: 0;
+}
+
 /* Pending review modal — narrower variant */
 .pending-review-modal-card {
   background: var(--paper);
