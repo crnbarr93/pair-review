@@ -523,6 +523,7 @@ export default function App() {
               requestQueuePending={state.requestQueue.pending}
               prKey={state.prKey}
               open={state.chatPanelOpen}
+              hasSelfReview={state.selfReview != null}
               onToggle={() => actions.setChatPanelOpen(!state.chatPanelOpen)}
             />
           </>

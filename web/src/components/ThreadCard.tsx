@@ -124,6 +124,21 @@ export function ThreadCard({ thread, onDraftChange, onCollapse }: ThreadCardProp
         ))}
       </div>
 
+      {/* Typing indicator — Claude is preparing a reply */}
+      {thread.turns[thread.turns.length - 1]?.author === 'user' &&
+        thread.draftBody === undefined &&
+        !thread.resolved && (
+          <div className="thread-msg" style={{ marginBottom: 8 }}>
+            <div className="av claude" />
+            <div className="body">
+              <span className="who" style={{ fontSize: 12, fontWeight: 600 }}>Claude</span>
+              <div className="typing-dots">
+                <span /><span /><span />
+              </div>
+            </div>
+          </div>
+        )}
+
       {/* Draft comment slot — appears after draft_comment MCP call */}
       {thread.draftBody !== undefined && (
         <div className="thread-draft-slot" style={{ marginTop: 8 }}>

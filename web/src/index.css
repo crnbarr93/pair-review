@@ -610,6 +610,7 @@ button {
   display: flex;
   flex-direction: column;
   border-left: 1px solid var(--line);
+  overflow: hidden;
 }
 .chat-head {
   padding: 12px 16px;

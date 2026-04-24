@@ -30,13 +30,22 @@ export class SessionRequestQueue {
   enqueue(req: QueuedRequest): void {
     if (this.resolver !== null) {
       const resolve = this.resolver;
-      this.resolver = null;          // clear BEFORE calling resolve (prevents double-resolve race)
+      this.resolver = null;
       if (this.timeout !== null) {
         clearTimeout(this.timeout);
         this.timeout = null;
       }
       resolve(req);
     } else {
+      const last = this.queue[this.queue.length - 1];
+      if (last && last.type === req.type) {
+        if (req.type === 'chat') {
+          const prev = (last.payload?.message as string) ?? '';
+          const next = (req.payload?.message as string) ?? '';
+          last.payload = { ...last.payload, message: prev + '\n' + next };
+        }
+        return;
+      }
       this.queue.push(req);
     }
   }

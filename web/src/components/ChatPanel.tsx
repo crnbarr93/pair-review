@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ChatMessage } from '@shared/types';
 import { postUserRequest } from '../api';
 
@@ -7,6 +7,7 @@ interface ChatPanelProps {
   requestQueuePending: number;
   prKey: string;
   open: boolean;
+  hasSelfReview: boolean;
   onToggle: () => void;
 }
 
@@ -21,21 +22,41 @@ export function ChatPanel({
   requestQueuePending,
   prKey,
   open,
+  hasSelfReview,
   onToggle,
 }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const [sendError, setSendError] = useState<string | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const [awaitingReply, setAwaitingReply] = useState(false);
+  const msgCountAtSend = useRef(-1);
+  const prevCountRef = useRef(-1);
 
-  // Auto-scroll to bottom when new messages arrive, only if user is near bottom
   useEffect(() => {
+    if (!awaitingReply) return;
+    if (messages.length <= msgCountAtSend.current) return;
+    const newMessages = messages.slice(msgCountAtSend.current);
+    if (newMessages.some((m) => m.author === 'llm')) {
+      setAwaitingReply(false);
+    }
+  }, [messages, awaitingReply]);
+
+  const isThinking = awaitingReply || requestQueuePending > 0;
+
+  useLayoutEffect(() => {
     const el = bodyRef.current;
     if (!el) return;
-    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
+    const countChanged = messages.length !== prevCountRef.current;
+    prevCountRef.current = messages.length;
+    if (countChanged) {
+      el.scrollTop = el.scrollHeight;
+      return;
+    }
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
     if (nearBottom) {
       el.scrollTop = el.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isThinking]);
 
   if (!open) {
     return (
@@ -72,10 +93,13 @@ export function ChatPanel({
     if (!trimmed || !prKey) return;
     setInput('');
     setSendError(null);
+    msgCountAtSend.current = messages.length;
+    setAwaitingReply(true);
     try {
       await postUserRequest(prKey, { type: 'chat', payload: { message: trimmed } });
     } catch {
       setSendError('Failed to send message. Please retry.');
+      setAwaitingReply(false);
     }
   }
 
@@ -94,8 +118,6 @@ export function ChatPanel({
       sendMessage(input);
     }
   }
-
-  const isThinking = requestQueuePending > 0;
 
   return (
     <aside className="chat" id="chat-panel">
@@ -133,9 +155,10 @@ export function ChatPanel({
           type="button"
           className="btn-sm"
           onClick={handleRunReview}
+          disabled={isThinking}
           style={{ marginLeft: 4 }}
         >
-          Run review
+          {hasSelfReview ? 'Re-review' : 'Request review'}
         </button>
         <button
           type="button"

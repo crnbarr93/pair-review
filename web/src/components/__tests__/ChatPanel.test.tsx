@@ -17,6 +17,7 @@ const defaultProps = {
   requestQueuePending: 0,
   prKey: 'test/repo#1',
   open: true,
+  hasSelfReview: false,
   onToggle: vi.fn(),
 };
 
@@ -80,7 +81,7 @@ describe('ChatPanel', () => {
   it('calls postUserRequest with run_self_review when Run review button is clicked', async () => {
     const { postUserRequest } = await import('../../api');
     render(<ChatPanel {...defaultProps} />);
-    const runBtn = screen.getByText('Run review');
+    const runBtn = screen.getByText('Request review');
     fireEvent.click(runBtn);
     expect(postUserRequest).toHaveBeenCalledWith('test/repo#1', { type: 'run_self_review' });
   });
