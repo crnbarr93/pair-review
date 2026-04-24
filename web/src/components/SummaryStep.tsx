@@ -29,15 +29,16 @@ export function SummaryStep({ summary, authorDescription, pr, prKey }: SummarySt
   return (
     <div className="summary-step">
       <div className="summary-content">
-        {/* Stage header */}
+        {/* Stage header + toggle row */}
         <div className="summary-stage-label">Stage 1 · Summary</div>
-        <h2 className="summary-heading">What this PR does</h2>
-        <div className="summary-subtitle">
-          Claude read the diff and wrote this · last run 2m ago
-        </div>
-
-        {/* Tab toggle */}
-        <div className="summary-toggle">
+        <div className="summary-header-row">
+          <div>
+            <h2 className="summary-heading">What this PR does</h2>
+            <div className="summary-subtitle">
+              Claude read the diff and wrote this · last run 2m ago
+            </div>
+          </div>
+          <div className="summary-toggle">
           <button
             type="button"
             className={`summary-toggle-btn${activeTab === 'claude' ? ' active' : ''}`}
@@ -56,6 +57,7 @@ export function SummaryStep({ summary, authorDescription, pr, prKey }: SummarySt
             Author&apos;s description
             <span className="toggle-badge toggle-badge--original">original</span>
           </button>
+          </div>
         </div>
 
         {/* Tab content */}
@@ -96,7 +98,7 @@ export function SummaryStep({ summary, authorDescription, pr, prKey }: SummarySt
                   className="summary-ask-btn"
                   onClick={() => handleAsk('Can you explain the purpose of this PR in more detail?')}
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
                   Ask
                 </button>
               </div>
@@ -113,7 +115,7 @@ export function SummaryStep({ summary, authorDescription, pr, prKey }: SummarySt
                     className="summary-ask-btn"
                     onClick={() => handleAsk('Can you walk me through the key changes in this PR?')}
                   >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
                     Ask
                   </button>
                 </div>
@@ -134,7 +136,7 @@ export function SummaryStep({ summary, authorDescription, pr, prKey }: SummarySt
                   className="summary-ask-btn"
                   onClick={() => handleAsk('What are the main risks I should focus on when reviewing this PR?')}
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
                   Ask
                 </button>
               </div>
