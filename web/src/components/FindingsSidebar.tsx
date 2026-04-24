@@ -1,25 +1,25 @@
 import { useState } from 'react';
 import type { ChecklistCategory, ResolvedFinding, SelfReview, Severity } from '@shared/types';
-
-function cn(...parts: Array<string | false | undefined | null>): string {
-  return parts.filter(Boolean).join(' ');
-}
+import { postUserRequest } from '../api';
 
 const SEVERITY_ORDER: Record<Severity, number> = { blocker: 0, major: 1, minor: 2, nit: 3 };
-const CATEGORIES: ChecklistCategory[] = ['correctness', 'security', 'tests', 'performance', 'style'];
+const SEVERITY_LABEL: Record<Severity, string> = { blocker: 'BLOCKER', major: 'WARNING', minor: 'WARNING', nit: 'NIT' };
 const CAT_LABELS: Record<ChecklistCategory, string> = {
-  correctness: 'Correctness',
-  security: 'Security',
-  tests: 'Tests',
-  performance: 'Performance',
-  style: 'Style',
+  correctness: 'CORRECTNESS',
+  security: 'SECURITY',
+  tests: 'TESTS',
+  performance: 'PERFORMANCE',
+  style: 'STYLE',
 };
+
+type FilterMode = 'all' | 'open' | 'blockers';
 
 interface FindingsSidebarProps {
   selfReview: SelfReview | null | undefined;
   activeCategory: ChecklistCategory | null;
   onCategoryClick: (cat: ChecklistCategory | null) => void;
   onFindingClick: (lineId: string) => void;
+  prKey?: string;
 }
 
 export function FindingsSidebar({
@@ -27,134 +27,88 @@ export function FindingsSidebar({
   activeCategory,
   onCategoryClick,
   onFindingClick,
+  prKey,
 }: FindingsSidebarProps) {
-  const [expandedFindings, setExpandedFindings] = useState<Set<string>>(new Set());
-  const [activeFindingId, setActiveFindingId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<FilterMode>('all');
 
   if (!selfReview) {
     return (
-      <div className="findings-sidebar" role="complementary" aria-label="Code review findings">
-        <div className="findings-sidebar-header">
-          <h3>Findings</h3>
-        </div>
-        <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--ink-4)' }}>
-          <p style={{ fontWeight: 500, marginBottom: 8 }}>Self-review not run yet</p>
-          <p style={{ fontSize: 12 }}>Ask Claude to run_self_review to see findings here.</p>
+      <div className="findings-panel">
+        <div className="findings-panel-header">
+          <div className="findings-stage-label">Stage 3 · Review</div>
+          <div className="findings-title">Findings</div>
+          <div className="findings-subtitle">Self-review not run yet</div>
         </div>
       </div>
     );
   }
 
-  const visibleCategories = activeCategory ? [activeCategory] : CATEGORIES;
+  const allFindings = selfReview.findings
+    .sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
 
-  const handleFindingClick = (finding: ResolvedFinding) => {
-    onFindingClick(finding.lineId);
-    setActiveFindingId(finding.id);
-    setTimeout(() => setActiveFindingId(null), 1500);
-  };
+  const blockerCount = allFindings.filter(f => f.severity === 'blocker').length;
+  const openCount = allFindings.length;
 
-  const toggleFindingExpand = (id: string) => {
-    setExpandedFindings((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const filtered = filter === 'blockers'
+    ? allFindings.filter(f => f.severity === 'blocker')
+    : allFindings;
+
+  async function handleAsk(finding: ResolvedFinding) {
+    if (!prKey) return;
+    try {
+      await postUserRequest(prKey, { type: 'chat', payload: { message: `Tell me more about this finding: "${finding.title}" at ${finding.path}:${finding.line}` } });
+    } catch { /* chat panel surfaces errors */ }
+  }
 
   return (
-    <div className="findings-sidebar" role="complementary" aria-label="Code review findings">
-      <div className="findings-sidebar-header">
-        <h3>
-          Findings ({selfReview.findings.length})
-          {activeCategory && (
-            <button
-              type="button"
-              className="filter-badge"
-              onClick={() => onCategoryClick(null)}
-              aria-label="Clear category filter"
-            >
-              {CAT_LABELS[activeCategory]} ×
-            </button>
-          )}
-        </h3>
+    <div className="findings-panel">
+      <div className="findings-panel-header">
+        <div className="findings-stage-label">Stage 3 · Review</div>
+        <div className="findings-title">Findings · ranked by severity</div>
+        <div className="findings-subtitle">
+          {blockerCount > 0 && <span className="findings-blocker-count">{blockerCount} blocker{blockerCount !== 1 ? 's' : ''}</span>}
+          {blockerCount > 0 && ' · '}{openCount} open
+        </div>
+        <div className="findings-filter-tabs">
+          <button type="button" className={`findings-filter-tab${filter === 'all' ? ' active' : ''}`} onClick={() => setFilter('all')}>All</button>
+          <button type="button" className={`findings-filter-tab${filter === 'open' ? ' active' : ''}`} onClick={() => setFilter('open')}>Open</button>
+          <button type="button" className={`findings-filter-tab${filter === 'blockers' ? ' active' : ''}`} onClick={() => setFilter('blockers')}>Blockers</button>
+        </div>
       </div>
 
-      {/* Category coverage chips — moved from StageStepper per D-09 */}
-      {selfReview && (
-        <div className="findings-coverage-strip" role="group" aria-label="Category coverage">
-          {CATEGORIES.map((cat) => {
-            const count = selfReview.findings.filter((f) => f.category === cat).length;
-            const coverageStatus = selfReview.coverage[cat];
-            const isActive = activeCategory === cat;
-            return (
-              <button
-                key={cat}
-                type="button"
-                className={cn('coverage-chip', `coverage-chip--${coverageStatus}`, isActive && 'active')}
-                onClick={() => onCategoryClick(isActive ? null : cat)}
-                aria-label={`${cat}: ${coverageStatus}`}
-              >
-                {CAT_LABELS[cat]} ({count})
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {visibleCategories.map((cat) => {
-        const findings = selfReview.findings
-          .filter((f) => f.category === cat)
-          .sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
-
-        return (
-          <div key={cat} className="findings-category">
-            <div
-              className="findings-category-header"
-              onClick={() => onCategoryClick(activeCategory === cat ? null : cat)}
-              role="button"
-              tabIndex={0}
-              aria-label={`${CAT_LABELS[cat]} category: ${findings.length} findings`}
-            >
-              <span>{CAT_LABELS[cat]}</span>
-              <span className="findings-count">({findings.length})</span>
+      <div className="findings-cards">
+        {filtered.map((f, i) => (
+          <div
+            key={f.id}
+            className={`findings-card findings-card--${f.severity}`}
+            onClick={() => onFindingClick(f.lineId)}
+          >
+            <div className="findings-card-num">{i + 1}</div>
+            <div className="findings-card-meta">
+              <span className={`findings-severity-badge findings-severity-badge--${f.severity}`}>
+                {SEVERITY_LABEL[f.severity]}
+              </span>
+              <span className="findings-category-label">{CAT_LABELS[f.category]}</span>
             </div>
-            {findings.map((f) => (
-              <div
-                key={f.id}
-                className={cn('findings-row', activeFindingId === f.id && 'active')}
+            <div className="findings-card-title">{f.title}</div>
+            <div className="findings-card-desc">{f.rationale}</div>
+            <div className="findings-card-footer">
+              <span className="findings-card-file">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                {f.path} :{f.line}
+              </span>
+              <button
+                type="button"
+                className="findings-card-ask"
+                onClick={(e) => { e.stopPropagation(); handleAsk(f); }}
               >
-                <span
-                  className={`severity-pill severity-pill--${f.severity}`}
-                  aria-label={`${f.severity} severity`}
-                >
-                  {f.severity}
-                </span>
-                <button
-                  type="button"
-                  className="findings-file-ref"
-                  onClick={() => handleFindingClick(f)}
-                  aria-label={`${f.path} line ${f.line}`}
-                >
-                  {f.path}:{f.line}
-                </button>
-                <button
-                  type="button"
-                  className="findings-title"
-                  onClick={() => toggleFindingExpand(f.id)}
-                >
-                  {f.title}
-                </button>
-                {expandedFindings.has(f.id) && (
-                  <div className="findings-rationale">
-                    {f.rationale}
-                  </div>
-                )}
-              </div>
-            ))}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+                Ask
+              </button>
+            </div>
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }
