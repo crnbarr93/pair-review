@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ChecklistCategory, ResolvedFinding, SelfReview, Severity } from '@shared/types';
 import { postUserRequest, postSessionEvent } from '../api';
+import { ReviewLoadingState } from './LoadingSkeletons';
 
 const SEVERITY_ORDER: Record<Severity, number> = { blocker: 0, major: 1, minor: 2, nit: 3 };
 const SEVERITY_LABEL: Record<Severity, string> = { blocker: 'BLOCKER', major: 'WARNING', minor: 'WARNING', nit: 'NIT' };
@@ -34,17 +35,7 @@ export function FindingsSidebar({
   const [filter, setFilter] = useState<FilterMode>('all');
 
   if (!selfReview) {
-    return (
-      <div className="findings-panel">
-        <div className="findings-panel-header">
-          <div className="findings-stage-label">Stage 3 · Review</div>
-          <div className="findings-title">Findings</div>
-          <div className="findings-subtitle">
-            <span className="generating-pulse">Running self-review...</span>
-          </div>
-        </div>
-      </div>
-    );
+    return <ReviewLoadingState />;
   }
 
   const allFindings = selfReview.findings

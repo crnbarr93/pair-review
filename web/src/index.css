@@ -3037,46 +3037,6 @@ tr:hover .gutter-add-comment {
 
 /* ── Loading / generating animations ── */
 
-/* Skeleton shimmer: horizontal gradient sweep for summary placeholder */
-@keyframes generating-shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-.generating-shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--paper-2) 25%,
-    var(--paper-3) 50%,
-    var(--paper-2) 75%
-  );
-  background-size: 200% 100%;
-  animation: generating-shimmer 1.8s ease-in-out infinite;
-  border-radius: 4px;
-}
-
-/* Pulsing dot: compact indicator for right-panel placeholders */
-@keyframes generating-pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
-}
-.generating-pulse {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--ink-4);
-  font-family: var(--sans);
-  font-size: 13px;
-}
-.generating-pulse::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--claude);
-  animation: generating-pulse 1.4s ease-in-out infinite;
-}
-
 /* Animated ellipsis for TopBar status text */
 @keyframes generating-ellipsis {
   0% { content: ''; }
@@ -3094,45 +3054,440 @@ tr:hover .gutter-add-comment {
   animation: generating-ellipsis 1.5s step-end infinite;
 }
 
-/* Summary skeleton placeholder layout */
-.summary-skeleton {
+/* ── Skeleton primitive ──
+   Warm paper-toned block with horizontal shimmer.
+   Reads as "in flight" without screaming for attention. */
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skel {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--paper-2) 0%,
+    var(--paper-2) 40%,
+    var(--claude-2) 50%,
+    var(--paper-2) 60%,
+    var(--paper-2) 100%
+  );
+  background-size: 200% 100%;
+  background-position: 200% 0;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  border-radius: 3px;
+  height: 12px;
+}
+.skel.h-line   { height: 11px; }
+.skel.h-text   { height: 13px; }
+.skel.h-title  { height: 18px; border-radius: 4px; }
+.skel.h-eyebrow{ height: 9px; width: 96px; border-radius: 2px; }
+.skel.h-stat   { height: 24px; border-radius: 4px; }
+.skel.w-30 { width: 30%; }
+.skel.w-40 { width: 40%; }
+.skel.w-50 { width: 50%; }
+.skel.w-60 { width: 60%; }
+.skel.w-70 { width: 70%; }
+.skel.w-80 { width: 80%; }
+.skel.w-90 { width: 90%; }
+.skel.w-100{ width: 100%; }
+
+/* ── "Claude is generating…" status strip ── */
+
+.ctx-loading-status {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 32px;
-  max-width: 560px;
-  width: 100%;
-}
-.summary-skeleton-heading {
-  height: 20px;
-  width: 45%;
-}
-.summary-skeleton-line {
-  height: 14px;
-}
-.summary-skeleton-line:nth-child(2) { width: 90%; }
-.summary-skeleton-line:nth-child(3) { width: 75%; }
-.summary-skeleton-line:nth-child(4) { width: 82%; }
-.summary-skeleton-line:nth-child(5) { width: 60%; }
-.summary-skeleton-label {
-  margin-top: 8px;
-  font-family: var(--sans);
+  align-items: center;
+  gap: 8px;
   font-size: 12px;
+  color: var(--claude);
+  margin-top: 4px;
+}
+.ctx-loading-status .live-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--claude);
+  position: relative;
+  flex: 0 0 7px;
+}
+@keyframes live-pulse {
+  0%   { transform: scale(1);   opacity: 0.5; }
+  100% { transform: scale(2.6); opacity: 0;   }
+}
+.ctx-loading-status .live-dot::before,
+.ctx-loading-status .live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--claude);
+  opacity: 0.5;
+  animation: live-pulse 1.6s ease-out infinite;
+}
+.ctx-loading-status .live-dot::after { animation-delay: 0.8s; }
+.ctx-loading-status .ctx-loading-label {
+  font-weight: 500;
+  color: var(--claude);
+  letter-spacing: 0.005em;
+}
+.ctx-loading-status .ctx-loading-substep {
   color: var(--ink-4);
-  text-align: center;
+  font-family: var(--mono);
+  font-size: 10.5px;
+}
+.ctx-loading-status .ctx-loading-substep::before {
+  content: "·";
+  margin-right: 6px;
+  color: var(--line-2);
 }
 
-/* Right-panel generating placeholder */
-.generating-placeholder {
+/* ── Progress bar under panel header ── */
+
+@keyframes ctx-loading-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(380%); }
+}
+.ctx-loading-bar {
+  height: 2px;
+  background: var(--claude-2);
+  position: relative;
+  overflow: hidden;
+}
+.ctx-loading-bar::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 35%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--claude) 50%,
+    transparent 100%
+  );
+  animation: ctx-loading-sweep 1.6s ease-in-out infinite;
+}
+
+/* ── Stage chips (pipeline progress) ── */
+
+.ctx-loading-stages {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.ctx-loading-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 7px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font-size: 10.5px;
+  color: var(--ink-4);
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+.ctx-loading-stage-glyph {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--paper-3);
+  display: grid; place-items: center;
+  flex: 0 0 12px;
+  color: var(--ink-4);
+}
+.ctx-loading-stage.done {
+  background: var(--claude-2);
+  border-color: var(--claude-3);
+  color: var(--claude);
+}
+.ctx-loading-stage.done .ctx-loading-stage-glyph {
+  background: var(--claude);
+  color: #fff;
+}
+.ctx-loading-stage.done .ctx-loading-stage-glyph svg { width: 8px; height: 8px; }
+.ctx-loading-stage.active {
+  background: var(--paper);
+  border-color: var(--ink-3);
+  color: var(--ink);
+}
+@keyframes mini-spin {
+  to { transform: rotate(360deg); }
+}
+.ctx-loading-stage.active .ctx-loading-stage-glyph {
+  background: transparent;
+  border: 1.4px solid var(--claude);
+  border-right-color: transparent;
+  animation: mini-spin 0.85s linear infinite;
+}
+.ctx-loading-stage.pending { opacity: 0.55; }
+
+/* ── Skeleton footer (shared by walkthrough + review loading) ── */
+
+.skel-loading-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--line);
+}
+.skel-loading-spinner {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 1.6px solid var(--claude);
+  border-right-color: transparent;
+  animation: mini-spin 0.85s linear infinite;
+  flex: 0 0 11px;
+}
+.skel-loading-meta {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  font-family: var(--mono);
+}
+
+/* ── Step footer loading state ── */
+
+.step-footer.step-footer--loading button { pointer-events: none; opacity: 0.5; }
+.step-footer.step-footer--loading .footer-secondary::before {
+  content: "";
+  display: inline-block;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 1.6px solid var(--claude);
+  border-right-color: transparent;
+  animation: mini-spin 0.85s linear infinite;
+  margin-right: 4px;
+}
+
+/* ── Stage 1 · Summary loading ── */
+
+.summary-loading-content {
+  width: 100%;
+}
+.skel-summary-body {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 0 48px;
+  position: relative;
+}
+@keyframes scan-sweep {
+  0%   { top: 0;    opacity: 0;   }
+  10%  {            opacity: 0.4; }
+  90%  {            opacity: 0.4; }
+  100% { top: 92%;  opacity: 0;   }
+}
+.skel-summary-body::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--claude) 50%,
+    transparent 100%
+  );
+  opacity: 0.35;
+  animation: scan-sweep 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+.skel-tldr {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  background: var(--claude-2);
+  border: 1px solid var(--claude-3);
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
   gap: 8px;
 }
-.generating-placeholder .generating-pulse {
-  font-weight: 500;
+.skel-tldr-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--claude);
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  margin-bottom: 2px;
+  display: flex; align-items: center; gap: 6px;
+}
+@keyframes cursor-blink {
+  0%, 50%   { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+.skel-tldr-cursor {
+  width: 7px; height: 12px;
+  background: var(--claude);
+  display: inline-block;
+  animation: cursor-blink 1.05s steps(2, end) infinite;
+  vertical-align: middle;
+  margin-left: 1px;
+}
+.skel-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  background: var(--paper);
+}
+.skel-stats > div {
+  padding: 12px 14px;
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.skel-stats > div:last-child { border-right: 0; }
+.skel-section { margin-bottom: 22px; }
+.skel-section .skel-h {
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.skel-section .skel-p {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.skel-stagger > * { animation-delay: 0s; }
+.skel-stagger > *:nth-child(2) .skel { animation-delay: 0.15s; }
+.skel-stagger > *:nth-child(3) .skel { animation-delay: 0.30s; }
+
+/* ── Stage 2 · Walkthrough loading ── */
+
+@keyframes walk-item-appear {
+  0%   { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0);   }
+}
+.wsl-loading .wsl-header {
+  padding-bottom: 0;
+}
+.skel-walk-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.skel-walk-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  animation: walk-item-appear 0.5s ease-out both;
+}
+.skel-walk-item:nth-child(1) { animation-delay: 0.05s; }
+.skel-walk-item:nth-child(2) { animation-delay: 0.30s; }
+.skel-walk-item:nth-child(3) { animation-delay: 0.55s; }
+.skel-walk-item:nth-child(4) { animation-delay: 0.80s; }
+.skel-walk-item:nth-child(5) { animation-delay: 1.05s; }
+.skel-walk-item:nth-child(6) { animation-delay: 1.30s; }
+.skel-walk-item.pending {
+  opacity: 0.5;
+  filter: saturate(0.7);
+}
+.skel-walk-item.active {
+  border-color: var(--claude-3);
+  background: var(--claude-2);
+}
+.skel-walk-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  background: var(--paper-2);
+  flex: 0 0 24px;
+  display: grid; place-items: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-4);
+  margin-top: 1px;
+}
+.skel-walk-item.active .skel-walk-num {
+  background: var(--claude);
+  border-color: var(--claude);
+  color: #fff;
+}
+.mini-spin {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 1.6px solid currentColor;
+  border-right-color: transparent;
+  animation: mini-spin 0.85s linear infinite;
+  display: block;
+}
+.skel-walk-body {
+  flex: 1;
+  display: flex; flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* ── Stage 3 · Review loading ── */
+
+.skel-find-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.skel-find-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line-2);
+  border-radius: 6px;
+  background: var(--paper);
+  animation: walk-item-appear 0.5s ease-out both;
+}
+.skel-find-item:nth-child(1) { animation-delay: 0.05s; }
+.skel-find-item:nth-child(2) { animation-delay: 0.30s; }
+.skel-find-item:nth-child(3) { animation-delay: 0.55s; }
+.skel-find-item:nth-child(4) { animation-delay: 0.80s; }
+.skel-find-item.skel-sev-blocker { border-left-color: var(--block); }
+.skel-find-item.skel-sev-warn    { border-left-color: var(--warn); }
+.skel-find-item.skel-sev-nit     { border-left-color: var(--ink-4); }
+.skel-find-rank {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-4);
+  flex: 0 0 18px;
+  margin-top: 2px;
+}
+.skel-find-body {
+  flex: 1;
+  display: flex; flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.skel-find-tagrow {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 2px;
+}
+.skel-find-tag {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-weight: 700;
+}
+.skel-find-tag.blocker { background: var(--block-bg); color: var(--block); }
+.skel-find-tag.warn    { background: var(--warn-bg); color: var(--warn); }
+.skel-find-tag.nit     { background: var(--paper-3); color: var(--ink-3); }
+
+/* Findings loading panel body — match normal panel scroll area */
+.findings-loading .findings-panel-body {
+  padding: 12px 16px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 /* ── Phase 06.3: Design alignment — walkthrough, threads, findings, diff ── */

@@ -26,6 +26,7 @@ import { FindingsSidebar } from './components/FindingsSidebar';
 import { ChatPanel } from './components/ChatPanel';
 import { WalkthroughStepList } from './components/WalkthroughStepList';
 import { WalkthroughStepBanner } from './components/WalkthroughStepBanner';
+import { SummaryLoadingState, WalkthroughLoadingState, ReviewLoadingState } from './components/LoadingSkeletons';
 
 function cn(...parts: Array<string | false | undefined | null>): string {
   return parts.filter(Boolean).join(' ');
@@ -595,18 +596,7 @@ export default function App() {
 
         {activeStep === 'summary' && !state.summary && (
           <>
-            <div className="summary-step" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div className="summary-skeleton">
-                <div className="generating-shimmer summary-skeleton-heading" />
-                <div className="generating-shimmer summary-skeleton-line" />
-                <div className="generating-shimmer summary-skeleton-line" />
-                <div className="generating-shimmer summary-skeleton-line" />
-                <div className="generating-shimmer summary-skeleton-line" />
-                <div className="summary-skeleton-label">
-                  Claude is generating the PR summary...
-                </div>
-              </div>
-            </div>
+            <SummaryLoadingState />
             <RightPanel chatSlot={chatPanelSlot} />
           </>
         )}
@@ -681,11 +671,8 @@ export default function App() {
               {activeStep === 'submission' && (
                 <SubmissionPanel />
               )}
-              {/* Fallback generating indicator when walkthrough not yet populated */}
               {activeStep === 'walkthrough' && !state.walkthrough && (
-                <div className="generating-placeholder">
-                  <span className="generating-pulse">Generating walkthrough...</span>
-                </div>
+                <WalkthroughLoadingState />
               )}
             </RightPanel>
           </>
@@ -694,6 +681,11 @@ export default function App() {
 
       <StepFooter
         step={activeStep}
+        loading={
+          (activeStep === 'summary' && !state.summary) ||
+          (activeStep === 'walkthrough' && !state.walkthrough) ||
+          (activeStep === 'review' && !state.selfReview)
+        }
         onRegenerateSummary={handleRegenerateSummary}
         onMarkAllReviewed={handleMarkAllReviewed}
         onExportComments={() => handleCTAStub('Export coming in a future phase')}
