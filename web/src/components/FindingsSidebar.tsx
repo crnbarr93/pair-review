@@ -138,7 +138,7 @@ export function FindingsSidebar({
                 <div className="findings-validity-buttons">
                   <button
                     type="button"
-                    className={`findings-validity-btn${isValid ? ' findings-validity-btn--active findings-validity-btn--valid' : ''}`}
+                    className={`findings-validity-btn findings-validity-btn--valid${isValid ? ' findings-validity-btn--active' : ''}`}
                     onClick={() => void handleValidityToggle(f, 'valid')}
                     title="Mark as valid"
                   >
@@ -149,7 +149,7 @@ export function FindingsSidebar({
                   </button>
                   <button
                     type="button"
-                    className={`findings-validity-btn${isInvalid ? ' findings-validity-btn--active findings-validity-btn--invalid' : ''}`}
+                    className={`findings-validity-btn findings-validity-btn--invalid${isInvalid ? ' findings-validity-btn--active' : ''}`}
                     onClick={() => void handleValidityToggle(f, 'invalid')}
                     title="Dismiss finding"
                   >

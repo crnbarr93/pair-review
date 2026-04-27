@@ -3874,30 +3874,44 @@ tr:hover .gutter-add-comment {
 }
 .findings-validity {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.05px;
   color: var(--ink-4);
-  padding: 4px 0;
+  padding: 6px 0 2px;
+}
+.findings-validity-buttons {
+  display: flex;
+  gap: 6px;
 }
 .findings-validity-btn {
+  flex: 1;
   background: none;
   border: 1px solid var(--line-2);
   border-radius: 4px;
-  padding: 2px 8px;
+  padding: 5px 10px;
   cursor: pointer;
   font-size: 10px;
   font-family: inherit;
   color: var(--ink-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
-.findings-validity-btn:hover { background: var(--paper-2); }
-.findings-validity-btn--active-valid {
-  border-color: var(--ok);
-  color: var(--ok);
+.findings-validity-btn--valid { color: var(--add-ink); }
+.findings-validity-btn--invalid { color: var(--block); }
+.findings-validity-btn--valid:hover { background: rgba(var(--ok-rgb, 47,111,102), 0.08); border-color: var(--add-ink); }
+.findings-validity-btn--invalid:hover { background: rgba(var(--block-rgb), 0.08); border-color: var(--block); }
+.findings-validity-btn--active.findings-validity-btn--valid {
+  background: rgba(var(--ok-rgb, 47,111,102), 0.12);
+  border-color: var(--add-ink);
+  color: var(--add-ink);
 }
-.findings-validity-btn--active-invalid {
+.findings-validity-btn--active.findings-validity-btn--invalid {
+  background: rgba(var(--block-rgb), 0.12);
   border-color: var(--block);
   color: var(--block);
 }
