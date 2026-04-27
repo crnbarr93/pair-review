@@ -47,6 +47,9 @@ interface DiffViewerProps {
   prKey: string;
   // Phase 06.2 additions
   findings?: ResolvedFinding[];
+  // Phase 06.3 additions (D-17, D-21)
+  onFindingMarkerClick?: (findingId: string) => void;
+  onFindingValidityToggle?: (findingId: string, validity: 'valid' | 'invalid') => void;
 }
 
 // ──────────── Shiki token rendering — the single innerHTML path ────────────
@@ -118,6 +121,28 @@ function fileStats(file: DiffFile): { adds: number; dels: number } {
   return { adds, dels };
 }
 
+// ──────────── Finding severity helpers ────────────
+
+function findingLineTintClass(severity: string): string {
+  switch (severity) {
+    case 'blocker': return 'diff-line--finding-blocker';
+    case 'major':
+    case 'minor': return 'diff-line--finding-warn';
+    case 'nit': return 'diff-line--finding-nit';
+    default: return '';
+  }
+}
+
+function gutterMarkerClass(severity: string): string {
+  switch (severity) {
+    case 'blocker': return 'gutter-finding-marker gutter-finding-marker--blocker';
+    case 'major':
+    case 'minor': return 'gutter-finding-marker gutter-finding-marker--major';
+    case 'nit': return 'gutter-finding-marker gutter-finding-marker--nit';
+    default: return 'gutter-finding-marker gutter-finding-marker--nit';
+  }
+}
+
 // ──────────── Top-level component ────────────
 
 export function DiffViewer(props: DiffViewerProps) {
@@ -139,6 +164,8 @@ export function DiffViewer(props: DiffViewerProps) {
     onNextStep,
     prKey,
     findings,
+    onFindingMarkerClick,
+    onFindingValidityToggle,
   } = props;
 
   return (
@@ -163,6 +190,9 @@ export function DiffViewer(props: DiffViewerProps) {
           onNextStep={onNextStep}
           prKey={prKey}
           findings={findings?.filter(f => f.path === file.path)}
+          allFindings={findings}
+          onFindingMarkerClick={onFindingMarkerClick}
+          onFindingValidityToggle={onFindingValidityToggle}
         />
       ))}
     </div>
@@ -192,6 +222,10 @@ interface FileSectionProps {
   prKey: string;
   // Phase 06.2 additions
   findings?: ResolvedFinding[];
+  // Phase 06.3 additions — full list for 1-based index numbering
+  allFindings?: ResolvedFinding[];
+  onFindingMarkerClick?: (findingId: string) => void;
+  onFindingValidityToggle?: (findingId: string, validity: 'valid' | 'invalid') => void;
 }
 
 function FileSection({
@@ -212,6 +246,9 @@ function FileSection({
   onNextStep,
   prKey,
   findings,
+  allFindings,
+  onFindingMarkerClick,
+  onFindingValidityToggle,
 }: FileSectionProps) {
   const collapse = file.generated && !expanded;
   const [dirname, basename] = splitPath(file.path);
@@ -224,6 +261,7 @@ function FileSection({
       className="file-section diff"
       data-view={view}
     >
+      {/* D-21: Restyled file header with stat badges */}
       <div className="diff-head">
         <div className="path">
           {dirname && <span className="sub">{dirname}/</span>}
@@ -232,10 +270,9 @@ function FileSection({
         {file.generated && (
           <span style={{ fontSize: 11, color: 'var(--ink-4)', marginLeft: 8 }}>Excluded</span>
         )}
-        <div className="stats">
-          <span className="add">+{adds}</span>
-          <span className="rem">−{dels}</span>
-        </div>
+        {/* D-21: +/- stat badges */}
+        <span className="stat-badge stat-badge--add">+{adds}</span>
+        <span className="stat-badge stat-badge--del">−{dels}</span>
         <div className="spacer" />
         <div className="viewtoggle">
           <button
@@ -253,8 +290,9 @@ function FileSection({
             Split
           </button>
         </div>
-        <button type="button" className="iconbtn" onClick={onMarkReviewed} title="Mark file reviewed">
-          {reviewStatus === 'reviewed' ? 'Reviewed ✓' : 'Mark reviewed'}
+        {/* D-21: diff-mark-reviewed styled button */}
+        <button type="button" className={`diff-mark-reviewed${reviewStatus === 'reviewed' ? ' diff-mark-reviewed--done' : ''}`} onClick={onMarkReviewed} title="Mark file reviewed">
+          {reviewStatus === 'reviewed' ? '✓ Reviewed' : 'Mark reviewed'}
         </button>
       </div>
 
@@ -270,6 +308,10 @@ function FileSection({
           {file.hunks.map((hunk, hunkIdx) => {
             const stepIndex = walkthrough?.steps.findIndex(s => s.hunkId === hunk.id) ?? -1;
             const walkthroughStepForHunk = stepIndex >= 0 ? walkthrough!.steps[stepIndex] : undefined;
+            // D-20: active step hunk gets hunk--active-step class
+            const isActiveStep = walkthrough
+              ? walkthrough.steps[walkthrough.cursor]?.hunkId === hunk.id
+              : false;
             return (
               <div
                 key={hunk.id}
@@ -278,6 +320,7 @@ function FileSection({
                   'hunk',
                   focusedHunkId === hunk.id ? 'focused' : '',
                   walkthroughStepForHunk ? 'hunk--curated' : '',
+                  isActiveStep ? 'hunk--active-step' : '',
                 ].filter(Boolean).join(' ')}
               >
                 <div className="hunk-code">
@@ -293,6 +336,9 @@ function FileSection({
                       onDraftChange={onDraftChange}
                       prKey={prKey}
                       findings={findings}
+                      allFindings={allFindings}
+                      onFindingMarkerClick={onFindingMarkerClick}
+                      onFindingValidityToggle={onFindingValidityToggle}
                     />
                   ) : (
                     <SplitHunk
@@ -305,6 +351,9 @@ function FileSection({
                       onDraftChange={onDraftChange}
                       prKey={prKey}
                       findings={findings}
+                      allFindings={allFindings}
+                      onFindingMarkerClick={onFindingMarkerClick}
+                      onFindingValidityToggle={onFindingValidityToggle}
                     />
                   )}
                 </div>
@@ -331,6 +380,10 @@ interface HunkProps {
   prKey: string;
   // Phase 06.2 additions
   findings?: ResolvedFinding[];
+  // Phase 06.3 additions — full list for 1-based index numbering
+  allFindings?: ResolvedFinding[];
+  onFindingMarkerClick?: (findingId: string) => void;
+  onFindingValidityToggle?: (findingId: string, validity: 'valid' | 'invalid') => void;
 }
 
 const SEVERITY_COLORS: Record<string, { bg: string; fg: string }> = {
@@ -340,17 +393,77 @@ const SEVERITY_COLORS: Record<string, { bg: string; fg: string }> = {
   nit: { bg: 'var(--paper-3)', fg: 'var(--ink-3)' },
 };
 
-function FindingAnnotation({ finding }: { finding: ResolvedFinding }) {
+// D-13, D-14: FindingAnnotation with validity toggle and collapse-on-invalid
+function FindingAnnotation({
+  finding,
+  findingIndex,
+  onValidityToggle,
+}: {
+  finding: ResolvedFinding;
+  findingIndex: number;
+  onValidityToggle?: (findingId: string, validity: 'valid' | 'invalid') => void;
+}) {
   const colors = SEVERITY_COLORS[finding.severity] ?? SEVERITY_COLORS.nit;
+  const severityLabel = finding.severity === 'nit' ? 'NIT' : finding.severity === 'blocker' ? 'BLOCKER' : 'WARNING';
+
+  // D-14: Collapse to dismissed row when invalid
+  if (finding.validity === 'invalid') {
+    return (
+      <div className="finding-annotation finding-annotation--collapsed">
+        <span
+          className="finding-annotation-severity finding-annotation-severity--dismissed"
+          style={{ background: colors.bg, color: colors.fg }}
+        >
+          {severityLabel}
+        </span>
+        <span className="finding-annotation-dismissed-label">DISMISSED</span>
+        <span className="finding-annotation-dismissed-title">
+          {finding.title ?? finding.rationale.slice(0, 60)}
+        </span>
+        <button
+          type="button"
+          onClick={() => onValidityToggle?.(finding.id, 'valid')}
+          className="finding-annotation-undo-btn"
+        >
+          Undo
+        </button>
+      </div>
+    );
+  }
+
+  // Full card state with validity toggle (D-13)
   return (
-    <div className="finding-annotation">
+    <div className="finding-annotation" id={`finding-annotation-${finding.id}`}>
       <div className="finding-annotation-header">
-        <span className="finding-annotation-severity" style={{ background: colors.bg, color: colors.fg }}>
-          {finding.severity === 'nit' ? 'NIT' : finding.severity === 'blocker' ? 'BLOCKER' : 'WARNING'}
+        <span
+          className="finding-annotation-severity"
+          style={{ background: colors.bg, color: colors.fg }}
+        >
+          {severityLabel}
         </span>
         <span className="finding-annotation-meta">
-          Line {finding.line} · {finding.category}
+          #{findingIndex} · Line {finding.line} · {finding.category}
         </span>
+      </div>
+      {/* IS THIS FINDING VALID? validity toggle row (D-13) */}
+      <div className="findings-validity" style={{ marginBottom: 6 }}>
+        <span>IS THIS FINDING VALID?</span>
+        <button
+          type="button"
+          className={`findings-validity-btn${finding.validity === 'valid' ? ' findings-validity-btn--active-valid' : ''}`}
+          onClick={() => onValidityToggle?.(finding.id, 'valid')}
+          aria-pressed={finding.validity === 'valid'}
+        >
+          ✓ Valid
+        </button>
+        <button
+          type="button"
+          className={`findings-validity-btn${finding.validity === 'invalid' ? ' findings-validity-btn--active-invalid' : ''}`}
+          onClick={() => onValidityToggle?.(finding.id, 'invalid')}
+          aria-pressed={finding.validity === 'invalid'}
+        >
+          ✗ Invalid
+        </button>
       </div>
       <div className="finding-annotation-author">
         <span className="finding-annotation-avatar">C</span>
@@ -362,7 +475,7 @@ function FindingAnnotation({ finding }: { finding: ResolvedFinding }) {
   );
 }
 
-function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDraftChange, prKey, findings }: HunkProps) {
+function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDraftChange, prKey, findings, allFindings, onFindingMarkerClick, onFindingValidityToggle }: HunkProps) {
   const [hoveredLineId, setHoveredLineId] = useState<string | null>(null);
   const [composerLineId, setComposerLineId] = useState<string | null>(null);
 
@@ -377,11 +490,19 @@ function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onD
           const tokens = fileTokens?.[hunkIdx]?.[lineIdx] ?? [{ content: line.text }];
           const markers = readOnlyComments.filter((c) => c.lineId === line.id);
           const lineThreads = Object.values(threads ?? {}).filter(t => t.lineId === line.id);
+          const findingsForLine = (findings ?? []).filter(f => f.lineId === line.id);
+          // D-18: severity tint on row
+          const worstFinding = findingsForLine.reduce<ResolvedFinding | null>((worst, f) => {
+            if (!worst) return f;
+            const order: Record<string, number> = { blocker: 0, major: 1, minor: 2, nit: 3 };
+            return (order[f.severity] ?? 3) < (order[worst.severity] ?? 3) ? f : worst;
+          }, null);
+          const lineTintClass = worstFinding ? findingLineTintClass(worstFinding.severity) : '';
           return (
             <Fragment key={line.id}>
               <tr
                 id={line.id}
-                className={rowClassName(line.kind)}
+                className={[rowClassName(line.kind), lineTintClass].filter(Boolean).join(' ')}
                 onMouseEnter={() => setHoveredLineId(line.id)}
                 onMouseLeave={() => setHoveredLineId(null)}
               >
@@ -399,6 +520,22 @@ function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onD
                   <span style={{ display: 'inline-block', width: 16, textAlign: 'right' }}>
                     {rightLine}
                   </span>
+                  {/* D-17: Colored numbered finding markers */}
+                  {findingsForLine.map(f => {
+                    const findingIdx = (allFindings ?? findings ?? []).findIndex(af => af.id === f.id);
+                    return (
+                      <button
+                        key={f.id}
+                        type="button"
+                        className={gutterMarkerClass(f.severity)}
+                        title={`Finding ${findingIdx + 1}: ${f.severity}`}
+                        onClick={(e) => { e.stopPropagation(); onFindingMarkerClick?.(f.id); }}
+                        aria-label={`Jump to finding ${findingIdx + 1}`}
+                      >
+                        {findingIdx + 1}
+                      </button>
+                    );
+                  })}
                   {markers.map((c) => (
                     <ReadOnlyMarker key={c.id} comment={c} />
                   ))}
@@ -434,21 +571,31 @@ function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onD
               {lineThreads.map(thread => (
                 <tr key={thread.threadId} className="thread-row">
                   <td colSpan={2} style={{ padding: 0 }}>
+                    {/* D-19: pass finding and prKey to ThreadCard */}
                     <ThreadCard
                       thread={thread}
+                      finding={findingsForLine.find(f => f.lineId === thread.lineId)}
                       onDraftChange={onDraftChange ?? (() => {})}
                       onCollapse={() => {/* collapse handled by parent state */}}
+                      prKey={prKey}
                     />
                   </td>
                 </tr>
               ))}
-              {(findings ?? []).filter(f => f.lineId === line.id).map(f => (
-                <tr key={`finding-${f.id}`} className="thread-row">
-                  <td colSpan={2} style={{ padding: 0 }}>
-                    <FindingAnnotation finding={f} />
-                  </td>
-                </tr>
-              ))}
+              {findingsForLine.map(f => {
+                const findingIdx = (allFindings ?? findings ?? []).findIndex(af => af.id === f.id);
+                return (
+                  <tr key={`finding-${f.id}`} className="thread-row">
+                    <td colSpan={2} style={{ padding: 0 }}>
+                      <FindingAnnotation
+                        finding={f}
+                        findingIndex={findingIdx + 1}
+                        onValidityToggle={onFindingValidityToggle}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
             </Fragment>
           );
         })}
@@ -524,7 +671,7 @@ function pairSplitLines(hunk: Hunk): Array<{ left: SplitCell; right: SplitCell }
   return out;
 }
 
-function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDraftChange, prKey, findings }: HunkProps) {
+function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDraftChange, prKey, findings, allFindings, onFindingMarkerClick, onFindingValidityToggle }: HunkProps) {
   const [hoveredLineId, setHoveredLineId] = useState<string | null>(null);
   const [composerLineId, setComposerLineId] = useState<string | null>(null);
 
@@ -563,11 +710,22 @@ function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDra
           // For the composer: use the representative line id and number
           const composerLine = pair.right.line ?? pair.left.line;
 
+          // D-18: finding line tints for split view
+          const findingsForRepLine = representativeLineId
+            ? (findings ?? []).filter(f => f.lineId === representativeLineId)
+            : [];
+          const worstFinding = findingsForRepLine.reduce<ResolvedFinding | null>((worst, f) => {
+            if (!worst) return f;
+            const order: Record<string, number> = { blocker: 0, major: 1, minor: 2, nit: 3 };
+            return (order[f.severity] ?? 3) < (order[worst.severity] ?? 3) ? f : worst;
+          }, null);
+          const lineTintClass = worstFinding ? findingLineTintClass(worstFinding.severity) : '';
+
           return (
             <Fragment key={idx}>
               <tr
                 id={pair.left.line?.id ?? pair.right.line?.id}
-                className="diff-row-split"
+                className={['diff-row-split', lineTintClass].filter(Boolean).join(' ')}
                 onMouseEnter={() => representativeLineId && setHoveredLineId(representativeLineId)}
                 onMouseLeave={() => setHoveredLineId(null)}
               >
@@ -605,6 +763,22 @@ function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDra
                   {rightMarkers.map((c) => (
                     <ReadOnlyMarker key={c.id} comment={c} />
                   ))}
+                  {/* D-17: Colored numbered finding markers on right gutter */}
+                  {findingsForRepLine.map(f => {
+                    const findingIdx = (allFindings ?? findings ?? []).findIndex(af => af.id === f.id);
+                    return (
+                      <button
+                        key={f.id}
+                        type="button"
+                        className={gutterMarkerClass(f.severity)}
+                        title={`Finding ${findingIdx + 1}: ${f.severity}`}
+                        onClick={(e) => { e.stopPropagation(); onFindingMarkerClick?.(f.id); }}
+                        aria-label={`Jump to finding ${findingIdx + 1}`}
+                      >
+                        {findingIdx + 1}
+                      </button>
+                    );
+                  })}
                 </td>
                 <td
                   className={`content ${rightKindClass}`}
@@ -629,21 +803,31 @@ function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDra
               {rowThreads.map(thread => (
                 <tr key={thread.threadId} className="thread-row">
                   <td colSpan={4} style={{ padding: 0 }}>
+                    {/* D-19: pass finding and prKey to ThreadCard */}
                     <ThreadCard
                       thread={thread}
+                      finding={findingsForRepLine.find(f => f.lineId === thread.lineId)}
                       onDraftChange={onDraftChange ?? (() => {})}
                       onCollapse={() => {/* collapse handled by parent state */}}
+                      prKey={prKey}
                     />
                   </td>
                 </tr>
               ))}
-              {(findings ?? []).filter(f => f.lineId === representativeLineId).map(f => (
-                <tr key={`finding-${f.id}`} className="thread-row">
-                  <td colSpan={4} style={{ padding: 0 }}>
-                    <FindingAnnotation finding={f} />
-                  </td>
-                </tr>
-              ))}
+              {findingsForRepLine.map(f => {
+                const findingIdx = (allFindings ?? findings ?? []).findIndex(af => af.id === f.id);
+                return (
+                  <tr key={`finding-${f.id}`} className="thread-row">
+                    <td colSpan={4} style={{ padding: 0 }}>
+                      <FindingAnnotation
+                        finding={f}
+                        findingIndex={findingIdx + 1}
+                        onValidityToggle={onFindingValidityToggle}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
             </Fragment>
           );
         })}

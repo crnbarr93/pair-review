@@ -25,6 +25,7 @@ import { PendingReviewModal } from './components/PendingReviewModal';
 import { FindingsSidebar } from './components/FindingsSidebar';
 import { ChatPanel } from './components/ChatPanel';
 import { WalkthroughStepList } from './components/WalkthroughStepList';
+import { WalkthroughStepBanner } from './components/WalkthroughStepBanner';
 
 function cn(...parts: Array<string | false | undefined | null>): string {
   return parts.filter(Boolean).join(' ');
@@ -45,6 +46,8 @@ export default function App() {
   const [focusedHunkId, setFocusedHunkId] = useState<string | null>(null);
   const [focusedFileId, setFocusedFileId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  // Phase 06.3: active finding for click-to-expand wiring (D-12)
+  const [activeFindingId, setActiveFindingId] = useState<string | null>(null);
   const focusedHunkIndex = useRef<number>(-1);
 
   // Build the cross-file virtual hunk list, excluding generated files (D-18).
@@ -290,6 +293,29 @@ export default function App() {
   const handleDraftChange = useCallback(
     (threadId: string, body: string) => {
       actions.updateLocalDraft(threadId, body);
+    },
+    []
+  );
+
+  // Phase 06.3: finding validity toggle (D-13, D-14) — fires finding.validitySet session event
+  const handleFindingValidityToggle = useCallback(
+    (findingId: string, validity: 'valid' | 'invalid') => {
+      if (!prKey) return;
+      postSessionEvent(prKey, {
+        type: 'finding.validitySet',
+        findingId,
+        validity,
+      }).catch(() => showToast('Could not update finding validity. Retry.'));
+    },
+    [prKey, showToast]
+  );
+
+  // Phase 06.3: gutter marker click scrolls right-panel findings list (D-17)
+  const handleFindingMarkerClick = useCallback(
+    (findingId: string) => {
+      setActiveFindingId(findingId);
+      const cardEl = document.getElementById(`finding-card-${findingId}`);
+      cardEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     },
     []
   );
@@ -593,25 +619,36 @@ export default function App() {
               activeFileId={focusedFileId}
               onPickFile={handlePickFile}
             />
-            <DiffViewer
-              diff={filteredDiff ?? diff}
-              shikiTokens={state.shikiTokens ?? {}}
-              view={view}
-              onViewChange={setView}
-              fileReviewStatus={(state.fileReviewStatus ?? {}) as Record<string, FileReviewStatus>}
-              expandedGenerated={expandedGeneratedSet}
-              focusedHunkId={focusedHunkId}
-              readOnlyComments={state.existingComments ?? []}
-              onMarkReviewed={handleMarkReviewed}
-              onExpandGenerated={handleExpandGenerated}
-              walkthrough={state.walkthrough}
-              threads={state.threads}
-              onDraftChange={handleDraftChange}
-              onSkipStep={handleSkipStep}
-              onNextStep={handleNextStep}
-              prKey={state.prKey}
-              findings={activeStep === 'review' ? state.selfReview?.findings : undefined}
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+              {/* D-01: WalkthroughStepBanner renders above DiffViewer on walkthrough step */}
+              {activeStep === 'walkthrough' && state.walkthrough && (
+                <WalkthroughStepBanner
+                  walkthrough={state.walkthrough}
+                  onStepClick={handleWalkthroughStepClick}
+                />
+              )}
+              <DiffViewer
+                diff={filteredDiff ?? diff}
+                shikiTokens={state.shikiTokens ?? {}}
+                view={view}
+                onViewChange={setView}
+                fileReviewStatus={(state.fileReviewStatus ?? {}) as Record<string, FileReviewStatus>}
+                expandedGenerated={expandedGeneratedSet}
+                focusedHunkId={focusedHunkId}
+                readOnlyComments={state.existingComments ?? []}
+                onMarkReviewed={handleMarkReviewed}
+                onExpandGenerated={handleExpandGenerated}
+                walkthrough={state.walkthrough}
+                threads={state.threads}
+                onDraftChange={handleDraftChange}
+                onSkipStep={handleSkipStep}
+                onNextStep={handleNextStep}
+                prKey={state.prKey}
+                findings={activeStep === 'review' ? state.selfReview?.findings : undefined}
+                onFindingValidityToggle={handleFindingValidityToggle}
+                onFindingMarkerClick={handleFindingMarkerClick}
+              />
+            </div>
             <RightPanel chatSlot={chatPanelSlot}>
               {/* Step-specific right panel content */}
               {activeStep === 'walkthrough' && state.walkthrough && (
@@ -630,10 +667,15 @@ export default function App() {
                   activeCategory={state.activeCategory}
                   onCategoryClick={(cat) => actions.setActiveCategory(cat)}
                   onFindingClick={(lineId) => {
+                    // D-12: set activeFindingId + scroll diff to finding's line
+                    const finding = state.selfReview?.findings.find(f => f.lineId === lineId);
+                    if (finding) setActiveFindingId(finding.id);
                     const el = document.getElementById(lineId)
                       ?? document.getElementById(lineId.replace(/:l\d+$/, ''));
                     el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   }}
+                  prKey={prKey}
+                  activeFindingId={activeFindingId}
                 />
               )}
               {activeStep === 'submission' && (
