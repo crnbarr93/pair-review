@@ -1,4 +1,4 @@
-// InlineComposer — Phase 06.1 inline comment composer with @claude detection.
+// InlineComposer — Phase 06.3 restyled to match ThreadCard visual treatment (D-09).
 // SECURITY:
 //   - LLM content is never rendered via innerHTML. Textarea only captures user input.
 //   - User-authored text is submitted as plain text via postUserRequest payload.
@@ -47,51 +47,33 @@ export function InlineComposer({ lineId, lineNumber, prKey, onClose }: InlineCom
   };
 
   return (
-    <div
-      className="thread-panel"
-      style={{
-        borderLeft: '3px solid var(--claude)',
-        padding: '8px 16px',
-        background: 'var(--paper)',
-      }}
-    >
+    <div className="ic-panel">
       <textarea
+        className="ic-textarea"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Leave a comment... (add @claude to get a response)"
         aria-label={`Leave a comment on line ${lineNumber}`}
         autoFocus
-        style={{
-          width: '100%',
-          minHeight: 60,
-          resize: 'vertical',
-          fontSize: 13,
-          fontFamily: 'inherit',
-          border: '1px solid var(--line-2)',
-          borderRadius: 6,
-          padding: 8,
-          background: 'var(--paper)',
-          boxSizing: 'border-box',
-        }}
       />
-      <div className="thread-reply-footer">
+      <div className="ic-footer">
         {isClaudeTagged && (
-          <span className="claude-chip" role="status">
+          <span className="ic-claude-chip" role="status">
             @claude will respond
           </span>
         )}
-        <span style={{ flex: 1 }} />
+        <span className="ic-footer-spacer" />
         <button
           type="button"
-          className="btn-sm"
+          className="ic-btn-discard"
           onClick={onClose}
         >
           Discard comment
         </button>
         <button
           type="button"
-          className="btn-sm primary"
+          className="ic-btn-submit"
           onClick={handleSubmit}
         >
           {isClaudeTagged ? 'Ask Claude' : 'Add comment'}
