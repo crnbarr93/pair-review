@@ -169,13 +169,13 @@ Plans:
 **Goal:** Pixel-match the walkthrough step cards, inline comment threads, review findings UI, submission panel, and DiffViewer inline integration to the updated design.html mockup. One functional addition: finding validity toggle (Valid/Invalid with dismiss + collapse). All other new interactive elements shown in the design (suggested changes, Mark resolved/Needs work/Block) are deferred.
 **Requirements**: D-01 through D-22 (CONTEXT.md locked decisions, excluding D-10 deferred)
 **Depends on:** Phase 06.2
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 06.3-01-PLAN.md — Finding validity types + reducer + test + WalkthroughStepBanner component (Wave 1)
 - [x] 06.3-02-PLAN.md — ThreadCard + InlineComposer full restyle with severity headers, avatars, reply input (Wave 1)
 - [x] 06.3-03-PLAN.md — WalkthroughStepList + FindingsSidebar + SubmissionPanel restyle with validity toggle (Wave 2)
-- [ ] 06.3-04-PLAN.md — DiffViewer inline integration + App.tsx wiring + CSS + human-verify checkpoint (Wave 3)
+- [x] 06.3-04-PLAN.md — DiffViewer inline integration + App.tsx wiring + CSS + human-verify checkpoint (Wave 3)
 
 ### Phase 06.2: UI design alignment — match review workspace to updated design.html mockups (INSERTED)
 
@@ -232,7 +232,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 06.1 → 06
 | 6. Review Submission + Verdict UI | 0/TBD | Not started | - |
 | 06.1. Bidirectional LLM Collaboration | 0/5 | Planning | - |
 | 06.2. UI Design Alignment | 0/4 | Planning | - |
-| 06.3. Walkthrough + Review Design Alignment | 3/4 | In Progress|  |
+| 06.3. Walkthrough + Review Design Alignment | 4/4 | Complete   | 2026-04-27 |
 | 7. Polish + Concurrency | 0/TBD | Not started | - |
 
 ---
