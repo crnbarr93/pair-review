@@ -61,6 +61,15 @@ const pendingReviewResolvedSchema = z
   .object({ type: z.literal('pendingReview.resolved') })
   .strict();
 
+// Phase 06.3: browser can toggle finding validity (D-13, D-15)
+const findingValiditySetSchema = z
+  .object({
+    type: z.literal('finding.validitySet'),
+    findingId: z.string().min(1),
+    validity: z.enum(['valid', 'invalid']),
+  })
+  .strict();
+
 // Only USER-TRIGGERED variants are accepted. Server-generated variants and
 // resume-choice variants are deliberately omitted — a client posting one of
 // those types fails zod validation (400).
@@ -74,6 +83,7 @@ const userEventSchema = z.discriminatedUnion('type', [
   stepToggledSchema,
   showAllToggledSchema,
   pendingReviewResolvedSchema,
+  findingValiditySetSchema,
 ]);
 
 const bodySchema = z

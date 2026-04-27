@@ -3137,6 +3137,13 @@ tr:hover .gutter-add-comment {
 
 /* ── Phase 06.3: Design alignment — walkthrough, threads, findings, diff ── */
 
+.diff-canvas {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+}
+
 /* ── WalkthroughStepBanner (wt-banner-*) ── */
 .wt-banner {
   background: var(--paper-2);
@@ -3152,7 +3159,7 @@ tr:hover .gutter-add-comment {
   gap: 8px;
   font-family: var(--mono);
   font-size: 11px;
-  color: var(--ink-4);
+  color: var(--ink);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-bottom: 4px;
@@ -3197,22 +3204,38 @@ tr:hover .gutter-add-comment {
 .wt-banner-nav-card {
   border: 1px solid var(--line-2);
   border-radius: 6px;
-  padding: 5px 10px;
+  padding: 6px 14px;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 12px;
   background: var(--paper);
   color: var(--ink-3);
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 .wt-banner-nav-card:hover {
   background: var(--paper-2);
   color: var(--ink-2);
 }
+.wt-banner-nav-card--next {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.wt-banner-nav-card--next:hover {
+  background: var(--ink-2);
+  color: var(--paper);
+}
+.wt-banner-nav-card--next .wt-banner-nav-title {
+  color: rgba(255,255,255,0.8);
+}
 .wt-banner-nav-card--disabled {
   opacity: 0.4;
   cursor: default;
+}
+.wt-banner-nav-card--next.wt-banner-nav-card--disabled {
+  background: var(--ink-4);
+  border-color: var(--ink-4);
 }
 .wt-banner-nav-label {
   font-weight: 600;
@@ -3403,6 +3426,22 @@ tr:hover .gutter-add-comment {
 }
 .tc-reply-btn:hover { background: #256b62; }
 .tc-reply-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.tc-validity {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 16px; background: var(--paper-2, #F5F3ED);
+  border-bottom: 1px solid var(--line-2);
+  font-size: 11px;
+}
+.tc-validity-label { color: var(--ink-4); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+.tc-validity-buttons { display: flex; gap: 6px; }
+.tc-validity-btn {
+  padding: 3px 10px; border-radius: 4px; border: 1px solid var(--line-2);
+  background: var(--paper); color: var(--ink-4); cursor: pointer; font-size: 11px;
+  display: flex; align-items: center; gap: 4px;
+}
+.tc-validity-btn:hover { border-color: var(--ink-4); }
+.tc-validity-btn--active.tc-validity-btn--valid { background: rgba(var(--ok-rgb, 47,111,102), 0.12); border-color: var(--ok); color: var(--ok); }
+.tc-validity-btn--active.tc-validity-btn--invalid { background: rgba(var(--block-rgb, 180,60,50), 0.12); border-color: var(--block); color: var(--block); }
 .thread-panel--resolved {
   opacity: 0.75;
 }

@@ -86,7 +86,7 @@ export function registerSubmitReview(mcp: McpServer, manager: SessionManager): v
         }
 
         // Content gate: must have body or at least one postable thread
-        const postableThreads = collectPostableThreads(session.threads ?? {});
+        const postableThreads = collectPostableThreads(session.threads ?? {}, session.selfReview?.findings);
         const hasBody = typeof body === 'string' && body.trim().length > 0;
         if (!hasBody && postableThreads.length === 0) {
           return {

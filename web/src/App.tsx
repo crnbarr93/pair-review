@@ -619,7 +619,7 @@ export default function App() {
               activeFileId={focusedFileId}
               onPickFile={handlePickFile}
             />
-            <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               {/* D-01: WalkthroughStepBanner renders above DiffViewer on walkthrough step */}
               {activeStep === 'walkthrough' && state.walkthrough && (
                 <WalkthroughStepBanner

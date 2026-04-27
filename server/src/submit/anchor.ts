@@ -25,11 +25,19 @@ export function threadToOctokitComment(thread: Thread): OctokitComment {
 }
 
 /**
- * Filter threads eligible for posting: must have draftBody and not be resolved.
+ * Filter threads eligible for posting: must have draftBody, not resolved,
+ * and not tied to a finding marked invalid.
  */
-export function collectPostableThreads(threads: Record<string, Thread>): Thread[] {
+export function collectPostableThreads(
+  threads: Record<string, Thread>,
+  findings?: ResolvedFinding[]
+): Thread[] {
+  const invalidLineIds = findings
+    ? new Set(findings.filter(f => f.validity === 'invalid').map(f => f.lineId))
+    : new Set<string>();
   return Object.values(threads).filter(
-    (t): t is Thread & { draftBody: string } => !!t.draftBody && !t.resolved
+    (t): t is Thread & { draftBody: string } =>
+      !!t.draftBody && !t.resolved && !invalidLineIds.has(t.lineId)
   );
 }
 
@@ -58,5 +66,5 @@ export function collectPostableFindings(
   const postableThreadLineIds = new Set(
     collectPostableThreads(threads).map((t) => t.lineId)
   );
-  return findings.filter((f) => !postableThreadLineIds.has(f.lineId));
+  return findings.filter((f) => !postableThreadLineIds.has(f.lineId) && f.validity !== 'invalid');
 }

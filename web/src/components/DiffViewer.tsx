@@ -582,7 +582,9 @@ function UnifiedHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onD
                   </td>
                 </tr>
               ))}
-              {findingsForLine.map(f => {
+              {findingsForLine
+                .filter(f => !lineThreads.some(t => t.lineId === f.lineId))
+                .map(f => {
                 const findingIdx = (allFindings ?? findings ?? []).findIndex(af => af.id === f.id);
                 return (
                   <tr key={`finding-${f.id}`} className="thread-row">
@@ -814,7 +816,9 @@ function SplitHunk({ hunk, hunkIdx, fileTokens, readOnlyComments, threads, onDra
                   </td>
                 </tr>
               ))}
-              {findingsForRepLine.map(f => {
+              {findingsForRepLine
+                .filter(f => !rowThreads.some(t => t.lineId === f.lineId))
+                .map(f => {
                 const findingIdx = (allFindings ?? findings ?? []).findIndex(af => af.id === f.id);
                 return (
                   <tr key={`finding-${f.id}`} className="thread-row">

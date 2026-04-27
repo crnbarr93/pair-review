@@ -40,8 +40,9 @@ function useSubmissionState() {
     }
   }, [state.pendingSubmission]);
 
-  // --- Signal-ratio calculation (D-02, SUB-02) ---
-  const findings = state.selfReview?.findings ?? [];
+  // --- Signal-ratio calculation (D-02, SUB-02) — excludes invalid findings ---
+  const allFindings = state.selfReview?.findings ?? [];
+  const findings = allFindings.filter(f => f.validity !== 'invalid');
   const counts = { blocker: 0, major: 0, minor: 0, nit: 0 };
   for (const f of findings) {
     if (f.severity in counts) counts[f.severity as keyof typeof counts]++;
@@ -64,9 +65,10 @@ function useSubmissionState() {
     state.submissionState?.status !== 'submitted' &&
     (walkthroughComplete || retypeMatch);
 
-  // --- Postable threads ---
+  // --- Postable threads — excludes threads tied to invalid findings ---
+  const invalidLineIds = new Set(allFindings.filter(f => f.validity === 'invalid').map(f => f.lineId));
   const postableThreads = Object.values(state.threads).filter(
-    (t) => t.draftBody && !t.resolved
+    (t) => t.draftBody && !t.resolved && !invalidLineIds.has(t.lineId)
   );
 
   // --- Thread counts by resolution ---
@@ -369,7 +371,7 @@ function SubmissionContent({ onClose }: { onClose?: () => void }) {
           {/* Inline comments list (threads + findings) */}
           {(() => {
             const postableThreadLineIds = new Set(s.postableThreads.map(t => t.lineId));
-            const postableFindings = s.findings.filter(f => !postableThreadLineIds.has(f.lineId));
+            const postableFindings = s.findings.filter(f => !postableThreadLineIds.has(f.lineId) && f.validity !== 'invalid');
             const totalComments = s.postableThreads.length + postableFindings.length;
             return (
               <div className="sm-section sm-threads-section">

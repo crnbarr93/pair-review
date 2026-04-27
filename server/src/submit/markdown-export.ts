@@ -39,7 +39,7 @@ export interface ExportParams {
 export async function exportReviewMarkdown(params: ExportParams): Promise<void> {
   validateExportPath(params.exportPath);
 
-  const postable = collectPostableThreads(params.threads);
+  const postable = collectPostableThreads(params.threads, params.findings);
   const verdictLabel: Record<Verdict, string> = {
     approve: 'Approve',
     request_changes: 'Request changes',

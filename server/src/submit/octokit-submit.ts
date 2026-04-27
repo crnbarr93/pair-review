@@ -53,7 +53,7 @@ export interface SubmitResult {
  */
 export async function submitGithubReview(params: SubmitParams): Promise<SubmitResult> {
   const octokit = await getOctokit();
-  const postable = collectPostableThreads(params.threads);
+  const postable = collectPostableThreads(params.threads, params.findings);
   const postableFindings = collectPostableFindings(params.findings, params.threads);
 
   // D-10: Embed submissionId for deduplication tracking

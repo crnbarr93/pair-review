@@ -9,3 +9,4 @@ coverage
 # Playwright MCP debug artifacts
 .playwright-mcp/
 phase1-*.png
+design.html

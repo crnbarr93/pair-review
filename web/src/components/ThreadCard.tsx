@@ -5,7 +5,7 @@
 //   - draftBody rendered in <textarea value={localDraft}> — textarea values are always text, never HTML (T-5-05-02)
 import { useState, useEffect, useRef } from 'react';
 import type { Thread, ResolvedFinding } from '@shared/types';
-import { postUserRequest } from '../api';
+import { postUserRequest, postSessionEvent } from '../api';
 
 function cn(...parts: Array<string | false | undefined | null>): string {
   return parts.filter(Boolean).join(' ');
@@ -117,6 +117,33 @@ export function ThreadCard({ thread, finding, onDraftChange, onCollapse, prKey }
         </button>
       </div>
 
+      {/* Validity toggle — shown when thread is tied to a finding */}
+      {finding && (
+        <div className="tc-validity" onClick={(e) => e.stopPropagation()}>
+          <span className="tc-validity-label">IS THIS FINDING VALID?</span>
+          <div className="tc-validity-buttons">
+            <button
+              type="button"
+              className={cn('tc-validity-btn', finding.validity === 'valid' && 'tc-validity-btn--active tc-validity-btn--valid')}
+              onClick={() => {
+                if (prKey) postSessionEvent(prKey, { type: 'finding.validitySet', findingId: finding.id, validity: 'valid' }).catch(() => {});
+              }}
+            >
+              ✓ Valid
+            </button>
+            <button
+              type="button"
+              className={cn('tc-validity-btn', finding.validity === 'invalid' && 'tc-validity-btn--active tc-validity-btn--invalid')}
+              onClick={() => {
+                if (prKey) postSessionEvent(prKey, { type: 'finding.validitySet', findingId: finding.id, validity: 'invalid' }).catch(() => {});
+              }}
+            >
+              × Invalid
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Pre-existing badge */}
       {thread.preExisting && (
         <div className="tc-preexisting">
@@ -177,22 +204,6 @@ export function ThreadCard({ thread, finding, onDraftChange, onCollapse, prKey }
           </div>
         )}
 
-      {/* Draft comment slot — appears after draft_comment MCP call */}
-      {thread.draftBody !== undefined && (
-        <div className="tc-draft-slot">
-          <textarea
-            className="tc-draft-input"
-            value={localDraft}
-            onChange={(e) => {
-              userHasEdited.current = true;
-              setLocalDraft(e.target.value);
-            }}
-            onBlur={handleDraftBlur}
-            aria-label="Draft comment body — edit before posting"
-            placeholder="Synthesized comment — edit before posting"
-          />
-        </div>
-      )}
 
       {/* Reply input (D-08) — only for unresolved threads */}
       {!thread.resolved && (
