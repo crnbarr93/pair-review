@@ -328,6 +328,7 @@ export const actions = {
   setActiveStep(step: 'summary' | 'walkthrough' | 'review' | 'submission') {
     state = { ...state, activeStep: step };
     emit();
+    location.hash = step;
   },
 
   onThreadReplyAdded(msg: UpdateMessage) {

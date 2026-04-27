@@ -62,7 +62,16 @@ export async function bootstrap(): Promise<void> {
   sessionStorage.setItem('reviewSession', sessionKey);
 
   // T-03 TOKEN LEAK MITIGATION: wipe query BEFORE opening EventSource or painting anything
-  history.replaceState('', '', '/');
+  // Preserve hash fragment (used to restore activeStep on refresh)
+  const savedHash = location.hash;
+  history.replaceState('', '', '/' + savedHash);
+
+  const validSteps = ['summary', 'walkthrough', 'review', 'submission'] as const;
+  type Step = (typeof validSteps)[number];
+  const hashStep = savedHash.replace(/^#/, '');
+  if (validSteps.includes(hashStep as Step)) {
+    actions.setActiveStep(hashStep as Step);
+  }
 
   openEventStream(
     sessionKey,
