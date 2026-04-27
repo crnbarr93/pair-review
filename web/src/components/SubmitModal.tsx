@@ -481,8 +481,8 @@ function SubmissionContent({ onClose }: { onClose?: () => void }) {
 }
 
 // ============================================================
-// SubmissionPanel — redesigned per Phase 06.2 design:
-// Checklist recap + Claude verdict suggestion + CTA to open submit dialog.
+// SubmissionPanel — redesigned per Phase 06.3 D-22:
+// Recap stats table + Claude verdict suggestion card + CTA to open submit dialog.
 // ============================================================
 export function SubmissionPanel() {
   const state = useAppStore();
@@ -490,11 +490,39 @@ export function SubmissionPanel() {
 
   const walkthrough = state.walkthrough;
   const selfReview = state.selfReview;
+  const ciStatus = state.ciStatus;
+
   const stepsVisited = walkthrough?.steps.filter(s => s.status === 'visited').length ?? 0;
   const stepsTotal = walkthrough?.steps.length ?? 0;
-  const blockerCount = selfReview?.findings.filter(f => f.severity === 'blocker').length ?? 0;
-  const openCount = selfReview?.findings.length ?? 0;
+  const findings = selfReview?.findings ?? [];
+  const blockerCount = findings.filter(f => f.severity === 'blocker').length;
+  const majorCount = findings.filter(f => f.severity === 'major').length;
+  const openCount = findings.filter(f => f.validity !== 'invalid').length;
   const verdict = selfReview?.verdict;
+
+  // Summary stage is complete if summary exists; walkthrough + review always shown in this panel
+  const summaryDone = state.summary != null;
+  const walkthroughDone = stepsTotal > 0 && stepsVisited >= stepsTotal;
+  const reviewDone = selfReview != null;
+  const stagesCompleted = [summaryDone, walkthroughDone, reviewDone].filter(Boolean).length;
+
+  function getCiLabel(): React.ReactNode {
+    if (!ciStatus) return <span className="subp-ci-none">No checks</span>;
+    if (ciStatus.aggregate === 'pass') return <span className="subp-badge subp-badge--ci-pass">Passed</span>;
+    if (ciStatus.aggregate === 'fail') return <span className="subp-badge subp-badge--ci-fail">Failed</span>;
+    if (ciStatus.aggregate === 'pending') return <span className="subp-badge subp-badge--ci-pending">Pending</span>;
+    return <span className="subp-ci-none">No checks</span>;
+  }
+
+  async function handleWhyClick() {
+    if (!state.prKey) return;
+    try {
+      await postUserRequest(state.prKey, {
+        type: 'chat',
+        payload: { message: 'Why do you suggest this verdict? Explain your reasoning.' },
+      });
+    } catch { /* chat panel surfaces errors */ }
+  }
 
   return (
     <div className="submission-panel">
@@ -505,36 +533,46 @@ export function SubmissionPanel() {
         <div className="subp-subtitle">Review the recap, then choose a verdict.</div>
       </div>
 
-      {/* Checklist table */}
-      <div className="subp-checklist">
-        <div className="subp-row">
-          <span className="subp-row-label">Stages completed</span>
-          <span className="subp-row-value">3 of 3 · Summary, Walkthrough, Review</span>
+      {/* Recap stats table (D-22) */}
+      <div className="subp-table">
+        <div className="subp-table-row">
+          <span className="subp-table-label">Stages completed</span>
+          <span className="subp-table-value">{stagesCompleted} of 3 · Summary, Walkthrough, Review</span>
         </div>
-        <div className="subp-row">
-          <span className="subp-row-label">Findings</span>
-          <span className="subp-row-value">
+        <div className="subp-table-row">
+          <span className="subp-table-label">Findings</span>
+          <span className="subp-table-value subp-table-value--badges">
             {blockerCount > 0 && <span className="subp-badge subp-badge--blocker">{blockerCount} blocker{blockerCount !== 1 ? 's' : ''}</span>}
+            {majorCount > 0 && <span className="subp-badge subp-badge--warn">{majorCount} warning{majorCount !== 1 ? 's' : ''}</span>}
             <span className="subp-badge subp-badge--open">{openCount} open</span>
           </span>
         </div>
-        <div className="subp-row">
-          <span className="subp-row-label">Walkthrough</span>
-          <span className="subp-row-value">{stepsVisited} of {stepsTotal} steps visited</span>
+        <div className="subp-table-row">
+          <span className="subp-table-label">CI Checks</span>
+          <span className="subp-table-value">{getCiLabel()}</span>
+        </div>
+        <div className="subp-table-row">
+          <span className="subp-table-label">Walkthrough</span>
+          <span className="subp-table-value">{stepsVisited} of {stepsTotal} steps visited</span>
         </div>
       </div>
 
-      {/* Claude suggestion */}
+      {/* Claude verdict suggestion card (D-22) */}
       {verdict && (
-        <div className="subp-suggestion">
-          <div className="subp-suggestion-header">
-            <span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
-              {' '}Claude suggests: <strong>{VERDICT_WORDS[verdict] ?? verdict}</strong>
-            </span>
+        <div className="subp-verdict-card">
+          <div className="subp-verdict-header">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+            <span>Claude suggests: <strong>{VERDICT_WORDS[verdict] ?? verdict}</strong></span>
+            <button
+              type="button"
+              className="subp-verdict-why"
+              onClick={() => void handleWhyClick()}
+            >
+              Why?
+            </button>
           </div>
           {blockerCount > 0 && (
-            <p className="subp-suggestion-body">
+            <p className="subp-verdict-body">
               There{blockerCount === 1 ? "'s" : ' are'} {blockerCount} unresolved blocker{blockerCount !== 1 ? 's' : ''}.
               Everything else is warnings or nits that can ship as follow-ups.
             </p>

@@ -621,6 +621,7 @@ export default function App() {
                   onStepComplete={handleWalkthroughStepComplete}
                   onStepToggle={handleWalkthroughStepToggle}
                   onShowAllToggle={handleShowAllToggle}
+                  prKey={state.prKey}
                 />
               )}
               {activeStep === 'review' && (
