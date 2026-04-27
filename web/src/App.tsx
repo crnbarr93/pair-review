@@ -570,9 +570,15 @@ export default function App() {
         {activeStep === 'summary' && !state.summary && (
           <>
             <div className="summary-step" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ textAlign: 'center', color: 'var(--ink-4)' }}>
-                <p style={{ fontWeight: 500, marginBottom: 8 }}>Summary not generated yet</p>
-                <p style={{ fontSize: 12 }}>Ask Claude to generate a PR summary.</p>
+              <div className="summary-skeleton">
+                <div className="generating-shimmer summary-skeleton-heading" />
+                <div className="generating-shimmer summary-skeleton-line" />
+                <div className="generating-shimmer summary-skeleton-line" />
+                <div className="generating-shimmer summary-skeleton-line" />
+                <div className="generating-shimmer summary-skeleton-line" />
+                <div className="summary-skeleton-label">
+                  Claude is generating the PR summary...
+                </div>
               </div>
             </div>
             <RightPanel chatSlot={chatPanelSlot} />
@@ -632,8 +638,12 @@ export default function App() {
               {activeStep === 'submission' && (
                 <SubmissionPanel />
               )}
-              {/* Fallback empty slot when step content is null */}
-              {activeStep === 'walkthrough' && !state.walkthrough && <div />}
+              {/* Fallback generating indicator when walkthrough not yet populated */}
+              {activeStep === 'walkthrough' && !state.walkthrough && (
+                <div className="generating-placeholder">
+                  <span className="generating-pulse">Generating walkthrough...</span>
+                </div>
+              )}
             </RightPanel>
           </>
         )}
