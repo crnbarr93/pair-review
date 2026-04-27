@@ -14,21 +14,31 @@ Parse $ARGUMENTS to determine the review source. Strip "--dry" from $ARGUMENTS b
 
 ## STARTUP SEQUENCE
 
-**Step 1:** Check whether $ARGUMENTS contains `--dry`. If it does, set a dry-run flag and skip Steps 3 and 4.
+**Step 1 — Parse flags:** Check whether $ARGUMENTS contains `--dry`. If it does, set DRY=true. Otherwise DRY=false.
 
-**Step 2:** Call `start_review` with the source argument built above. Share its `summary` field with the user verbatim — it contains the PR title, source descriptor, paraphrased description, and the local review URL. Do NOT add your own analysis of the diff. Check the returned text for `has_summary: true` and `has_walkthrough: true` flags — these indicate the session was resumed from a previous run and already has these artifacts.
+**Step 2 — Start session:** Call `start_review` with the source argument built above. Note the returned text — it contains the PR title, source descriptor, paraphrased description, and the local review URL. Parse the flags at the end of the response: `has_summary: true`, `has_walkthrough: true`, `has_selfReview: true` — these indicate the session was resumed from a previous run and already has these artifacts.
 
-**Step 3 (skip if --dry OR if start_review returned `has_summary: true`):** Call `respond_chat` with "Generating PR summary..." so the user sees activity. Then call `set_pr_summary` to generate the PR intent, key changes, and risk areas. After it completes, call `respond_chat` with a brief message like "Summary generated — click the Summary step above to view intent, key changes, and risk areas."
+**DO NOT** share the URL with the user yet — you will share it after auto-generation completes (Step 6).
 
-**Step 4 (skip if --dry OR if start_review returned `has_walkthrough: true`):** Call `respond_chat` with "Building walkthrough..." so the user sees activity. Then call `set_walkthrough` to build the step-by-step walkthrough narrative. After it completes, call `respond_chat` with a brief message like "Walkthrough ready — N steps covering the core changes. Click the Walkthrough step or use Next step to navigate."
+## AUTO-GENERATION (Steps 3–5)
 
-**Step 5:** Enter the LISTEN LOOP immediately after startup completes (after Step 4, or after Step 2 if --dry).
+**These steps are MANDATORY unless DRY=true. You MUST execute each step sequentially before entering the listen loop. Do not skip them. Do not jump ahead to the listen loop.**
+
+**Step 3 — Generate PR summary (skip ONLY if DRY=true OR `has_summary: true`):** Call `respond_chat` with "Generating PR summary..." so the user sees activity. Then call `set_pr_summary` to generate the PR intent, key changes, and risk areas. After it completes, call `respond_chat` with a brief message like "Summary generated — click the Summary step above to view intent, key changes, and risk areas."
+
+**Step 4 — Generate walkthrough (skip ONLY if DRY=true OR `has_walkthrough: true`):** Call `respond_chat` with "Building walkthrough..." so the user sees activity. Then call `set_walkthrough` to build the step-by-step walkthrough narrative. After it completes, call `respond_chat` with a brief message like "Walkthrough ready — N steps covering the core changes. Click the Walkthrough step or use Next step to navigate."
+
+**Step 5 — Run self-review (skip ONLY if DRY=true OR `has_selfReview: true`):** Call `respond_chat` with "Running self-review..." so the user sees activity. Then call `list_files` and `get_hunk` as needed to gather the diff context required by `run_self_review`. Then call `run_self_review` with your findings, coverage assessment, and verdict. After it completes, call `respond_chat` with a summary like "Self-review complete — N findings (X blockers, Y major, Z minor). Check the Findings sidebar."
+
+**Step 6 — Report to user:** Share the review URL from Step 2 with the user. Include a brief status: which artifacts were generated (summary, walkthrough, self-review) and that the review workspace is ready. Example: "Review workspace ready at <URL>. Generated summary, walkthrough (N steps), and self-review (N findings). Listening for your requests."
+
+**Step 7:** Enter the LISTEN LOOP immediately.
 
 ## LISTEN LOOP
 
-**Step 6:** Call `await_user_request`. This blocks until the browser sends a request or a ~5-minute timeout fires.
+**Step 8:** Call `await_user_request`. This blocks until the browser sends a request or a ~5-minute timeout fires.
 
-**Step 7:** Process the returned payload based on its `type` field:
+**Step 9:** Process the returned payload based on its `type` field:
 
 - `type: "no_request"` — The timeout fired with no user request. Call `await_user_request` again immediately. Do not pause, do not comment. Just loop.
 - `type: "chat"` — The user sent a chat message. Read `payload.message`. Formulate a relevant response (drawing on the PR diff and context). Call `respond_chat` with your answer. Then call `await_user_request` again.
@@ -37,7 +47,7 @@ Parse $ARGUMENTS to determine the review source. Strip "--dry" from $ARGUMENTS b
 - `type: "regenerate_summary"` — The user requested a fresh PR summary. Call `respond_chat` with "Regenerating summary..." first. Then call `set_pr_summary`. After it completes, call `respond_chat` with "Summary regenerated — click the Summary step to view." Then call `await_user_request` again.
 - `type: "regenerate_walkthrough"` — The user requested a fresh walkthrough. Call `respond_chat` with "Rebuilding walkthrough..." first. Then call `set_walkthrough`. After it completes, call `respond_chat` with "Walkthrough rebuilt — N steps. Click the Walkthrough step to navigate." Then call `await_user_request` again.
 
-**Step 8:** After processing ANY request type (except `no_request`, which already loops back in Step 7), call `await_user_request` again.
+**Step 10:** After processing ANY request type (except `no_request`, which already loops back in Step 9), call `await_user_request` again.
 
 ## CRITICAL LOOP DISCIPLINE
 

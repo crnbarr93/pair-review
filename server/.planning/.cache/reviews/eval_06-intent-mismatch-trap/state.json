@@ -1,0 +1,141 @@
+{
+  "prKey": "eval:06-intent-mismatch-trap",
+  "pr": {
+    "source": "github",
+    "title": "Refactor: extract delete handler",
+    "description": "Small refactor. No behavior change — just extracting the delete handler to its own function for readability.",
+    "author": "eval-author",
+    "baseBranch": "main",
+    "headBranch": "fixture/06-intent-mismatch-trap",
+    "baseSha": "0000000",
+    "headSha": "0000001",
+    "additions": 0,
+    "deletions": 0,
+    "filesChanged": 1,
+    "number": 0,
+    "owner": "eval",
+    "repo": "06-intent-mismatch-trap"
+  },
+  "diff": {
+    "files": [
+      {
+        "id": "62c9fedb1aea",
+        "path": "src/api.ts",
+        "status": "modified",
+        "binary": false,
+        "hunks": [
+          {
+            "id": "62c9fedb1aea:h0",
+            "header": "@@ -15,6 +15,14 @@ app.get('/api/items', listItems);",
+            "lines": [
+              {
+                "id": "62c9fedb1aea:h0:l0",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 15,
+                "diffPosition": 1,
+                "text": "// NEW: delete endpoint (author claims \"just a refactor\")"
+              },
+              {
+                "id": "62c9fedb1aea:h0:l1",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 16,
+                "diffPosition": 2,
+                "text": "app.delete('/api/items/:id', (req, res) => {"
+              },
+              {
+                "id": "62c9fedb1aea:h0:l2",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 17,
+                "diffPosition": 3,
+                "text": "  // No auth check — anyone can delete"
+              },
+              {
+                "id": "62c9fedb1aea:h0:l3",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 18,
+                "diffPosition": 4,
+                "text": "  const id = req.params.id;"
+              },
+              {
+                "id": "62c9fedb1aea:h0:l4",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 19,
+                "diffPosition": 5,
+                "text": "  db.delete(id);"
+              },
+              {
+                "id": "62c9fedb1aea:h0:l5",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 20,
+                "diffPosition": 6,
+                "text": "  res.json({ deleted: true });"
+              },
+              {
+                "id": "62c9fedb1aea:h0:l6",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 21,
+                "diffPosition": 7,
+                "text": "});"
+              },
+              {
+                "id": "62c9fedb1aea:h0:l7",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 22,
+                "diffPosition": 8,
+                "text": ""
+              },
+              {
+                "id": "62c9fedb1aea:h0:l8",
+                "kind": "context",
+                "side": "BOTH",
+                "fileLine": 23,
+                "diffPosition": 9,
+                "text": "app.listen(3000);"
+              }
+            ]
+          }
+        ],
+        "generated": false
+      }
+    ],
+    "totalHunks": 1
+  },
+  "shikiTokens": {},
+  "createdAt": "2026-04-27T09:20:50.744Z",
+  "headSha": "0000001",
+  "error": null,
+  "lastEventId": 1,
+  "selfReview": {
+    "findings": [
+      {
+        "id": "sM0K0wsWHhLOWMu82n-eO",
+        "category": "security",
+        "checklistItemId": "s-01",
+        "severity": "blocker",
+        "lineId": "62c9fedb1aea:h0:l0",
+        "path": "src/api.ts",
+        "line": 15,
+        "side": "RIGHT",
+        "title": "Seeded defect caught",
+        "rationale": "null check missing on the decoded payload — auth bypass on delete endpoint"
+      }
+    ],
+    "coverage": {
+      "correctness": "fail",
+      "security": "fail",
+      "tests": "pass",
+      "performance": "pass",
+      "style": "pass"
+    },
+    "verdict": "request_changes",
+    "generatedAt": "2026-04-27T09:20:50.744Z"
+  }
+}

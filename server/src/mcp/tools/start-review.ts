@@ -125,6 +125,7 @@ function renderSummary(s: ReviewSession, url: string): string {
   ];
   if (s.summary) lines.push('', 'has_summary: true');
   if (s.walkthrough) lines.push('has_walkthrough: true');
+  if (s.selfReview) lines.push('has_selfReview: true');
   return lines.join('\n');
 }
 

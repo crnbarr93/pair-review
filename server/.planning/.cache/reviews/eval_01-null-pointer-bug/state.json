@@ -1,0 +1,104 @@
+{
+  "prKey": "eval:01-null-pointer-bug",
+  "pr": {
+    "source": "github",
+    "title": "Fix null deref in verifyToken",
+    "description": "The jwt.decode call returns null on malformed tokens; verifyToken currently dereferences .payload without a guard, which crashes the auth middleware. Add the null check.",
+    "author": "eval-author",
+    "baseBranch": "main",
+    "headBranch": "fixture/01-null-pointer-bug",
+    "baseSha": "0000000",
+    "headSha": "0000001",
+    "additions": 0,
+    "deletions": 0,
+    "filesChanged": 1,
+    "number": 0,
+    "owner": "eval",
+    "repo": "01-null-pointer-bug"
+  },
+  "diff": {
+    "files": [
+      {
+        "id": "04d6e3bb2c1a",
+        "path": "src/auth.ts",
+        "status": "modified",
+        "binary": false,
+        "hunks": [
+          {
+            "id": "04d6e3bb2c1a:h0",
+            "header": "@@ -10,6 +10,8 @@ export function verifyToken(token: string): User | null {",
+            "lines": [
+              {
+                "id": "04d6e3bb2c1a:h0:l0",
+                "kind": "context",
+                "side": "BOTH",
+                "fileLine": 10,
+                "diffPosition": 1,
+                "text": "  const decoded = jwt.decode(token);"
+              },
+              {
+                "id": "04d6e3bb2c1a:h0:l1",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 11,
+                "diffPosition": 2,
+                "text": "  // Fix: return early on decode failure"
+              },
+              {
+                "id": "04d6e3bb2c1a:h0:l2",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 12,
+                "diffPosition": 3,
+                "text": "  const payload = decoded.payload;"
+              },
+              {
+                "id": "04d6e3bb2c1a:h0:l3",
+                "kind": "context",
+                "side": "BOTH",
+                "fileLine": 13,
+                "diffPosition": 4,
+                "text": "  return {"
+              },
+              {
+                "id": "04d6e3bb2c1a:h0:l4",
+                "kind": "context",
+                "side": "BOTH",
+                "fileLine": 14,
+                "diffPosition": 5,
+                "text": "    id: payload.sub,"
+              },
+              {
+                "id": "04d6e3bb2c1a:h0:l5",
+                "kind": "context",
+                "side": "BOTH",
+                "fileLine": 15,
+                "diffPosition": 6,
+                "text": "    email: payload.email,"
+              }
+            ]
+          }
+        ],
+        "generated": false
+      }
+    ],
+    "totalHunks": 1
+  },
+  "shikiTokens": {},
+  "createdAt": "2026-04-27T09:20:50.803Z",
+  "headSha": "0000001",
+  "error": null,
+  "lastEventId": 1,
+  "selfReview": {
+    "findings": [],
+    "coverage": {
+      "correctness": "pass",
+      "security": "pass",
+      "tests": "pass",
+      "performance": "pass",
+      "style": "pass"
+    },
+    "verdict": "approve",
+    "generatedAt": "2026-04-27T09:20:50.804Z"
+  }
+}

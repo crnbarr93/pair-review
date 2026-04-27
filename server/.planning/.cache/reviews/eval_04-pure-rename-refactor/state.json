@@ -1,0 +1,152 @@
+{
+  "prKey": "eval:04-pure-rename-refactor",
+  "pr": {
+    "source": "github",
+    "title": "Rename legacyHandler to currentHandler",
+    "description": "Pure rename across 3 callsites. No behavior change.",
+    "author": "eval-author",
+    "baseBranch": "main",
+    "headBranch": "fixture/04-pure-rename-refactor",
+    "baseSha": "0000000",
+    "headSha": "0000001",
+    "additions": 0,
+    "deletions": 0,
+    "filesChanged": 1,
+    "number": 0,
+    "owner": "eval",
+    "repo": "04-pure-rename-refactor"
+  },
+  "diff": {
+    "files": [
+      {
+        "id": "3097239c1d1d",
+        "path": "src/handlers.ts",
+        "status": "modified",
+        "binary": false,
+        "hunks": [
+          {
+            "id": "3097239c1d1d:h0",
+            "header": "@@ -5,7 +5,7 @@ import { db } from './db';",
+            "lines": [
+              {
+                "id": "3097239c1d1d:h0:l0",
+                "kind": "del",
+                "side": "LEFT",
+                "fileLine": 5,
+                "diffPosition": 1,
+                "text": "export function legacyHandler(req: Request): Response {"
+              },
+              {
+                "id": "3097239c1d1d:h0:l1",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 5,
+                "diffPosition": 2,
+                "text": "export function currentHandler(req: Request): Response {"
+              },
+              {
+                "id": "3097239c1d1d:h0:l2",
+                "kind": "context",
+                "side": "BOTH",
+                "fileLine": 6,
+                "diffPosition": 3,
+                "text": "  return db.query(req.params.id);"
+              },
+              {
+                "id": "3097239c1d1d:h0:l3",
+                "kind": "context",
+                "side": "BOTH",
+                "fileLine": 7,
+                "diffPosition": 4,
+                "text": "}"
+              },
+              {
+                "id": "3097239c1d1d:h0:l4",
+                "kind": "del",
+                "side": "LEFT",
+                "fileLine": 8,
+                "diffPosition": 5,
+                "text": "-- a/src/router.ts"
+              },
+              {
+                "id": "3097239c1d1d:h0:l5",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 8,
+                "diffPosition": 6,
+                "text": "++ b/src/router.ts"
+              },
+              {
+                "id": "3097239c1d1d:h0:l6",
+                "kind": "del",
+                "side": "LEFT",
+                "fileLine": 9,
+                "diffPosition": 7,
+                "text": "app.get('/api/items', legacyHandler);"
+              },
+              {
+                "id": "3097239c1d1d:h0:l7",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 9,
+                "diffPosition": 8,
+                "text": "app.get('/api/items', currentHandler);"
+              },
+              {
+                "id": "3097239c1d1d:h0:l8",
+                "kind": "del",
+                "side": "LEFT",
+                "fileLine": 10,
+                "diffPosition": 9,
+                "text": "-- a/src/index.ts"
+              },
+              {
+                "id": "3097239c1d1d:h0:l9",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 10,
+                "diffPosition": 10,
+                "text": "++ b/src/index.ts"
+              },
+              {
+                "id": "3097239c1d1d:h0:l10",
+                "kind": "del",
+                "side": "LEFT",
+                "fileLine": 11,
+                "diffPosition": 11,
+                "text": "export { legacyHandler } from './handlers';"
+              },
+              {
+                "id": "3097239c1d1d:h0:l11",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 11,
+                "diffPosition": 12,
+                "text": "export { currentHandler } from './handlers';"
+              }
+            ]
+          }
+        ],
+        "generated": false
+      }
+    ],
+    "totalHunks": 1
+  },
+  "shikiTokens": {},
+  "createdAt": "2026-04-27T09:20:50.719Z",
+  "headSha": "0000001",
+  "error": null,
+  "lastEventId": 1,
+  "selfReview": {
+    "findings": [],
+    "coverage": {
+      "correctness": "pass",
+      "security": "pass",
+      "tests": "pass",
+      "performance": "pass",
+      "style": "pass"
+    },
+    "verdict": "comment",
+    "generatedAt": "2026-04-27T09:20:50.720Z"
+  }
+}

@@ -1,0 +1,257 @@
+{
+  "prKey": "eval:07-nit-temptation",
+  "pr": {
+    "source": "github",
+    "title": "Add preferences dropdown",
+    "description": "Adds a preferences dropdown. No changes to backend.",
+    "author": "eval-author",
+    "baseBranch": "main",
+    "headBranch": "fixture/07-nit-temptation",
+    "baseSha": "0000000",
+    "headSha": "0000001",
+    "additions": 0,
+    "deletions": 0,
+    "filesChanged": 1,
+    "number": 0,
+    "owner": "eval",
+    "repo": "07-nit-temptation"
+  },
+  "diff": {
+    "files": [
+      {
+        "id": "c191dd503466",
+        "path": "src/components/Preferences.tsx",
+        "oldPath": "/dev/null",
+        "status": "added",
+        "binary": false,
+        "hunks": [
+          {
+            "id": "c191dd503466:h0",
+            "header": "@@ -0,0 +1,25 @@",
+            "lines": [
+              {
+                "id": "c191dd503466:h0:l0",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 1,
+                "diffPosition": 1,
+                "text": "import React, { useState } from 'react';"
+              },
+              {
+                "id": "c191dd503466:h0:l1",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 2,
+                "diffPosition": 2,
+                "text": ""
+              },
+              {
+                "id": "c191dd503466:h0:l2",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 3,
+                "diffPosition": 3,
+                "text": "export function PreferencesDropdown() {"
+              },
+              {
+                "id": "c191dd503466:h0:l3",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 4,
+                "diffPosition": 4,
+                "text": "  const [open, setOpen] = useState(false);"
+              },
+              {
+                "id": "c191dd503466:h0:l4",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 5,
+                "diffPosition": 5,
+                "text": "  const [theme, setTheme] = useState('light');"
+              },
+              {
+                "id": "c191dd503466:h0:l5",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 6,
+                "diffPosition": 6,
+                "text": "  const [fontSize, setFontSize] = useState(14);"
+              },
+              {
+                "id": "c191dd503466:h0:l6",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 7,
+                "diffPosition": 7,
+                "text": "  const [showLineNumbers, setShowLineNumbers] = useState(true);"
+              },
+              {
+                "id": "c191dd503466:h0:l7",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 8,
+                "diffPosition": 8,
+                "text": "  const [autoSave, setAutoSave] = useState(false);"
+              },
+              {
+                "id": "c191dd503466:h0:l8",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 9,
+                "diffPosition": 9,
+                "text": "  const [tabSize, setTabSize] = useState(2);"
+              },
+              {
+                "id": "c191dd503466:h0:l9",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 10,
+                "diffPosition": 10,
+                "text": ""
+              },
+              {
+                "id": "c191dd503466:h0:l10",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 11,
+                "diffPosition": 11,
+                "text": "  const toggleOpen = () => setOpen(!open);"
+              },
+              {
+                "id": "c191dd503466:h0:l11",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 12,
+                "diffPosition": 12,
+                "text": ""
+              },
+              {
+                "id": "c191dd503466:h0:l12",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 13,
+                "diffPosition": 13,
+                "text": "  return ("
+              },
+              {
+                "id": "c191dd503466:h0:l13",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 14,
+                "diffPosition": 14,
+                "text": "    <div className=\"preferences\">"
+              },
+              {
+                "id": "c191dd503466:h0:l14",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 15,
+                "diffPosition": 15,
+                "text": "      <button onClick={toggleOpen}>Preferences</button>"
+              },
+              {
+                "id": "c191dd503466:h0:l15",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 16,
+                "diffPosition": 16,
+                "text": "      {open && ("
+              },
+              {
+                "id": "c191dd503466:h0:l16",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 17,
+                "diffPosition": 17,
+                "text": "        <div className=\"dropdown\">"
+              },
+              {
+                "id": "c191dd503466:h0:l17",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 18,
+                "diffPosition": 18,
+                "text": "          <label>Theme: <select value={theme} onChange={e => setTheme(e.target.value)}><option>light</option><option>dark</option></select></label>"
+              },
+              {
+                "id": "c191dd503466:h0:l18",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 19,
+                "diffPosition": 19,
+                "text": "          <label>Font Size: <input type=\"number\" value={fontSize} onChange={e => setFontSize(Number(e.target.value))} /></label>"
+              },
+              {
+                "id": "c191dd503466:h0:l19",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 20,
+                "diffPosition": 20,
+                "text": "          <label>Line Numbers: <input type=\"checkbox\" checked={showLineNumbers} onChange={e => setShowLineNumbers(e.target.checked)} /></label>"
+              },
+              {
+                "id": "c191dd503466:h0:l20",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 21,
+                "diffPosition": 21,
+                "text": "          <label>Auto Save: <input type=\"checkbox\" checked={autoSave} onChange={e => setAutoSave(e.target.checked)} /></label>"
+              },
+              {
+                "id": "c191dd503466:h0:l21",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 22,
+                "diffPosition": 22,
+                "text": "          <label>Tab Size: <input type=\"number\" value={tabSize} onChange={e => setTabSize(Number(e.target.value))} /></label>"
+              },
+              {
+                "id": "c191dd503466:h0:l22",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 23,
+                "diffPosition": 23,
+                "text": "        </div>"
+              },
+              {
+                "id": "c191dd503466:h0:l23",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 24,
+                "diffPosition": 24,
+                "text": "      )}"
+              },
+              {
+                "id": "c191dd503466:h0:l24",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 25,
+                "diffPosition": 25,
+                "text": "    </div>"
+              }
+            ]
+          }
+        ],
+        "generated": false
+      }
+    ],
+    "totalHunks": 1
+  },
+  "shikiTokens": {},
+  "createdAt": "2026-04-27T09:20:50.770Z",
+  "headSha": "0000001",
+  "error": null,
+  "lastEventId": 1,
+  "selfReview": {
+    "findings": [],
+    "coverage": {
+      "correctness": "pass",
+      "security": "pass",
+      "tests": "pass",
+      "performance": "pass",
+      "style": "pass"
+    },
+    "verdict": "comment",
+    "generatedAt": "2026-04-27T09:20:50.770Z"
+  }
+}

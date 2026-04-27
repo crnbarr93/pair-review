@@ -93,6 +93,12 @@ export async function highlightHunks(
   return tokens;
 }
 
+export function clearHighlightCache(): number {
+  const count = cache.size;
+  cache.clear();
+  return count;
+}
+
 /** Test-only: clears cache and resets highlighter singleton so each test starts fresh. */
 export function resetHighlighterForTests(): void {
   hl = null;

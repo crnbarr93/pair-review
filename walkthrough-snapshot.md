@@ -1,0 +1,53 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: P
+      - generic [ref=e7]: PairReview
+    - generic [ref=e9]:
+      - generic [ref=e10]: "EuclidProtocol/euclid_api #923"
+      - generic [ref=e11]: "feat: add txn-tracker service with shared txparser and chainresolver"
+    - generic [ref=e12]:
+      - img [ref=e13]
+      - text: sumit/txn_tracking
+      - generic [ref=e18]: →
+      - text: full_refactor
+    - button "Findings" [ref=e19] [cursor=pointer]
+    - button "Settings" [ref=e20] [cursor=pointer]:
+      - img [ref=e21]
+      - text: Settings
+    - button "Submit review" [ref=e24] [cursor=pointer]
+  - list "Review stages" [ref=e25]:
+    - listitem [ref=e26] [cursor=pointer]:
+      - generic [ref=e27]: "1"
+      - generic [ref=e28]
+    - img [ref=e32]
+    - listitem [ref=e34] [cursor=pointer]:
+      - img [ref=e36]
+      - generic [ref=e38]
+    - img [ref=e42]
+    - listitem [ref=e44] [cursor=pointer]:
+      - generic [ref=e45]: "3"
+      - generic [ref=e46]
+    - img [ref=e50]
+    - listitem [ref=e52] [cursor=pointer]:
+      - generic [ref=e53]: "4"
+      - generic [ref=e54]
+  - main [ref=e57]:
+    - generic [ref=e58]:
+      - generic [ref=e59]
+      - generic [ref=e70]
+      - generic [ref=e77]
+    - generic [ref=e254]:
+      - generic [ref=e255]
+      - generic [ref=e693]
+      - generic [ref=e911]
+      - generic [ref=e1805]
+      - generic [ref=e2275]
+      - generic [ref=e5797]
+      - generic [ref=e6583]
+      - generic [ref=e7423]
+    - complementary [ref=e8141]:
+      - generic [ref=e8142]
+      - generic [ref=e8151]
+      - generic [ref=e8207]
+  - generic: n / p · r · c · v s

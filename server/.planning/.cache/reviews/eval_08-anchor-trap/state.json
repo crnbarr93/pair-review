@@ -1,0 +1,152 @@
+{
+  "prKey": "eval:08-anchor-trap",
+  "pr": {
+    "source": "github",
+    "title": "Delete obsolete helpers",
+    "description": "Removes src/legacy.ts (no longer used) and inlines the one remaining use in src/main.ts.",
+    "author": "eval-author",
+    "baseBranch": "main",
+    "headBranch": "fixture/08-anchor-trap",
+    "baseSha": "0000000",
+    "headSha": "0000001",
+    "additions": 0,
+    "deletions": 0,
+    "filesChanged": 2,
+    "number": 0,
+    "owner": "eval",
+    "repo": "08-anchor-trap"
+  },
+  "diff": {
+    "files": [
+      {
+        "id": "9b14a8d1fd65",
+        "path": "src/legacy.ts",
+        "oldPath": "src/legacy.ts",
+        "status": "deleted",
+        "binary": false,
+        "hunks": [
+          {
+            "id": "9b14a8d1fd65:h0",
+            "header": "@@ -1,5 +0,0 @@",
+            "lines": [
+              {
+                "id": "9b14a8d1fd65:h0:l0",
+                "kind": "del",
+                "side": "LEFT",
+                "fileLine": 1,
+                "diffPosition": 1,
+                "text": "export function oldHelper() {"
+              },
+              {
+                "id": "9b14a8d1fd65:h0:l1",
+                "kind": "del",
+                "side": "LEFT",
+                "fileLine": 2,
+                "diffPosition": 2,
+                "text": "  return 'legacy';"
+              },
+              {
+                "id": "9b14a8d1fd65:h0:l2",
+                "kind": "del",
+                "side": "LEFT",
+                "fileLine": 3,
+                "diffPosition": 3,
+                "text": "}"
+              },
+              {
+                "id": "9b14a8d1fd65:h0:l3",
+                "kind": "del",
+                "side": "LEFT",
+                "fileLine": 4,
+                "diffPosition": 4,
+                "text": ""
+              },
+              {
+                "id": "9b14a8d1fd65:h0:l4",
+                "kind": "del",
+                "side": "LEFT",
+                "fileLine": 5,
+                "diffPosition": 5,
+                "text": "export const LEGACY_CONST = 42;"
+              }
+            ]
+          }
+        ],
+        "generated": false
+      },
+      {
+        "id": "1af9a5bdf96d",
+        "path": "src/main.ts",
+        "status": "modified",
+        "binary": false,
+        "hunks": [
+          {
+            "id": "1af9a5bdf96d:h0",
+            "header": "@@ -1,5 +1,4 @@",
+            "lines": [
+              {
+                "id": "1af9a5bdf96d:h0:l0",
+                "kind": "del",
+                "side": "LEFT",
+                "fileLine": 1,
+                "diffPosition": 1,
+                "text": "import { oldHelper } from './legacy';"
+              },
+              {
+                "id": "1af9a5bdf96d:h0:l1",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 1,
+                "diffPosition": 2,
+                "text": "const inlinedHelper = () => 'legacy';"
+              },
+              {
+                "id": "1af9a5bdf96d:h0:l2",
+                "kind": "del",
+                "side": "LEFT",
+                "fileLine": 2,
+                "diffPosition": 3,
+                "text": "const result = oldHelper();"
+              },
+              {
+                "id": "1af9a5bdf96d:h0:l3",
+                "kind": "add",
+                "side": "RIGHT",
+                "fileLine": 2,
+                "diffPosition": 4,
+                "text": "const result = inlinedHelper();"
+              },
+              {
+                "id": "1af9a5bdf96d:h0:l4",
+                "kind": "context",
+                "side": "BOTH",
+                "fileLine": 3,
+                "diffPosition": 5,
+                "text": "console.log(result);"
+              }
+            ]
+          }
+        ],
+        "generated": false
+      }
+    ],
+    "totalHunks": 2
+  },
+  "shikiTokens": {},
+  "createdAt": "2026-04-27T09:20:50.790Z",
+  "headSha": "0000001",
+  "error": null,
+  "lastEventId": 1,
+  "selfReview": {
+    "findings": [],
+    "coverage": {
+      "correctness": "pass",
+      "security": "pass",
+      "tests": "pass",
+      "performance": "pass",
+      "style": "pass"
+    },
+    "verdict": "comment",
+    "generatedAt": "2026-04-27T09:20:50.790Z"
+  }
+}

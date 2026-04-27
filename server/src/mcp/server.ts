@@ -13,6 +13,7 @@ import { registerResolveThread } from './tools/resolve-thread.js';
 import { registerSubmitReview } from './tools/submit-review.js';
 import { registerAwaitUserRequest } from './tools/await-user-request.js';
 import { registerRespondChat } from './tools/respond-chat.js';
+import { registerClearCache } from './tools/clear-cache.js';
 import type { RequestQueueManager } from '../session/request-queue.js';
 
 export function registerAllTools(mcp: McpServer, manager: SessionManager, queueManager: RequestQueueManager): void {
@@ -28,6 +29,7 @@ export function registerAllTools(mcp: McpServer, manager: SessionManager, queueM
   registerSubmitReview(mcp, manager);
   registerAwaitUserRequest(mcp, manager, queueManager);
   registerRespondChat(mcp, manager);
+  registerClearCache(mcp);
 }
 
 export async function startMcp(manager: SessionManager, queueManager: RequestQueueManager): Promise<McpServer> {

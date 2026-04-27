@@ -1049,6 +1049,8 @@ button {
   flex-direction: column;
   border-left: 1px solid var(--line);
   overflow: hidden;
+  flex: 1;
+  min-height: 0;
 }
 .chat-head {
   padding: 12px 16px;

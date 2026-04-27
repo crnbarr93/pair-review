@@ -202,7 +202,7 @@ export const actions = {
       expandedGeneratedFiles: s.expandedGeneratedFiles ?? {},
       existingComments: s.existingComments ?? [],
       ciStatus: s.ciStatus,
-      headShaError: undefined, // an update arrived → previous head-sha-check-failed is cleared
+      headShaError: undefined, // an update arrived -> previous head-sha-check-failed is cleared
       summary: s.summary ?? null,
       selfReview: s.selfReview ?? null,
       walkthrough: s.walkthrough ?? null,
@@ -226,6 +226,9 @@ export const actions = {
     state = {
       ...state,
       selfReview: msg.state.selfReview ?? null,
+      // The server reducer creates Thread objects from findings on selfReview.set,
+      // so we must also sync threads here to keep browser state consistent.
+      threads: mergeThreadsFromServer(msg.state.threads ?? {}, state.threads, state.locallyEditedDrafts),
       findingsSidebarOpen: wasNull && msg.state.selfReview != null ? true : state.findingsSidebarOpen,
     };
     emit();

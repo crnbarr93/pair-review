@@ -147,6 +147,24 @@ describe('renderSummary()', () => {
     const result = renderSummaryForTest(session, 'http://127.0.0.1:9999/?token=abc123');
     expect(result).toContain('(no description provided');
   });
+
+  it('includes has_selfReview flag when session has selfReview', () => {
+    const session = makeSession();
+    session.selfReview = {
+      findings: [],
+      coverage: { correctness: 'pass', security: 'pass', tests: 'pass', performance: 'pass', style: 'pass' },
+      verdict: 'approve',
+      generatedAt: '2026-04-27T00:00:00.000Z',
+    };
+    const result = renderSummaryForTest(session, 'http://127.0.0.1:9999/?token=abc123');
+    expect(result).toContain('has_selfReview: true');
+  });
+
+  it('omits has_selfReview flag when session has no selfReview', () => {
+    const session = makeSession();
+    const result = renderSummaryForTest(session, 'http://127.0.0.1:9999/?token=abc123');
+    expect(result).not.toContain('has_selfReview');
+  });
 });
 
 describe('plugin manifest structure', () => {
