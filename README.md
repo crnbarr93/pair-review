@@ -27,26 +27,26 @@ pnpm install
 pnpm build
 ```
 
-After installation, the plugin registers three slash commands and an MCP server automatically via `.claude-plugin/plugin.json`.
+After installation, the plugin registers three slash commands under the `/gr:` prefix and an MCP server automatically via `.claude-plugin/plugin.json`.
 
 ## Usage
 
-### `/pair-review` -- Start a review
+### `/gr:pair-review` -- Start a review
 
 The primary entry point. Accepts a GitHub PR URL, a PR number (inferred from the current repo), or local git refs:
 
 ```
 # Full GitHub PR URL
-/pair-review https://github.com/owner/repo/pull/123
+/gr:pair-review https://github.com/owner/repo/pull/123
 
 # PR number (owner/repo inferred from git remote)
-/pair-review 123
+/gr:pair-review 123
 
 # Local branch diff
-/pair-review --local main feature/my-branch
+/gr:pair-review --local main feature/my-branch
 
 # Dry run -- opens the workspace without auto-generating summary/walkthrough/self-review
-/pair-review 123 --dry
+/gr:pair-review 123 --dry
 ```
 
 On launch, Claude will:
@@ -59,11 +59,11 @@ On launch, Claude will:
 
 The review session persists on disk. Closing the browser and re-running the same command resumes where you left off.
 
-### `/listen` -- Resume listening
+### `/gr:listen` -- Resume listening
 
 If Claude stops responding to browser requests (e.g., after a context reset), use this to re-enter the listen loop for the active session without regenerating artifacts.
 
-### `/clear-cache` -- Reset state
+### `/gr:clear-cache` -- Reset state
 
 Deletes all persisted review sessions and the syntax-highlight cache.
 
