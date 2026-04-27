@@ -164,6 +164,16 @@ Plans:
 
 ---
 
+### Phase 06.3: Walkthrough and review stage design alignment — match inline comments, walkthrough steps, and review UI to updated design.html mockup (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 6
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 06.3 to break down)
+
 ### Phase 06.2: UI design alignment — match review workspace to updated design.html mockups (INSERTED)
 
 **Goal:** Pixel-match the review workspace to the updated design.html mockups across all 4 steps (Summary, Walkthrough, Review, Submission). Two-row TopBar, step-based routing with right panel (step content + chat), contextual footer, and component relocations (summary to full-page, findings to inline, submit modal to step view, walkthrough steps to right panel).
