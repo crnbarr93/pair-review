@@ -1,4 +1,4 @@
-import type { ReviewSession, SessionEvent, Thread } from '@shared/types';
+import type { ResolvedFinding, ReviewSession, SessionEvent, Thread } from '@shared/types';
 
 /**
  * Phase 2 reducer. Pure function — no I/O, no async, no timestamp reads on the critical path.
@@ -7,6 +7,39 @@ import type { ReviewSession, SessionEvent, Thread } from '@shared/types';
  * INVARIANT: reducer does NOT touch the monotonic event counter. The SessionManager's applyEvent
  * orchestrator owns the counter (see 02-RESEARCH.md Pattern 2).
  */
+
+/**
+ * Convert a ResolvedFinding into a Thread object so that self-review findings
+ * appear as editable discussion threads in the submission modal. The thread's
+ * draftBody matches the format used by findingToOctokitComment in anchor.ts
+ * (severity-prefixed title + rationale) so the GitHub comment content is consistent
+ * whether posted via thread or finding path.
+ *
+ * If a thread already exists at the same lineId (e.g., from a walkthrough discussion),
+ * the existing thread is preserved — we don't overwrite user-created threads.
+ */
+function findingToThread(finding: ResolvedFinding, generatedAt: string): Thread {
+  return {
+    threadId: `finding-${finding.id}`,
+    lineId: finding.lineId,
+    path: finding.path,
+    line: finding.line,
+    side: finding.side,
+    preExisting: false,
+    initiator: 'llm' as const,
+    turns: [
+      {
+        author: 'llm' as const,
+        message: `**[${finding.severity.toUpperCase()}] ${finding.title}**\n\n${finding.rationale}`,
+        createdAt: generatedAt,
+      },
+    ],
+    draftBody: `**[${finding.severity.toUpperCase()}] ${finding.title}**\n\n${finding.rationale}`,
+    resolved: false,
+    createdAt: generatedAt,
+  };
+}
+
 export function applyEvent(s: ReviewSession, e: SessionEvent): ReviewSession {
   switch (e.type) {
     case 'session.adoptNewDiff':
@@ -47,8 +80,36 @@ export function applyEvent(s: ReviewSession, e: SessionEvent): ReviewSession {
       return { ...s, ciStatus: e.ciStatus };
     case 'summary.set':
       return { ...s, summary: e.summary };
-    case 'selfReview.set':
-      return { ...s, selfReview: e.selfReview };
+    case 'selfReview.set': {
+      // Create threads from findings so they appear as editable discussion threads
+      // in the submission modal. Preserve existing threads (from walkthrough or user)
+      // at the same lineId — user-created content takes priority.
+      const existingThreads = s.threads ?? {};
+
+      // Remove any previous finding-generated threads (prefix: 'finding-') so a
+      // re-run of self-review replaces stale threads instead of accumulating them.
+      const withoutOldFindingThreads: Record<string, Thread> = {};
+      for (const [tid, thread] of Object.entries(existingThreads)) {
+        if (!tid.startsWith('finding-')) {
+          withoutOldFindingThreads[tid] = thread;
+        }
+      }
+
+      // Recompute existingLineIds from non-finding threads only
+      const nonFindingLineIds = new Set(
+        Object.values(withoutOldFindingThreads).map((t) => t.lineId)
+      );
+
+      const newThreads: Record<string, Thread> = { ...withoutOldFindingThreads };
+      for (const finding of e.selfReview.findings) {
+        // Don't create a thread if a user/walkthrough thread already exists at this lineId
+        if (nonFindingLineIds.has(finding.lineId)) continue;
+        const thread = findingToThread(finding, e.selfReview.generatedAt);
+        newThreads[thread.threadId] = thread;
+      }
+
+      return { ...s, selfReview: e.selfReview, threads: newThreads };
+    }
     case 'walkthrough.set':
       return { ...s, walkthrough: e.walkthrough };
     case 'walkthrough.stepAdvanced':

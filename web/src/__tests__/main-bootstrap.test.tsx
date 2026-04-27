@@ -80,7 +80,7 @@ describe('main.tsx bootstrap', () => {
     expect(replaceIdx).toBeGreaterThanOrEqual(0);
     expect(esIdx).toBeGreaterThanOrEqual(0);
 
-    // Critical ordering assertion: fetch → replaceState → EventSource (T-03 mitigation)
+    // Critical ordering assertion: fetch -> replaceState -> EventSource (T-03 mitigation)
     expect(replaceIdx).toBeGreaterThan(fetchIdx);
     expect(esIdx).toBeGreaterThan(replaceIdx);
   });
@@ -161,7 +161,7 @@ describe('main.tsx bootstrap', () => {
   it('calls setReviewToken + setSource BEFORE history.replaceState (token capture ordering)', async () => {
     Object.defineProperty(window, 'location', {
       writable: true,
-      value: { ...window.location, search: '?token=abc&session=gh:o/r%231' },
+      value: { ...window.location, search: '?token=abc&session=gh:o/r%231', hash: '' },
     });
 
     const callOrder: string[] = [];
@@ -206,6 +206,7 @@ describe('main.tsx bootstrap', () => {
         onSnapshot: vi.fn(),
         onUpdate: vi.fn(),
         onSessionExpired: vi.fn(),
+        setActiveStep: vi.fn(),
         setSource: vi.fn().mockImplementation((src: unknown) => {
           callOrder.push(`setSource:${JSON.stringify(src)}`);
         }),
@@ -247,7 +248,7 @@ describe('main.tsx bootstrap', () => {
 
     Object.defineProperty(window, 'location', {
       writable: true,
-      value: { ...window.location, search: '?token=badtok&session=gh:o%2Fr%231' },
+      value: { ...window.location, search: '?token=badtok&session=gh:o%2Fr%231', hash: '' },
     });
 
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));

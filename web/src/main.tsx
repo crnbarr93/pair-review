@@ -5,6 +5,13 @@ import type { ChooseResumeSource } from './api';
 import { actions } from './store';
 import App from './App';
 
+const VALID_STEPS = ['summary', 'walkthrough', 'review', 'submission'] as const;
+type Step = (typeof VALID_STEPS)[number];
+
+function isValidStep(s: string): s is Step {
+  return (VALID_STEPS as readonly string[]).includes(s);
+}
+
 function renderFatal(msg: string): void {
   const root = document.getElementById('root');
   if (root) root.textContent = msg;
@@ -28,6 +35,19 @@ export function sourceFromPrKey(prKey: string): ChooseResumeSource {
   const gh = prKey.match(/^gh:([^/]+)\/([^#]+)#(\d+)$/);
   if (gh) return { kind: 'github', number: parseInt(gh[3], 10) };
   return { kind: 'local', base: '', head: '' };
+}
+
+/**
+ * Sync activeStep from the URL hash fragment. Used on initial load and on
+ * hashchange (browser back/forward). If the hash is not a recognised step
+ * name the call is a no-op and the store keeps its current activeStep.
+ */
+function syncStepFromHash(): void {
+  const hash = location.hash ?? '';
+  const raw = hash.replace(/^#/, '');
+  if (isValidStep(raw)) {
+    actions.setActiveStep(raw);
+  }
 }
 
 export async function bootstrap(): Promise<void> {
@@ -63,15 +83,22 @@ export async function bootstrap(): Promise<void> {
 
   // T-03 TOKEN LEAK MITIGATION: wipe query BEFORE opening EventSource or painting anything
   // Preserve hash fragment (used to restore activeStep on refresh)
-  const savedHash = location.hash;
+  const savedHash = location.hash ?? '';
   history.replaceState('', '', '/' + savedHash);
 
-  const validSteps = ['summary', 'walkthrough', 'review', 'submission'] as const;
-  type Step = (typeof validSteps)[number];
-  const hashStep = savedHash.replace(/^#/, '');
-  if (validSteps.includes(hashStep as Step)) {
-    actions.setActiveStep(hashStep as Step);
+  // Restore step from hash (refresh case) or set initial hash (first load case).
+  // On refresh: savedHash is e.g. '#walkthrough' -> restores that step.
+  // On first load: savedHash is '' -> syncStepFromHash is a no-op, then we
+  // explicitly set the hash to the default step ('summary') so the URL always
+  // reflects the active step.
+  syncStepFromHash();
+  if (!savedHash) {
+    location.hash = 'summary';
   }
+
+  // Listen for hash changes from browser back/forward navigation so the
+  // active step stays in sync with the URL.
+  window.addEventListener('hashchange', syncStepFromHash);
 
   openEventStream(
     sessionKey,
