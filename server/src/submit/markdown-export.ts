@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { Thread, Verdict } from '@shared/types';
-import { collectPostableThreads } from './anchor.js';
+import type { Thread, Verdict, ResolvedFinding } from '@shared/types';
+import { collectPostableThreads, collectPostableFindings } from './anchor.js';
 
 /**
  * Validate exportPath before writing. Path traversal defense per RESEARCH.md Security Domain.
@@ -25,6 +25,7 @@ export interface ExportParams {
   verdict: Verdict;
   body: string;
   threads: Record<string, Thread>;
+  findings?: ResolvedFinding[];
   baseRef: string;
   headRef: string;
   title: string;
@@ -64,6 +65,20 @@ export async function exportReviewMarkdown(params: ExportParams): Promise<void> 
         `### ${t.path}:${t.line} (${t.side})`,
         '',
         t.draftBody ?? '',
+        '',
+      );
+    }
+  }
+
+  const postableFindings = collectPostableFindings(params.findings ?? [], params.threads);
+  if (postableFindings.length > 0) {
+    lines.push('## Self-Review Findings', '');
+    for (const f of postableFindings) {
+      lines.push(
+        `### [${f.severity.toUpperCase()}] ${f.title}`,
+        `**${f.path}:${f.line}** (${f.side})`,
+        '',
+        f.rationale,
         '',
       );
     }

@@ -139,7 +139,7 @@ function GenerateReviewButton({ onGenerated, prKey }: { onGenerated: (body: stri
     try {
       await postUserRequest(prKey, {
         type: 'chat',
-        payload: { message: 'Please draft a review summary for this PR that I can paste into the review body. Include key observations, any concerns, and an overall assessment. Format it as markdown. IMPORTANT: Start your response with the review text directly — no preamble like "Here\'s a draft". Just the review content.' },
+        payload: { message: 'Draft a concise review summary (3-5 sentences max). Focus on: (1) your verdict reasoning — why approve/request changes/comment, (2) the most critical findings if any, (3) remaining concerns or conditions. Do NOT list every finding — those will be posted as inline comments. Start directly with the summary text, no preamble.' },
       });
     } catch {
       setGenerating(false);
@@ -366,39 +366,58 @@ function SubmissionContent({ onClose }: { onClose?: () => void }) {
             </div>
           </div>
 
-          {/* Threads list */}
-          <div className="sm-section sm-threads-section">
-            <div className="sm-section-label">
-              THREADS TO POST ({s.postableThreads.length})
-            </div>
-            {s.postableThreads.length === 0 ? (
-              <div className="sm-empty-threads">
-                No inline comments drafted -- the review will post summary only.
-              </div>
-            ) : (
-              <div className="sm-thread-list">
-                {s.postableThreads.map((t) => {
-                  const finding = s.findings.find((f) => f.lineId === t.lineId);
-                  const sev = finding?.severity;
-                  const firstLine = (t.draftBody ?? '').split('\n')[0];
-                  return (
-                    <div key={t.threadId} className="sm-thread-row">
-                      <div className={`sm-thread-dot${sev ? ` sm-thread-dot--${sev}` : ''}`} />
-                      <div className="sm-thread-info">
-                        <div className="sm-thread-preview">{firstLine}</div>
-                        <div className="sm-thread-path">{t.path}:{t.line}</div>
-                      </div>
-                      {sev && (
-                        <span className={`sm-thread-sev sm-thread-sev--${sev}`}>
-                          {sev.toUpperCase()}
+          {/* Inline comments list (threads + findings) */}
+          {(() => {
+            const postableThreadLineIds = new Set(s.postableThreads.map(t => t.lineId));
+            const postableFindings = s.findings.filter(f => !postableThreadLineIds.has(f.lineId));
+            const totalComments = s.postableThreads.length + postableFindings.length;
+            return (
+              <div className="sm-section sm-threads-section">
+                <div className="sm-section-label">
+                  INLINE COMMENTS TO POST ({totalComments})
+                </div>
+                {totalComments === 0 ? (
+                  <div className="sm-empty-threads">
+                    No inline comments or findings to post -- the review will post summary only.
+                  </div>
+                ) : (
+                  <div className="sm-thread-list">
+                    {s.postableThreads.map((t) => {
+                      const finding = s.findings.find((f) => f.lineId === t.lineId);
+                      const sev = finding?.severity;
+                      const firstLine = (t.draftBody ?? '').split('\n')[0];
+                      return (
+                        <div key={t.threadId} className="sm-thread-row">
+                          <div className={`sm-thread-dot${sev ? ` sm-thread-dot--${sev}` : ''}`} />
+                          <div className="sm-thread-info">
+                            <div className="sm-thread-preview">{firstLine}</div>
+                            <div className="sm-thread-path">{t.path}:{t.line}</div>
+                          </div>
+                          {sev && (
+                            <span className={`sm-thread-sev sm-thread-sev--${sev}`}>
+                              {sev.toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {postableFindings.map((f) => (
+                      <div key={f.id} className="sm-thread-row">
+                        <div className={`sm-thread-dot sm-thread-dot--${f.severity}`} />
+                        <div className="sm-thread-info">
+                          <div className="sm-thread-preview">{f.title}</div>
+                          <div className="sm-thread-path">{f.path}:{f.line}</div>
+                        </div>
+                        <span className={`sm-thread-sev sm-thread-sev--${f.severity}`}>
+                          {f.severity.toUpperCase()}
                         </span>
-                      )}
-                    </div>
-                  );
-                })}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            );
+          })()}
 
           {/* Incomplete walkthrough warning + retype gate (D-03) */}
           {!s.walkthroughComplete && (

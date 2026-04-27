@@ -83,6 +83,7 @@ export function mountConfirmSubmit(app: Hono, manager: SessionManager): void {
           verdict: verdict as Verdict,
           body,
           threads: session.threads ?? {},
+          findings: session.selfReview?.findings ?? [],
           submissionId,
         });
 
@@ -107,6 +108,7 @@ export function mountConfirmSubmit(app: Hono, manager: SessionManager): void {
           verdict: verdict as Verdict,
           body,
           threads: session.threads ?? {},
+          findings: session.selfReview?.findings ?? [],
           baseRef: session.pr?.baseBranch ?? 'base',
           headRef: session.pr?.headBranch ?? 'head',
           title: session.pr?.title ?? 'Local Review',

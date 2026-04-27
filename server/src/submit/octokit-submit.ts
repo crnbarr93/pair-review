@@ -1,7 +1,7 @@
 import { execa } from 'execa';
 import { Octokit } from 'octokit';
-import type { Thread, Verdict } from '@shared/types';
-import { threadToOctokitComment, collectPostableThreads } from './anchor.js';
+import type { Thread, Verdict, ResolvedFinding } from '@shared/types';
+import { threadToOctokitComment, collectPostableThreads, findingToOctokitComment, collectPostableFindings } from './anchor.js';
 import { logger } from '../logger.js';
 
 // D-07: Verdict mapping — plugin lowercase → GitHub API uppercase
@@ -37,6 +37,7 @@ export interface SubmitParams {
   verdict: Verdict;
   body: string;
   threads: Record<string, Thread>;
+  findings: ResolvedFinding[];
   submissionId: string;
 }
 
@@ -53,22 +54,34 @@ export interface SubmitResult {
 export async function submitGithubReview(params: SubmitParams): Promise<SubmitResult> {
   const octokit = await getOctokit();
   const postable = collectPostableThreads(params.threads);
+  const postableFindings = collectPostableFindings(params.findings, params.threads);
 
   // D-10: Embed submissionId for deduplication tracking
   const bodyWithId = `${params.body}\n\n<!-- submission_id: ${params.submissionId} -->`;
 
-  const comments = postable.map((t) => {
+  const threadComments = postable.map((t) => {
     const c = threadToOctokitComment(t);
     return {
       path: c.path,
       body: c.body,
       line: c.line,
       side: c.side as 'LEFT' | 'RIGHT',
-      // Pitfall B workaround: Octokit types may require position (issue #614)
     };
   });
 
-  logger.info(`Submitting review: ${postable.length} comments, verdict=${params.verdict}`);
+  const findingComments = postableFindings.map((f) => {
+    const c = findingToOctokitComment(f);
+    return {
+      path: c.path,
+      body: c.body,
+      line: c.line,
+      side: c.side as 'LEFT' | 'RIGHT',
+    };
+  });
+
+  const comments = [...threadComments, ...findingComments];
+
+  logger.info(`Submitting review: ${postable.length} thread comments + ${postableFindings.length} finding comments, verdict=${params.verdict}`);
 
   const { data: review } = await octokit.rest.pulls.createReview({
     owner: params.owner,
