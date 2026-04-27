@@ -10,3 +10,9 @@ coverage
 .playwright-mcp/
 phase1-*.png
 design.html
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+.playwright-mcp/
