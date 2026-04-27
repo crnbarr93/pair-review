@@ -146,7 +146,9 @@ export type SessionEvent =
   | { type: 'chat.llmMessage'; message: string; timestamp: string }
   | { type: 'thread.userStarted'; lineId: string; path: string; line: number; side: LineSide; threadId: string; message: string; isClaudeTagged: boolean; timestamp: string }
   | { type: 'request.queued'; requestType: string; position: number }
-  | { type: 'request.processing' };
+  | { type: 'request.processing' }
+  // Phase 06.3 additions (D-15) — finding validity toggle:
+  | { type: 'finding.validitySet'; findingId: string; validity: 'valid' | 'invalid' };
 
 // SSE message envelope (server → browser)
 export interface SnapshotMessage {
@@ -304,6 +306,8 @@ export interface ResolvedFinding {
   /** Max 2000 chars (enforced in Plan 04-06).
    * SECURITY: render via React text nodes, NEVER innerHTML. */
   rationale: string;
+  // Phase 06.3 additions (D-16) — user-set validity toggle for each finding:
+  validity?: 'valid' | 'invalid';
 }
 
 /**

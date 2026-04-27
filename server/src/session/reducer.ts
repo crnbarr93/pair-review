@@ -246,6 +246,14 @@ export function applyEvent(s: ReviewSession, e: SessionEvent): ReviewSession {
         ...s,
         requestQueue: { pending: Math.max(0, (s.requestQueue?.pending ?? 0) - 1) },
       };
+    // Phase 06.3 additions (D-15) — finding validity toggle:
+    case 'finding.validitySet': {
+      if (!s.selfReview) return s;
+      const updatedFindings = s.selfReview.findings.map(f =>
+        f.id === e.findingId ? { ...f, validity: e.validity } : f
+      );
+      return { ...s, selfReview: { ...s.selfReview, findings: updatedFindings } };
+    }
     default: {
       // Exhaustiveness guard — adding an event variant without handling it is a compile error.
       const _never: never = e;
