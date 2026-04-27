@@ -1,10 +1,11 @@
-// ThreadCard — Phase 5 inline push-down thread card.
+// ThreadCard — Phase 06.3 restyled thread card (D-06, D-07, D-08).
 // SECURITY:
 //   - turn.message is LLM-authored — rendered as React text node inside <p> (T-5-05-01).
 //     innerHTML is NEVER used for LLM content in this component.
 //   - draftBody rendered in <textarea value={localDraft}> — textarea values are always text, never HTML (T-5-05-02)
 import { useState, useEffect, useRef } from 'react';
-import type { Thread } from '@shared/types';
+import type { Thread, ResolvedFinding } from '@shared/types';
+import { postUserRequest } from '../api';
 
 function cn(...parts: Array<string | false | undefined | null>): string {
   return parts.filter(Boolean).join(' ');
@@ -12,15 +13,30 @@ function cn(...parts: Array<string | false | undefined | null>): string {
 
 interface ThreadCardProps {
   thread: Thread;
+  finding?: ResolvedFinding;   // Associated finding (if thread was generated from a finding)
   onDraftChange: (threadId: string, body: string) => void;
   onCollapse: () => void;
+  prKey: string;               // For reply submissions via postUserRequest
 }
 
 const VISIBLE_TURNS = 3;
 
-export function ThreadCard({ thread, onDraftChange, onCollapse }: ThreadCardProps) {
+function getSeverityClass(finding?: ResolvedFinding): string {
+  if (!finding) return 'tc-header--neutral';
+  switch (finding.severity) {
+    case 'blocker': return 'tc-header--blocker';
+    case 'major':   return 'tc-header--major';
+    case 'minor':   return 'tc-header--minor';
+    case 'nit':     return 'tc-header--nit';
+    default:        return 'tc-header--neutral';
+  }
+}
+
+export function ThreadCard({ thread, finding, onDraftChange, onCollapse, prKey }: ThreadCardProps) {
   const [showAllTurns, setShowAllTurns] = useState(false);
   const [localDraft, setLocalDraft] = useState(thread.draftBody ?? '');
+  const [replyValue, setReplyValue] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const userHasEdited = useRef(false);
 
   // Sync localDraft when server updates draftBody, but only if user hasn't manually edited
@@ -41,43 +57,72 @@ export function ThreadCard({ thread, onDraftChange, onCollapse }: ThreadCardProp
     }
   };
 
+  // @claude detection for reply input
+  const isReplyClaudeTagged = replyValue.includes('@claude');
+
+  const handleReplySubmit = async () => {
+    if (!replyValue.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      await postUserRequest(prKey, {
+        type: 'inline_comment',
+        payload: {
+          lineId: thread.lineId,
+          message: replyValue.trim(),
+          isClaudeTagged: isReplyClaudeTagged,
+        },
+      });
+      setReplyValue('');
+    } catch {
+      // Keep reply input open so user can retry
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleReplyKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleReplySubmit();
+    }
+  };
+
+  const severityLabel = finding?.severity
+    ? finding.severity.toUpperCase()
+    : '';
+
   return (
     <div
       className={cn('thread-panel', thread.resolved && 'thread-panel--resolved')}
       role="region"
       aria-label={`Thread on ${thread.path}:${thread.line}`}
       id={`thread-${thread.threadId}`}
-      style={{
-        borderLeft: `3px solid ${thread.resolved ? 'var(--ok)' : 'var(--claude)'}`,
-        padding: '8px 16px',
-        background: 'var(--paper)',
-      }}
     >
-      {/* Location reference */}
-      <div
-        className="ref-loc"
-        style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-4)', marginBottom: 4 }}
-      >
-        {thread.path}:{thread.line} · {thread.side.toLowerCase()}
-        {thread.preExisting && (
-          <span className="tag" style={{ marginLeft: 4, fontSize: 10 }}>pre-existing</span>
-        )}
+      {/* Severity-colored header bar (D-06) */}
+      <div className={cn('tc-header', getSeverityClass(finding))}>
+        <span className="tc-header-label">
+          {severityLabel && <span className="tc-header-severity">{severityLabel}</span>}
+          <span className="tc-header-loc">Line {thread.line}</span>
+          {finding?.category && (
+            <span className="tc-header-category">{finding.category}</span>
+          )}
+        </span>
         <button
           type="button"
+          className="tc-header-collapse"
           onClick={onCollapse}
-          style={{
-            float: 'right',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: 'var(--ink-4)',
-            fontSize: 12,
-          }}
           aria-label="Collapse thread"
         >
-          Collapse thread
+          ×
         </button>
       </div>
+
+      {/* Pre-existing badge */}
+      {thread.preExisting && (
+        <div className="tc-preexisting">
+          <span className="tc-preexisting-tag">pre-existing</span>
+        </div>
+      )}
 
       {/* Older turns expander */}
       {hiddenCount > 0 && !showAllTurns && (
@@ -86,15 +131,6 @@ export function ThreadCard({ thread, onDraftChange, onCollapse }: ThreadCardProp
           className="thread-older-expander"
           onClick={() => setShowAllTurns(true)}
           aria-expanded={false}
-          style={{
-            fontSize: 11,
-            color: 'var(--ink-4)',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '4px 0',
-            display: 'block',
-          }}
         >
           {hiddenCount} earlier message{hiddenCount !== 1 ? 's' : ''}
         </button>
@@ -103,22 +139,22 @@ export function ThreadCard({ thread, onDraftChange, onCollapse }: ThreadCardProp
       {/* Conversation turns */}
       <div className="thread-msgs">
         {visibleTurns.map((turn, i) => (
-          <div key={i} className="thread-msg" style={{ marginBottom: 8 }}>
-            <div className={cn('av', turn.author === 'llm' ? 'claude' : 'me')} />
-            <div className="body">
-              <span className="who" style={{ fontSize: 12, fontWeight: 600 }}>
-                {turn.author === 'llm' ? 'Claude' : 'You'}
-              </span>
-              <span
-                className="time"
-                style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-4)', marginLeft: 8 }}
-              >
-                {new Date(turn.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
+          <div key={i} className="tc-turn">
+            {/* Avatar circle (D-06) */}
+            <div className={cn('tc-avatar', turn.author === 'llm' ? 'tc-avatar--claude' : 'tc-avatar--user')}>
+              {turn.author === 'llm' ? 'C' : 'Y'}
+            </div>
+            <div className="tc-turn-content">
+              <div className="tc-turn-meta">
+                <span className="tc-turn-name">
+                  {turn.author === 'llm' ? 'Claude' : 'You'}
+                </span>
+                <span className="tc-turn-time">
+                  {new Date(turn.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
               {/* SECURITY: message is LLM-authored — render as React text node, NEVER innerHTML */}
-              <p style={{ fontSize: 13, lineHeight: 1.5, margin: '4px 0 0', whiteSpace: 'pre-wrap' }}>
-                {turn.message}
-              </p>
+              <p className="tc-turn-body">{turn.message}</p>
             </div>
           </div>
         ))}
@@ -128,10 +164,12 @@ export function ThreadCard({ thread, onDraftChange, onCollapse }: ThreadCardProp
       {thread.turns[thread.turns.length - 1]?.author === 'user' &&
         thread.draftBody === undefined &&
         !thread.resolved && (
-          <div className="thread-msg" style={{ marginBottom: 8 }}>
-            <div className="av claude" />
-            <div className="body">
-              <span className="who" style={{ fontSize: 12, fontWeight: 600 }}>Claude</span>
+          <div className="tc-turn tc-typing">
+            <div className="tc-avatar tc-avatar--claude">C</div>
+            <div className="tc-turn-content">
+              <div className="tc-turn-meta">
+                <span className="tc-turn-name">Claude</span>
+              </div>
               <div className="typing-dots">
                 <span /><span /><span />
               </div>
@@ -141,9 +179,9 @@ export function ThreadCard({ thread, onDraftChange, onCollapse }: ThreadCardProp
 
       {/* Draft comment slot — appears after draft_comment MCP call */}
       {thread.draftBody !== undefined && (
-        <div className="thread-draft-slot" style={{ marginTop: 8 }}>
+        <div className="tc-draft-slot">
           <textarea
-            className="thread-draft-input"
+            className="tc-draft-input"
             value={localDraft}
             onChange={(e) => {
               userHasEdited.current = true;
@@ -152,27 +190,36 @@ export function ThreadCard({ thread, onDraftChange, onCollapse }: ThreadCardProp
             onBlur={handleDraftBlur}
             aria-label="Draft comment body — edit before posting"
             placeholder="Synthesized comment — edit before posting"
-            style={{
-              width: '100%',
-              minHeight: 60,
-              maxHeight: 200,
-              resize: 'vertical',
-              fontSize: 13,
-              lineHeight: 1.45,
-              fontFamily: 'inherit',
-              border: '1px solid var(--line-2)',
-              borderRadius: 6,
-              padding: 8,
-              background: 'var(--paper)',
-            }}
           />
         </div>
       )}
 
-      {/* Thread actions */}
+      {/* Reply input (D-08) — only for unresolved threads */}
       {!thread.resolved && (
-        <div className="thread-actions" style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-          {/* Resolve is non-destructive — just local display state per UI-SPEC */}
+        <div className="tc-reply">
+          {isReplyClaudeTagged && (
+            <div className="tc-reply-claude-chip" role="status">Claude will respond</div>
+          )}
+          <div className="tc-reply-row">
+            <input
+              type="text"
+              className="tc-reply-input"
+              value={replyValue}
+              onChange={(e) => setReplyValue(e.target.value)}
+              onKeyDown={handleReplyKeyDown}
+              placeholder="Reply..."
+              aria-label="Reply to thread"
+              disabled={submitting}
+            />
+            <button
+              type="button"
+              className="tc-reply-btn"
+              onClick={handleReplySubmit}
+              disabled={!replyValue.trim() || submitting}
+            >
+              {isReplyClaudeTagged ? 'Ask Claude' : 'Reply'}
+            </button>
+          </div>
         </div>
       )}
     </div>
