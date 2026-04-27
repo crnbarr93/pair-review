@@ -37,7 +37,9 @@ export function FindingsSidebar({
         <div className="findings-panel-header">
           <div className="findings-stage-label">Stage 3 · Review</div>
           <div className="findings-title">Findings</div>
-          <div className="findings-subtitle">Self-review not run yet</div>
+          <div className="findings-subtitle">
+            <span className="generating-pulse">Running self-review...</span>
+          </div>
         </div>
       </div>
     );

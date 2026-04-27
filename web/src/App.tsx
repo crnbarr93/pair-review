@@ -638,8 +638,12 @@ export default function App() {
               {activeStep === 'submission' && (
                 <SubmissionPanel />
               )}
-              {/* Fallback empty slot when step content is null */}
-              {activeStep === 'walkthrough' && !state.walkthrough && <div />}
+              {/* Fallback generating indicator when walkthrough not yet populated */}
+              {activeStep === 'walkthrough' && !state.walkthrough && (
+                <div className="generating-placeholder">
+                  <span className="generating-pulse">Generating walkthrough...</span>
+                </div>
+              )}
             </RightPanel>
           </>
         )}
