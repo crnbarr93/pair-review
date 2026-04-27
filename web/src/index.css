@@ -21,6 +21,7 @@
 
   /* Accent — Claude identity (calm teal-green) */
   --claude: #2F6F66;
+  --claude-rgb: 47, 111, 102;
   --claude-2: #E6EFEC;
   --claude-3: #CFDFD9;
 
@@ -33,10 +34,13 @@
   --rem-ink: #7A3A34;
 
   --warn: #B5791F;
+  --warn-rgb: 181, 121, 31;
   --warn-bg: #F6EED9;
   --block: #9B3B2E;
+  --block-rgb: 155, 59, 46;
   --block-bg: #F3DFD8;
   --ok: #3A7A55;
+  --ok-rgb: 58, 122, 85;
   --ok-bg: #DEEBE1;
 
   /* Type */
@@ -3130,3 +3134,558 @@ tr:hover .gutter-add-comment {
 .generating-placeholder .generating-pulse {
   font-weight: 500;
 }
+
+/* ── Phase 06.3: Design alignment — walkthrough, threads, findings, diff ── */
+
+/* ── WalkthroughStepBanner (wt-banner-*) ── */
+.wt-banner {
+  background: var(--paper-2);
+  border-bottom: 1px solid var(--line);
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.wt-banner-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-4);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.wt-banner-reviewed {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--ok);
+  font-weight: 600;
+}
+.wt-banner-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.wt-banner-desc {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.wt-banner-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: var(--ok);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.wt-banner-nav {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  margin-top: 8px;
+}
+.wt-banner-nav-card {
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 11px;
+  background: var(--paper);
+  color: var(--ink-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.wt-banner-nav-card:hover {
+  background: var(--paper-2);
+  color: var(--ink-2);
+}
+.wt-banner-nav-card--disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.wt-banner-nav-label {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+.wt-banner-nav-title {
+  color: var(--ink-3);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── ThreadCard (tc-*) — Phase 06.3 design ── */
+.tc-header {
+  padding: 6px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.tc-header--blocker {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--block);
+}
+.tc-header--major,
+.tc-header--minor {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--warn);
+}
+.tc-header--nit {
+  background: var(--paper-3);
+  color: var(--ink-3);
+}
+.tc-header--neutral {
+  background: var(--paper-2);
+  color: var(--ink-3);
+}
+.tc-header-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tc-header-severity {
+  font-weight: 700;
+}
+.tc-header-loc {
+  font-weight: 500;
+  font-family: var(--mono);
+}
+.tc-header-category {
+  font-weight: 400;
+  color: var(--ink-4);
+  font-size: 10px;
+}
+.tc-header-collapse {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ink-4);
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+}
+.tc-header-collapse:hover {
+  color: var(--ink-2);
+}
+.tc-preexisting {
+  padding: 2px 12px;
+  background: var(--paper-2);
+}
+.tc-preexisting-tag {
+  font-size: 10px;
+  font-style: italic;
+  color: var(--ink-4);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.tc-turn {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  align-items: flex-start;
+}
+.tc-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+}
+.tc-avatar--claude { background: var(--claude); }
+.tc-avatar--user { background: var(--ink-4); }
+.tc-turn-content { flex: 1; min-width: 0; }
+.tc-turn-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+.tc-turn-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.tc-turn-time {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-4);
+}
+.tc-turn-body {
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  color: var(--ink-2);
+  margin: 0;
+}
+.tc-typing {
+  opacity: 0.7;
+}
+.tc-draft-slot {
+  padding: 8px 12px;
+  border-top: 1px solid var(--line-2);
+}
+.tc-draft-input {
+  width: 100%;
+  min-height: 60px;
+  max-height: 200px;
+  resize: vertical;
+  font-size: 13px;
+  line-height: 1.45;
+  font-family: inherit;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  padding: 8px;
+  background: var(--paper);
+  box-sizing: border-box;
+}
+.tc-reply {
+  padding: 8px 12px;
+  border-top: 1px solid var(--line-2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tc-reply-claude-chip {
+  font-size: 11px;
+  color: var(--claude);
+  background: rgba(var(--claude-rgb), 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  align-self: flex-start;
+}
+.tc-reply-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.tc-reply-input {
+  flex: 1;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  background: var(--paper);
+  font-family: inherit;
+}
+.tc-reply-btn {
+  background: var(--claude);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.tc-reply-btn:hover { background: #256b62; }
+.tc-reply-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.thread-panel--resolved {
+  opacity: 0.75;
+}
+
+/* ── InlineComposer (ic-*) ── */
+.ic-panel {
+  border-left: 3px solid var(--claude);
+  padding: 8px 16px;
+  background: var(--paper);
+  border-radius: 0 8px 8px 0;
+}
+.ic-textarea {
+  width: 100%;
+  min-height: 60px;
+  resize: vertical;
+  font-size: 13px;
+  font-family: inherit;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  padding: 8px;
+  background: var(--paper);
+  box-sizing: border-box;
+}
+.ic-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.ic-claude-chip {
+  font-size: 11px;
+  color: var(--claude);
+  background: rgba(var(--claude-rgb), 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.ic-btn-discard {
+  background: none;
+  border: 1px solid var(--line-2);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.ic-btn-submit {
+  background: var(--claude);
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ── FindingsSidebar Phase 06.3 additions ── */
+.findings-card--active {
+  border-color: var(--line-2);
+}
+.findings-card--active.findings-card--blocker {
+  border-left-color: var(--block);
+  background: rgba(var(--block-rgb), 0.04);
+}
+.findings-card--active.findings-card--major,
+.findings-card--active.findings-card--minor {
+  border-left-color: var(--warn);
+  background: rgba(var(--warn-rgb), 0.04);
+}
+.findings-card--invalid {
+  opacity: 0.5;
+}
+.findings-card--invalid .findings-card-title {
+  text-decoration: line-through;
+}
+.findings-validity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05px;
+  color: var(--ink-4);
+  padding: 4px 0;
+}
+.findings-validity-btn {
+  background: none;
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: inherit;
+  color: var(--ink-3);
+}
+.findings-validity-btn:hover { background: var(--paper-2); }
+.findings-validity-btn--active-valid {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+.findings-validity-btn--active-invalid {
+  border-color: var(--block);
+  color: var(--block);
+}
+
+/* ── DiffViewer Phase 06.3 gutter markers + line tints ── */
+.gutter-finding-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  margin-right: 2px;
+  border: none;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.gutter-finding-marker--blocker { background: var(--block); }
+.gutter-finding-marker--major,
+.gutter-finding-marker--minor { background: var(--warn); }
+.gutter-finding-marker--nit { background: var(--ink-4); }
+.diff-line--finding-blocker { background: rgba(155, 59, 46, 0.06) !important; }
+.diff-line--finding-warn { background: rgba(181, 121, 31, 0.06) !important; }
+.diff-line--finding-nit { background: rgba(234, 179, 8, 0.04) !important; }
+/* D-20: walkthrough active step hunk */
+.hunk--active-step {
+  border-left: 3px solid var(--claude);
+  background: rgba(var(--claude-rgb), 0.03);
+}
+/* D-21: file header stat badges */
+.stat-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+}
+.stat-badge--add {
+  background: rgba(var(--ok-rgb), 0.15);
+  color: var(--ok);
+}
+.stat-badge--del {
+  background: rgba(var(--block-rgb), 0.15);
+  color: var(--block);
+}
+/* D-21: mark reviewed button update */
+.diff-mark-reviewed {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid var(--line-2);
+  color: var(--ink-3);
+  background: var(--paper);
+  cursor: pointer;
+}
+.diff-mark-reviewed:hover { background: var(--paper-2); }
+.diff-mark-reviewed--done {
+  background: var(--ok-bg);
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+/* ── FindingAnnotation collapsed state (D-14) ── */
+.finding-annotation--collapsed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: var(--paper-2);
+  border-radius: 6px;
+  opacity: 0.6;
+  margin: 2px 0;
+}
+.finding-annotation-severity--dismissed {
+  opacity: 0.5;
+  font-size: 9px;
+}
+.finding-annotation-dismissed-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-4);
+  font-weight: 600;
+}
+.finding-annotation-dismissed-title {
+  font-size: 12px;
+  color: var(--ink-4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.finding-annotation-undo-btn {
+  background: none;
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 10px;
+  color: var(--ink-3);
+  margin-left: auto;
+  font-family: inherit;
+}
+.finding-annotation-undo-btn:hover { background: var(--paper-3); }
+
+/* ── SubmissionPanel Phase 06.3 additions (subp-table-*, subp-verdict-*) ── */
+.subp-table {
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 12px 16px;
+}
+.subp-table-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line-2);
+  font-size: 12px;
+}
+.subp-table-row:last-child { border-bottom: none; }
+.subp-table-label { color: var(--ink-3); }
+.subp-table-value {
+  color: var(--ink);
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.subp-verdict-card {
+  background: var(--paper-2);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 0 16px 16px;
+}
+.subp-verdict-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.subp-verdict-why {
+  color: var(--claude);
+  cursor: pointer;
+  font-size: 12px;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+}
+
+/* ── WalkthroughStepList Phase 06.3 additions (wsl-viewing-badge, wsl-ask-btn) ── */
+.wsl-viewing-badge {
+  background: var(--claude);
+  color: white;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.wsl-ask-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--line-2);
+  background: var(--paper);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--ink-3);
+  margin-top: 6px;
+  font-family: inherit;
+}
+.wsl-ask-btn:hover { background: var(--paper-2); }
