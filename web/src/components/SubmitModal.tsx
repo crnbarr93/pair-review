@@ -128,21 +128,35 @@ function useSubmissionState() {
 // ============================================================
 function GenerateReviewButton({ onGenerated, prKey }: { onGenerated: (body: string) => void; prKey: string }) {
   const [generating, setGenerating] = useState(false);
+  const chatMessages = useAppStore().chatMessages;
+
+  const latestLlmRef = useRef(chatMessages.filter(m => m.author === 'llm').length);
 
   async function handleGenerate() {
     if (!prKey || generating) return;
     setGenerating(true);
+    latestLlmRef.current = chatMessages.filter(m => m.author === 'llm').length;
     try {
       await postUserRequest(prKey, {
         type: 'chat',
-        payload: { message: 'Please draft a review summary for this PR. Include key observations, any concerns, and an overall assessment. Format it as markdown suitable for a GitHub review comment.' },
+        payload: { message: 'Please draft a review summary for this PR that I can paste into the review body. Include key observations, any concerns, and an overall assessment. Format it as markdown. IMPORTANT: Start your response with the review text directly — no preamble like "Here\'s a draft". Just the review content.' },
       });
     } catch {
-      // chat panel surfaces errors
-    } finally {
       setGenerating(false);
     }
   }
+
+  useEffect(() => {
+    if (!generating) return;
+    const llmMessages = chatMessages.filter(m => m.author === 'llm');
+    if (llmMessages.length > latestLlmRef.current) {
+      const latest = llmMessages[llmMessages.length - 1];
+      if (latest) {
+        onGenerated(latest.message);
+      }
+      setGenerating(false);
+    }
+  }, [chatMessages, generating, onGenerated]);
 
   return (
     <button
@@ -151,8 +165,17 @@ function GenerateReviewButton({ onGenerated, prKey }: { onGenerated: (body: stri
       onClick={handleGenerate}
       disabled={generating}
     >
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
-      {generating ? 'Generating...' : 'Generate with Claude'}
+      {generating ? (
+        <>
+          <span className="sm-generate-spinner" />
+          Generating...
+        </>
+      ) : (
+        <>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+          Generate with Claude
+        </>
+      )}
     </button>
   );
 }
