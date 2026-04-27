@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Verdict } from '@shared/types';
 import { useAppStore, actions } from '../store';
-import { confirmSubmit } from '../api';
+import { confirmSubmit, postUserRequest } from '../api';
 
 const VERDICT_WORDS: Record<Verdict, string> = {
   approve: 'approve',
@@ -119,7 +119,42 @@ function useSubmissionState() {
     openThreadCount, resolvedThreadCount,
     isLocalMode, isSubmitted, prNumber, submissionUrl,
     handleSubmit, getSubmitLabel, getSubmitColorClass,
+    prKey: state.prKey,
   };
+}
+
+// ============================================================
+// Generate review summary button — asks Claude to draft the review body
+// ============================================================
+function GenerateReviewButton({ onGenerated, prKey }: { onGenerated: (body: string) => void; prKey: string }) {
+  const [generating, setGenerating] = useState(false);
+
+  async function handleGenerate() {
+    if (!prKey || generating) return;
+    setGenerating(true);
+    try {
+      await postUserRequest(prKey, {
+        type: 'chat',
+        payload: { message: 'Please draft a review summary for this PR. Include key observations, any concerns, and an overall assessment. Format it as markdown suitable for a GitHub review comment.' },
+      });
+    } catch {
+      // chat panel surfaces errors
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      className="sm-generate-btn"
+      onClick={handleGenerate}
+      disabled={generating}
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+      {generating ? 'Generating...' : 'Generate with Claude'}
+    </button>
+  );
 }
 
 // ============================================================
@@ -292,7 +327,10 @@ function SubmissionContent({ onClose }: { onClose?: () => void }) {
 
           {/* Review body textarea */}
           <div className="sm-section">
-            <div className="sm-section-label">REVIEW SUMMARY</div>
+            <div className="sm-section-label-row">
+              <span className="sm-section-label">REVIEW SUMMARY</span>
+              <GenerateReviewButton onGenerated={s.setBody} prKey={s.prKey} />
+            </div>
             <textarea
               className="sm-textarea"
               value={s.body}

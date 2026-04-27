@@ -2985,3 +2985,32 @@ tr:hover .gutter-add-comment {
   line-height: 1.6;
   color: var(--ink-2);
 }
+
+/* Generate review summary button */
+.sm-section-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.sm-generate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--claude);
+  background: var(--paper);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.sm-generate-btn:hover {
+  background: var(--claude-2);
+}
+.sm-generate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
