@@ -107,6 +107,7 @@ function StepNav({
     key: ReviewStep;
     label: string;
     sub: string;
+    subGenerating?: boolean;
     status: 'done' | 'active' | 'default';
   }> = [
     {
@@ -114,7 +115,8 @@ function StepNav({
       label: 'Summary',
       sub: summary
         ? `${summary.intent} · ${Math.round(summary.intentConfidence * 100)}%`
-        : 'Not generated',
+        : 'Generating',
+      subGenerating: !summary,
       status: summary ? 'done' : 'active',
     },
     {
@@ -122,7 +124,8 @@ function StepNav({
       label: 'Walkthrough',
       sub: walkthrough
         ? `${walkthrough.steps.filter(s => s.status === 'visited').length}/${walkthrough.steps.length} steps`
-        : 'Not started',
+        : summary ? 'Generating' : 'Not started',
+      subGenerating: !walkthrough && !!summary,
       status: walkthrough
         ? walkthrough.steps.every(s => s.status !== 'pending') ? 'done' : 'active'
         : summary ? 'active' : 'default',
@@ -132,7 +135,8 @@ function StepNav({
       label: 'Review',
       sub: selfReview
         ? `${selfReview.findings.length} finding${selfReview.findings.length !== 1 ? 's' : ''}`
-        : 'Not run',
+        : walkthrough ? 'Running' : 'Not run',
+      subGenerating: !selfReview && !!walkthrough,
       status: selfReview ? 'done' : walkthrough ? 'active' : 'default',
     },
     {
@@ -171,7 +175,7 @@ function StepNav({
               </div>
               <div className="meta">
                 <div className="label">{s.label}</div>
-                <div className="sub">{s.sub}</div>
+                <div className={cn('sub', s.subGenerating && 'generating-text')}>{s.sub}</div>
               </div>
             </div>
             {i < steps.length - 1 && (
