@@ -24,7 +24,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: LLM Summary + Checklist + Self-Review** - LLM-generated PR summary pane, built-in criticality-ranked checklist shipped with the plugin, self-review produces category-grouped severity-tagged findings with clickable `file:line` refs, per-category coverage visible in the UI. (completed 2026-04-21)
 - [ ] **Phase 5: Walkthrough + Inline Threaded Comments** - LLM-curated walkthrough narrative ordering core changes with per-step commentary, "show all" escape to walk the remaining hunks without losing state, threaded conversational comments anchored to `{path, line, side}` via opaque server-resolved IDs (never freeform strings from the LLM).
 - [ ] **Phase 6: Review Submission + Verdict UI** - Verdict UI (Approve / Request changes / Comment), atomic single-call GitHub review submission with verdict + body + all inline comments, pre-submit signal-ratio check, existing-pending-review detection with adopt/clear choice, local-branch markdown export path.
-- [ ] **Phase 7: Polish + Concurrency** - Multi-session switcher for concurrent reviews across tabs, large-PR virtualization tightening, auth-identity display, daily-use papercut repairs surfaced during Phases 1–6 ship.
+- [x] **Phase 7: Polish + Concurrency** - Multi-session switcher for concurrent reviews across tabs, large-PR virtualization tightening, auth-identity display, daily-use papercut repairs surfaced during Phases 1–6 ship. (completed 2026-04-28)
 
 ## Phase Details
 
@@ -217,7 +217,7 @@ Plans:
 Plans:
 - [x] 07-01-PLAN.md — Stale test fix + AuthIdentity types + identity module + identity tests + PITFALLS verification tests (Pitfalls 8/9/16) (Wave 1)
 - [x] 07-02-PLAN.md — Server identity wiring (manager.ts + CSP fix) + web integration (store + TopBar badge + icon + CSS) (Wave 2)
-- [ ] 07-03-PLAN.md — Full test baseline + manual PITFALLS verification pass + papercut repairs + human-verify checkpoint (Wave 3)
+- [x] 07-03-PLAN.md — Full test baseline + manual PITFALLS verification pass + papercut repairs + human-verify checkpoint (Wave 3)
 **UI hint**: yes
 
 **Placement rationale**: SESS-04 is the single requirement deferred from Phase 2 because multi-session concurrency is a polish concern rather than a blocker — a single daily-driver review session works end-to-end without it. Per D-01, SESS-04 has been dropped from Phase 7 and moved to backlog. The rest of this phase is intentionally verification-focused: auth identity badge (small new feature), automated test coverage gaps filled, and a manual verification pass against a real PR to catch "looks done but isn't" issues before v1 ships.
@@ -238,7 +238,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 06.1 → 06
 | 06.1. Bidirectional LLM Collaboration | 0/5 | Planning | - |
 | 06.2. UI Design Alignment | 0/4 | Planning | - |
 | 06.3. Walkthrough + Review Design Alignment | 4/4 | Complete    | 2026-04-27 |
-| 7. Polish + Verification | 2/3 | In Progress|  |
+| 7. Polish + Verification | 3/3 | Complete   | 2026-04-28 |
 
 ---
 *Roadmap created: 2026-04-16*
