@@ -46,7 +46,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **SESS-01**: User can close the browser or quit Claude Code mid-review and, on next `/pair-review` invocation for the same PR, resume with walkthrough cursor, drafted comments, summary, self-review findings, and checklist state intact
 - [x] **SESS-02**: User is alerted and given a resolution choice (rebase drafts / discard / view-both) when resuming a PR whose head SHA has changed since last session
 - [x] **SESS-03**: Plugin survives crashes, kills, and power loss without corrupting review state, using atomic write-and-rename and cross-process file locking
-- [ ] **SESS-04**: User can run multiple concurrent review sessions in separate browser tabs and switch between them via a session-switcher UI
+- [x] **SESS-04**: User can run multiple concurrent review sessions in separate browser tabs and switch between them via a session-switcher UI
 
 ### Security (SEC)
 
@@ -139,7 +139,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SESS-01 | Phase 2 | Complete |
 | SESS-02 | Phase 2 | Complete |
 | SESS-03 | Phase 2 | Complete |
-| SESS-04 | Phase 7 | Pending |
+| SESS-04 | Phase 7 | Complete |
 | SEC-01 | Phase 1 | Complete |
 | SEC-02 | Phase 1 | Complete |
 | SEC-03 | Phase 1 | Complete |

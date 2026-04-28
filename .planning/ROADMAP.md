@@ -215,7 +215,7 @@ Plans:
   4. SESS-04 (multi-session concurrency) is acknowledged as deferred to backlog — not implemented in Phase 7.
 **Plans**: 3 plans in 3 waves
 Plans:
-- [ ] 07-01-PLAN.md — Stale test fix + AuthIdentity types + identity module + identity tests + PITFALLS verification tests (Pitfalls 8/9/16) (Wave 1)
+- [x] 07-01-PLAN.md — Stale test fix + AuthIdentity types + identity module + identity tests + PITFALLS verification tests (Pitfalls 8/9/16) (Wave 1)
 - [ ] 07-02-PLAN.md — Server identity wiring (manager.ts + CSP fix) + web integration (store + TopBar badge + icon + CSS) (Wave 2)
 - [ ] 07-03-PLAN.md — Full test baseline + manual PITFALLS verification pass + papercut repairs + human-verify checkpoint (Wave 3)
 **UI hint**: yes
@@ -238,7 +238,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 06.1 → 06
 | 06.1. Bidirectional LLM Collaboration | 0/5 | Planning | - |
 | 06.2. UI Design Alignment | 0/4 | Planning | - |
 | 06.3. Walkthrough + Review Design Alignment | 4/4 | Complete    | 2026-04-27 |
-| 7. Polish + Verification | 0/3 | Planning | - |
+| 7. Polish + Verification | 1/3 | In Progress|  |
 
 ---
 *Roadmap created: 2026-04-16*
