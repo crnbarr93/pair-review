@@ -47,6 +47,7 @@ Declared values (must be multiples of 4):
 Exceptions:
 - Auth badge avatar circle: 20px × 20px (follows existing `.chat-head .avatar` and `.toggle-avatar` precedent — non-4-grid sizing for small avatar circles is established in this codebase)
 - Mismatch warning icon: 14px × 14px (inline icon size matching existing `Ic.*` icon usage)
+- `.auth-badge` flex container `gap: 6px` (matches the established `.topbar .branch` and `.topbar .topbtn` pattern — both use `gap: 6px` in `web/src/index.css` lines 147 and 151 respectively; using any other value would break visual consistency with the existing TopBar chip/button row)
 
 ---
 
@@ -95,7 +96,7 @@ Phase 7 adds one new UI element (auth badge in TopBar row 1) and modifies no exi
 ```
 - Avatar: `<img>` 20px × 20px, `border-radius: 50%`, `src={authenticatedUser.avatarUrl}`
 - Username: `<span>` 13px, `color: var(--ink-3)`, weight 400
-- Container: `display: inline-flex; align-items: center; gap: 6px;`
+- Container: `display: inline-flex; align-items: center; gap: 6px;` (see Exceptions in Spacing Scale — 6px matches the `.topbtn` and `.branch` chip pattern)
 - No background, no border — blends with existing `.topbtn` spacing
 
 **Mismatch state (D-03):**
@@ -176,7 +177,7 @@ No third-party component registry blocks are introduced in Phase 7.
 
 ## Implementation Notes for Executor
 
-1. **Do not add new CSS classes for spacing values** — use existing inline styles matching the `.topbar` flex pattern (`gap: 6px`, `align-items: center`) consistent with how `.topbtn` and `.branch` chips are laid out.
+1. **Use `gap: 6px` for the `.auth-badge` flex container** — this is a declared exception (see Spacing Scale Exceptions). It matches the existing `.topbtn` and `.branch` chip pattern in `web/src/index.css` lines 147 and 151. Do not substitute `gap: 8px` or `gap: 4px` as that would diverge from the surrounding TopBar row elements visually.
 
 2. **Avatar `<img>` must never use `dangerouslySetInnerHTML`** — render via standard `<img src={...} />` JSX.
 
