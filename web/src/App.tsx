@@ -578,6 +578,7 @@ export default function App() {
           onStepClick={handleStepClick}
           onSettingsClick={() => handleCTAStub('Settings coming in Phase 7')}
           onSubmitReview={() => actions.setActiveStep('submission')}
+          authenticatedUser={state.authenticatedUser}
         />
       )}
 

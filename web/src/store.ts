@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type {
   AppStatePhase,
+  AuthIdentity,
   ChatMessage,
   ChecklistCategory,
   CIStatus,
@@ -71,6 +72,8 @@ export interface AppState {
   chatPanelOpen: boolean;
   // Phase 06.2 — client-only step routing (NOT in server session model)
   activeStep: 'summary' | 'walkthrough' | 'review' | 'submission';
+  // Phase 7 additions (D-02/D-04)
+  authenticatedUser: AuthIdentity | null;
 }
 
 const INITIAL: AppState = {
@@ -99,6 +102,7 @@ const INITIAL: AppState = {
   requestQueue: { pending: 0 },
   chatPanelOpen: true,  // open by default per D-07
   activeStep: 'summary',
+  authenticatedUser: null,
 };
 
 let state: AppState = { ...INITIAL };
@@ -183,6 +187,7 @@ export const actions = {
       threads: mergeThreadsFromServer(s.threads ?? {}, state.threads, state.locallyEditedDrafts),
       chatMessages: s.chatMessages ?? [],
       requestQueue: s.requestQueue ?? { pending: 0 },
+      authenticatedUser: s.authenticatedUser ?? null,
     };
     emit();
   },
@@ -212,6 +217,7 @@ export const actions = {
       pendingReview: s.pendingReview ?? null,
       chatMessages: s.chatMessages ?? state.chatMessages,
       requestQueue: s.requestQueue ?? state.requestQueue,
+      authenticatedUser: s.authenticatedUser ?? null,
     };
     emit();
   },

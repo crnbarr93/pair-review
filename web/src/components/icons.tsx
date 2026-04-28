@@ -138,4 +138,11 @@ export const Ic = {
       />
     </svg>
   ),
+  warning: (p: Props = {}) => (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" {...p}>
+      <path d="M8 2L14 13H2L8 2Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+      <path d="M8 7v3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+      <circle cx="8" cy="11.5" r="0.5" fill="currentColor"/>
+    </svg>
+  ),
 };

@@ -1,5 +1,5 @@
 import { Fragment, useState } from 'react';
-import type { CIStatus, PrSummary, PullRequestMeta, SelfReview, SubmissionState, Walkthrough } from '@shared/types';
+import type { AuthIdentity, CIStatus, PrSummary, PullRequestMeta, SelfReview, SubmissionState, Walkthrough } from '@shared/types';
 import { Ic } from './icons';
 
 function cn(...parts: Array<string | false | undefined | null>): string {
@@ -19,6 +19,7 @@ interface TopBarProps {
   onStepClick: (step: ReviewStep) => void;
   onSettingsClick: () => void;
   onSubmitReview: () => void;
+  authenticatedUser?: AuthIdentity | null;  // D-02: optional; absent = badge hidden (D-04)
 }
 
 export function TopBar({
@@ -32,6 +33,7 @@ export function TopBar({
   onStepClick,
   onSettingsClick,
   onSubmitReview,
+  authenticatedUser,
 }: TopBarProps) {
   const hasGhCoords =
     pr.source === 'github' &&
@@ -62,6 +64,27 @@ export function TopBar({
         </div>
         <CIPill ciStatus={ciStatus} />
         <div className="spacer" />
+        {/* D-02: Auth identity badge — absent when authenticatedUser is null/undefined (D-04) */}
+        {authenticatedUser && (
+          <div
+            className="auth-badge"
+            title={
+              authenticatedUser.mismatch
+                ? 'gh auth and GITHUB_TOKEN resolve to different users'
+                : authenticatedUser.login
+            }
+          >
+            {authenticatedUser.mismatch && <Ic.warning style={{ color: 'var(--warn)' }} />}
+            <img
+              src={authenticatedUser.avatarUrl}
+              alt={authenticatedUser.login}
+              className="auth-avatar"
+              width={20}
+              height={20}
+            />
+            <span className="auth-login">{authenticatedUser.login}</span>
+          </div>
+        )}
         <button type="button" className="topbtn" onClick={onSettingsClick}>
           <Ic.settings /> Settings
         </button>
