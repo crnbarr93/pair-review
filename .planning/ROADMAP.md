@@ -204,18 +204,23 @@ Plans:
 - [ ] 06.1-04-PLAN.md — InlineComposer + DiffViewer gutter + icon + @claude tagging (Wave 4)
 - [ ] 06.1-05-PLAN.md — Slash command rewrite (auto-generation + listen loop + --dry) + human-verify checkpoint (Wave 5)
 
-### Phase 7: Polish + Concurrency
-**Goal**: v1 shake-out. Close the "looks done but isn't" checklist from PITFALLS.md, address daily-use papercuts surfaced during Phases 1–6 shipping, and land the one v1 requirement (concurrent sessions) that isn't blocker-class: users can run multiple concurrent review sessions in separate browser tabs and switch between them via a session-switcher UI.
+### Phase 7: Polish + Verification
+**Goal**: v1 shake-out. Auth identity badge in TopBar, PITFALLS verification pass (mixed automated + manual), and emergent papercut repairs. SESS-04 (multi-session concurrency) deferred to backlog per D-01.
 **Depends on**: Phase 6
-**Requirements**: SESS-04
+**Requirements**: SESS-04 (deferred to backlog per D-01 — not implemented in this phase)
 **Success Criteria** (what must be TRUE):
-  1. User can run multiple concurrent review sessions (e.g., two different PRs at once) in separate browser tabs and switch between them via a session-switcher UI; each session's state is isolated and persists independently.
-  2. Authenticated GitHub user identity is visible in the UI chrome (surfaces any `gh auth token` vs `GITHUB_TOKEN` mismatch — mitigating Pitfall 17), and the "looks done but isn't" checklist from PITFALLS.md is walked through with each item verified (comment line correctness, idempotency, resume across close, resume after force-push, walkthrough ordering, self-review stance, large-PR handling, pre-existing code guard, security headers, port-in-use fallback, duplicate-submission guard).
-  3. Daily-use papercuts captured during Phases 1–6 ship (or are explicitly deferred to v1.x with rationale in PROJECT.md).
-**Plans**: TBD
+  1. Authenticated GitHub user identity is visible in the UI chrome (avatar + username badge in TopBar row 1, with token mismatch warning when `gh auth token` and `GITHUB_TOKEN` resolve to different users — mitigating Pitfall 17).
+  2. The "looks done but isn't" checklist from PITFALLS.md is walked through with each item verified: comment line correctness (Pitfall 1), security headers (Pitfall 6), resume across close (Pitfall 8), resume after force-push (Pitfall 9), duplicate-submission guard (Pitfall 10), port-in-use fallback (Pitfall 16) — automated; signal-ratio check (Pitfall 3), self-review stance (Pitfall 4), large-PR handling (Pitfall 5), pre-existing code guard (Pitfall 12), walkthrough ordering (Pitfall 14) — manual.
+  3. Daily-use papercuts captured during verification are fixed (or explicitly deferred with rationale).
+  4. SESS-04 (multi-session concurrency) is acknowledged as deferred to backlog — not implemented in Phase 7.
+**Plans**: 3 plans in 3 waves
+Plans:
+- [ ] 07-01-PLAN.md — Stale test fix + AuthIdentity types + identity module + identity tests + PITFALLS verification tests (Pitfalls 8/9/16) (Wave 1)
+- [ ] 07-02-PLAN.md — Server identity wiring (manager.ts + CSP fix) + web integration (store + TopBar badge + icon + CSS) (Wave 2)
+- [ ] 07-03-PLAN.md — Full test baseline + manual PITFALLS verification pass + papercut repairs + human-verify checkpoint (Wave 3)
 **UI hint**: yes
 
-**Placement rationale**: SESS-04 is the single requirement deferred from Phase 2 because multi-session concurrency is a polish concern rather than a blocker — a single daily-driver review session works end-to-end without it. The rest of this phase is intentionally under-specified because per PITFALLS Pitfall 13 ("over-engineering for teams"), polish scope should be driven by observed friction in daily use, not pre-planned.
+**Placement rationale**: SESS-04 is the single requirement deferred from Phase 2 because multi-session concurrency is a polish concern rather than a blocker — a single daily-driver review session works end-to-end without it. Per D-01, SESS-04 has been dropped from Phase 7 and moved to backlog. The rest of this phase is intentionally verification-focused: auth identity badge (small new feature), automated test coverage gaps filled, and a manual verification pass against a real PR to catch "looks done but isn't" issues before v1 ships.
 
 ## Progress
 
@@ -233,7 +238,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 06.1 → 06
 | 06.1. Bidirectional LLM Collaboration | 0/5 | Planning | - |
 | 06.2. UI Design Alignment | 0/4 | Planning | - |
 | 06.3. Walkthrough + Review Design Alignment | 4/4 | Complete    | 2026-04-27 |
-| 7. Polish + Concurrency | 0/TBD | Not started | - |
+| 7. Polish + Verification | 0/3 | Planning | - |
 
 ---
 *Roadmap created: 2026-04-16*
