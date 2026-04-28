@@ -187,10 +187,10 @@ describe('plugin manifest structure', () => {
     // server unambiguously. The default `commands/` directory is auto-discovered
     // and the field is omitted from the manifest.
     const servers = json.mcpServers as Record<string, { command: string; args: string[] }>;
-    expect(servers).toHaveProperty('git-review-plugin');
-    expect(servers['git-review-plugin'].command).toBe('node');
-    expect(servers['git-review-plugin'].args[0]).toContain('${CLAUDE_PLUGIN_ROOT}');
-    expect(servers['git-review-plugin'].args[0]).toContain('server/dist/index.js');
+    expect(servers).toHaveProperty('gr');
+    expect(servers['gr'].command).toBe('node');
+    expect(servers['gr'].args[0]).toContain('${CLAUDE_PLUGIN_ROOT}');
+    expect(servers['gr'].args[0]).toContain('server/dist/index.js');
   });
 
   it('no separate .mcp.json at repo root (inlined in plugin.json)', async () => {
@@ -236,7 +236,7 @@ describe('plugin manifest structure', () => {
 
     expect(content).toContain('description:');
     expect(content).toContain('argument-hint:');
-    expect(content).toContain('mcp__git-review-plugin__start_review');
+    expect(content).toContain('mcp__gr__start_review');
     expect(content).toContain('allowed-tools:');
     expect(content).toContain('$ARGUMENTS');
   });

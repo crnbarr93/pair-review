@@ -105,6 +105,21 @@ export interface ReviewSession {
   // Phase 06.1 additions (D-21) — all optional for backward compat:
   chatMessages?: ChatMessage[];
   requestQueue?: { pending: number };
+  // Phase 7 additions (D-02) — optional for backward compat with pre-Phase-7 snapshots:
+  authenticatedUser?: AuthIdentity | null;  // null = fetch failed (fail-open, D-04)
+}
+
+// -------------------------------------------------------------------------
+// Phase 7 additions — Auth Identity Badge (D-02/D-03/D-04)
+// D-04: null means fetch failed; the badge simply does not render.
+// SECURITY: login and avatarUrl are rendered via React text nodes and <img src> —
+//           never dangerouslySetInnerHTML.
+// -------------------------------------------------------------------------
+
+export interface AuthIdentity {
+  login: string;
+  avatarUrl: string;
+  mismatch: boolean;  // true = gh auth token user != GITHUB_TOKEN user (D-03)
 }
 
 // Phase 2 event union — Phase 4/5/6 variants will extend this.

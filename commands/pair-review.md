@@ -1,7 +1,7 @@
 ---
 description: Open a PR review workspace with bidirectional collaboration
 argument-hint: <pr-url-or-number> | --local <base> <head> [--dry]
-allowed-tools: mcp__git-review-plugin__start_review, mcp__git-review-plugin__set_pr_summary, mcp__git-review-plugin__set_walkthrough, mcp__git-review-plugin__run_self_review, mcp__git-review-plugin__list_files, mcp__git-review-plugin__get_hunk, mcp__git-review-plugin__reply_in_thread, mcp__git-review-plugin__draft_comment, mcp__git-review-plugin__resolve_thread, mcp__git-review-plugin__submit_review, mcp__git-review-plugin__await_user_request, mcp__git-review-plugin__respond_chat
+allowed-tools: mcp__gr__start_review, mcp__gr__set_pr_summary, mcp__gr__set_walkthrough, mcp__gr__run_self_review, mcp__gr__list_files, mcp__gr__get_hunk, mcp__gr__reply_in_thread, mcp__gr__draft_comment, mcp__gr__resolve_thread, mcp__gr__submit_review, mcp__gr__await_user_request, mcp__gr__respond_chat
 ---
 
 ## SOURCE ARGUMENT PARSING
