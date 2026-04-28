@@ -74,6 +74,15 @@ describe('secureHeadersMw', () => {
     expect(csp).not.toContain('ws://');
   });
 
+  it('CSP img-src allows GitHub avatar domain', async () => {
+    const app = new Hono();
+    app.use('*', secureHeadersMw());
+    app.get('/', (c) => c.text('ok'));
+    const res = await app.fetch(new Request('http://localhost/'));
+    const csp = res.headers.get('content-security-policy') ?? '';
+    expect(csp).toContain('https://avatars.githubusercontent.com');
+  });
+
   it('c.get("secureHeadersNonce") returns a non-empty string from a handler', async () => {
     const app = new Hono();
     app.use('*', secureHeadersMw());

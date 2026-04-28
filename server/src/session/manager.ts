@@ -5,6 +5,7 @@ import type {
   ShikiFileTokens,
   GitHubPrViewJson,
   SessionEvent,
+  AuthIdentity,
 } from '@shared/types';
 import { githubKey, localKey } from './key.js';
 import { writeState, readState } from '../persist/store.js';
@@ -17,6 +18,7 @@ import {
   fetchCIChecks,
 } from '../ingest/github.js';
 import { ingestLocal, fetchCurrentHeadSha as fetchLocalHeadSha } from '../ingest/local.js';
+import { fetchAuthIdentity } from '../ingest/identity.js';
 import { inferRepoFromCwd } from '../ingest/repo-infer.js';
 import { toDiffModel } from '../ingest/parse.js';
 import { highlightHunks } from '../highlight/shiki.js';
@@ -132,16 +134,25 @@ export class SessionManager {
     // (3) Fall-through: full ingest — original Phase-1 behavior
     let pr: PullRequestMeta;
     let diffText: string;
+    let authIdentity: AuthIdentity | null = null;
 
     if (source.kind === 'github') {
       const id = 'url' in source ? source.url : String(source.number);
-      const { meta, diffText: dt } = await ingestGithub(id);
+      const [{ meta, diffText: dt }, identity] = await Promise.all([
+        ingestGithub(id),
+        fetchAuthIdentity(),  // D-04: fail-open, runs in parallel
+      ]);
       diffText = dt;
       pr = this.githubMetaToPr(source, meta, prKey);
+      authIdentity = identity;
     } else {
       const cwd = process.cwd();
-      const { diffText: dt, baseSha, headSha } = await ingestLocal(source.base, source.head, cwd);
+      const [{ diffText: dt, baseSha, headSha }, identity] = await Promise.all([
+        ingestLocal(source.base, source.head, cwd),
+        fetchAuthIdentity(),  // D-04: fail-open
+      ]);
       diffText = dt;
+      authIdentity = identity;
       pr = {
         source: 'local',
         title: `Local diff: ${source.base}..${source.head}`,
@@ -199,6 +210,7 @@ export class SessionManager {
       headSha: pr.headSha,
       error: null,
       lastEventId: 0,
+      authenticatedUser: authIdentity,  // D-02: null if fetch failed (D-04)
     };
     this.sessions.set(prKey, session);
     this.activePrKey = prKey;
