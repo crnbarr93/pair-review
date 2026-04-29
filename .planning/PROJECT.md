@@ -32,7 +32,7 @@ A Claude Code plugin that pairs the user with an LLM to review pull requests thr
 
 <!-- Current scope. Building toward these. -->
 
-(All v1 functional requirements validated. Phase 7 addresses polish and concurrency.)
+(All v1.0 requirements validated and shipped. No active requirements — next milestone will define new scope.)
 
 ### Out of Scope
 
@@ -49,12 +49,21 @@ A Claude Code plugin that pairs the user with an LLM to review pull requests thr
 
 ## Context
 
+### Current State (v1.0 shipped 2026-04-29)
+
+- **Codebase:** ~28K LOC TypeScript across server/ (MCP+HTTP), web/ (Vite+React SPA), shared/ (types)
+- **Tech stack:** Node 22, Hono HTTP server, SSE transport, React 19, Vite 8, Tailwind 4, bespoke DiffViewer, Octokit for submission
+- **Tests:** 533 passing (vitest), web build clean
+- **MCP tools:** 10 registered (start_review, list_files, get_hunk, set_pr_summary, run_self_review, set_walkthrough, draft_comment, reply_in_thread, resolve_thread, submit_review) plus 2 bidirectional (await_user_request, respond_chat)
+- **Plugin distribution:** Claude Code plugin via `.claude-plugin/plugin.json`, `/gr pair-review` slash command
+
+### Background
+
 - **User situation:** Author reviews pull requests frequently and already uses Claude (often the desktop app) as a review assistant. The desktop-app chat UX is the specific pain point being replaced.
 - **Existing auth surface:** User is already running Claude Code, so the plugin inherits that session — no second API key, no separate auth flow. The LLM driving the review *is* the Claude Code session the user invokes the plugin from.
 - **GitHub access assumption:** `gh` CLI is expected to be installed and authenticated (standard dev setup on macOS); plugin falls back to env-var token if needed.
-- **Local-only scope:** Plugin spawns a local HTTP/websocket server, opens the user's default browser to it, and tears down when the review session ends. No data leaves the machine except the final review submission to GitHub.
-- **Greenfield repo:** `/Users/connorbarr/dev/personal/git-review-plugin` is empty — no prior code to preserve, full stack choice is open.
-- **Claude Code plugin surface assumed:** slash commands, MCP tools, hooks, and (optionally) subagents are all available to wire up the plugin flow.
+- **Local-only scope:** Plugin spawns a local HTTP server, opens the user's default browser to it. No data leaves the machine except the final review submission to GitHub.
+- **Claude Code plugin surface:** slash commands, MCP tools, hooks, and subagents are all available.
 
 ## Constraints
 
@@ -70,13 +79,13 @@ A Claude Code plugin that pairs the user with an LLM to review pull requests thr
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Claude Code plugin + local web UI (not Zed extension, not standalone app) | Zed's WASM extension API cannot render the needed diff+comments UI; Claude Code gives MCP + slash commands + existing auth for free. Zed integration possible later via shared MCP server. | — Pending |
-| MCP tools as the LLM-to-UI control plane (not subagent+file-protocol) | MCP is the natural Claude Code pattern; gives responsive, typed tool calls that map cleanly to UI actions (show_hunk, post_comment, run_self_review, submit_review). Subagent+files would be clunkier. | — Pending |
-| Built-in default checklist only in v1 (repo override deferred to v2) | Works out of the box; avoids forcing override-schema design in v1. Repo override (`.review/checklist.md`) tracked as `CHECK-V2-01` and will come forward if daily use surfaces a need. | — Pending |
-| LLM-curated walkthrough with "show all" escape | Reviewer-style guidance beats "walk every hunk" for long PRs; escape hatch prevents missing something. | — Pending |
-| Final action is a full GitHub review submission (verdict + body + inline comments) | Matches how real reviews ship; one API call keeps the GitHub UI clean; verdict discipline forces the user to actually decide. | — Pending |
-| Resumable per-PR state on disk | Real reviews happen in chunks across hours/days; session-only state would be a non-starter. | — Pending |
-| GitHub + local branches only in v1 (no GitLab/Bitbucket) | Personal tool; author works on GitHub. API surface for other hosts isn't free. | — Pending |
+| Claude Code plugin + local web UI (not Zed extension, not standalone app) | Zed's WASM extension API cannot render the needed diff+comments UI; Claude Code gives MCP + slash commands + existing auth for free. Zed integration possible later via shared MCP server. | ✓ Good — shipped v1.0 |
+| MCP tools as the LLM-to-UI control plane (not subagent+file-protocol) | MCP is the natural Claude Code pattern; gives responsive, typed tool calls that map cleanly to UI actions (show_hunk, post_comment, run_self_review, submit_review). Subagent+files would be clunkier. | ✓ Good — 10 MCP tools shipped |
+| Built-in default checklist only in v1 (repo override deferred to v2) | Works out of the box; avoids forcing override-schema design in v1. Repo override (`.review/checklist.md`) tracked as `CHECK-V2-01` and will come forward if daily use surfaces a need. | ✓ Good — 24-item checklist works |
+| LLM-curated walkthrough with "show all" escape | Reviewer-style guidance beats "walk every hunk" for long PRs; escape hatch prevents missing something. | ✓ Good — filter-not-reset UX |
+| Final action is a full GitHub review submission (verdict + body + inline comments) | Matches how real reviews ship; one API call keeps the GitHub UI clean; verdict discipline forces the user to actually decide. | ✓ Good — atomic createReview |
+| Resumable per-PR state on disk | Real reviews happen in chunks across hours/days; session-only state would be a non-starter. | ✓ Good — event-sourced reducer |
+| GitHub + local branches only in v1 (no GitLab/Bitbucket) | Personal tool; author works on GitHub. API surface for other hosts isn't free. | ✓ Good — scope held |
 | **D-01 (Phase 1)** Real-time transport: SSE + HTTP POST (chosen over WebSocket) | Asymmetric broadcast shape (server pushes snapshots; client posts adopt/comment). EventSource is curl-debuggable and needs no extra dep; the LLM control channel is MCP-stdio so a bidirectional WS layer would have been redundant. | Resolved (Phase 1) |
 | **D-04 (Phase 1)** Persistence format: atomic JSON via `write-file-atomic` + `proper-lockfile` (chosen over `better-sqlite3`) | Reducer-on-single-event-loop already serializes mutations; native addons add install friction in a plugin-distributed binary; grep-able JSON state is easier to debug for a single-user local tool. | Resolved (Phase 1) |
 | **D-01 (Phase 3)** Phase-1 `01-UI-SPEC.md` formally superseded by the committed prototype at commit `c7fe93f` | Paper-and-teal light-mode design is the authoritative direction for Phase 3+; dark-mode palette + `@theme` block + `@git-diff-view/react` recommendation are abandoned in favor of bespoke components + `:root` CSS vars | Resolved (Phase 3 planning) — see `.planning/phases/03-diff-ui-file-tree-navigation/03-CONTEXT.md` D-01 and `03-UI-SPEC.md` |
@@ -111,4 +120,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-23 after Phase 6 completion (review submission + verdict UI shipped; all v1 functional requirements validated; Phase 7 is polish only)*
+*Last updated: 2026-04-29 after v1.0 milestone completion (all 10 phases shipped, 51 plans executed, 533 tests passing)*
