@@ -125,6 +125,7 @@ None yet.
 | 260427-da1 | Add URL hash param to persist current review phase across browser refresh | 2026-04-27 | 118733f | [260427-da1-add-url-hash-param-to-persist-current-re](./quick/260427-da1-add-url-hash-param-to-persist-current-re/) |
 | 260427-e7o | Add review findings as line comments and make review summary more succinct with verdict reasoning | 2026-04-27 | 81123a8 | [260427-e7o-add-review-findings-as-line-comments-and](./quick/260427-e7o-add-review-findings-as-line-comments-and/) |
 | 260427-hzy | Add loading visualization while waiting for summary, walkthrough and self-review generation | 2026-04-27 | f03e4f5 | [260427-hzy-add-loading-visualization-while-waiting-](./quick/260427-hzy-add-loading-visualization-while-waiting-/) |
+| 260429-hp9 | Fix review page to show all changes instead of walkthrough-filtered view | 2026-04-29 | 7f1c74e | [260429-hp9-fix-review-page-to-show-all-changes-inst](./quick/260429-hp9-fix-review-page-to-show-all-changes-inst/) |
 
 ## Deferred Items
 
