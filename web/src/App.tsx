@@ -63,16 +63,16 @@ export default function App() {
       .flatMap((f) => f.hunks.map((h) => ({ fileId: f.id, hunkId: h.id })));
 
     const walkthrough = state.walkthrough;
-    if (walkthrough && !walkthrough.showAll) {
+    if (activeStep === 'walkthrough' && walkthrough && !walkthrough.showAll) {
       // Curated mode: only walkthrough steps in step order (D-05)
       return walkthrough.steps.map((step) => {
         const file = diff.files.find((f) => f.hunks.some((h) => h.id === step.hunkId));
         return { fileId: file?.id ?? '', hunkId: step.hunkId };
       });
     }
-    // Show-all mode or no walkthrough: all non-generated hunks in file order (D-06)
+    // Show-all mode, non-walkthrough step, or no walkthrough: all non-generated hunks in file order (D-06)
     return allHunks;
-  }, [diff, state.walkthrough]);
+  }, [diff, state.walkthrough, activeStep]);
 
   // Compute the DiffModel that DiffViewer renders (Gap 1 closure -- LLM-04).
   // In curated mode (walkthrough active + showAll=false): only hunks listed in
@@ -83,8 +83,8 @@ export default function App() {
   const filteredDiff = useMemo((): DiffModel | undefined => {
     if (!diff) return undefined;
     const wt = state.walkthrough;
-    if (!wt || wt.showAll) return diff;
-    // Curated mode: order files/hunks by walkthrough step sequence
+    if (activeStep !== 'walkthrough' || !wt || wt.showAll) return diff;
+    // Curated mode (walkthrough step only): order files/hunks by walkthrough step sequence
     const fileIndex = new Map(diff.files.map(f => [f.id, f]));
     const orderedFiles: DiffFile[] = [];
     const seen = new Set<string>();
@@ -103,7 +103,7 @@ export default function App() {
       }
     }
     return { files: orderedFiles, totalHunks: orderedFiles.reduce((n, f) => n + f.hunks.length, 0) };
-  }, [diff, state.walkthrough]);
+  }, [diff, state.walkthrough, activeStep]);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
